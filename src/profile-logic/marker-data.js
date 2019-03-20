@@ -10,6 +10,7 @@ import type {
   SamplesTable,
   RawMarkerTable,
   IndexIntoStringTable,
+  IndexIntoRawMarkerTable,
 } from '../types/profile';
 import type { Marker, IndexIntoMarkers } from '../types/profile-derived';
 import type { BailoutPayload, NetworkPayload } from '../types/markers';
@@ -628,27 +629,42 @@ export function* filterRawMarkerTableToRangeIndexGenerator(
  * range and marker indexes array specified as parameters.
  *
  * Uses `filterRawMarkerTableToRangeIndexGenerator` function and excludes
- * markers in `markersToDelete` array.
+ * markers in `markersToDelete` set.
  */
 export function filterRawMarkerTableToRangeWithMarkersToDelete(
   markerTable: RawMarkerTable,
-  markersToDelete: number[],
+  markersToDelete: Set<IndexIntoRawMarkerTable>,
   filterRange: StartEndRange | null
-): RawMarkerTable {
+): {
+  rawMarkerTable: RawMarkerTable,
+  oldMarkerIndexToNew: Map<IndexIntoRawMarkerTable, IndexIntoRawMarkerTable>,
+} {
   const oldMarkers = markerTable;
   const newMarkerTable = getEmptyRawMarkerTable();
-  const addMarkerIndexIfIncluded = (index: number) => {
-    if (markersToDelete.includes(index)) {
+  const oldMarkerIndexToNew: Map<
+    IndexIntoRawMarkerTable,
+    IndexIntoRawMarkerTable
+  > = new Map();
+  const addMarkerIndexIfIncluded = (index: IndexIntoRawMarkerTable) => {
+    if (markersToDelete.has(index)) {
       return;
     }
+    oldMarkerIndexToNew.set(index, newMarkerTable.length);
     newMarkerTable.name.push(oldMarkers.name[index]);
     newMarkerTable.time.push(oldMarkers.time[index]);
     newMarkerTable.data.push(oldMarkers.data[index]);
     newMarkerTable.length++;
   };
 
-  // If user wants to remove full time range, filter all the markers and accordingly.
-  if (filterRange !== null) {
+  if (filterRange === null) {
+    // If user doesn't want to filter out the full time range, remove only
+    // markers that we want to remove.
+    for (let i = 0; i < oldMarkers.length; i++) {
+      addMarkerIndexIfIncluded(i);
+    }
+  } else {
+    // If user wants to remove full time range, filter all the markers
+    // accordingly.
     const { start, end } = filterRange;
     const filteredMarkerIndexIter = filterRawMarkerTableToRangeIndexGenerator(
       oldMarkers,
@@ -659,14 +675,11 @@ export function filterRawMarkerTableToRangeWithMarkersToDelete(
     for (const index of filteredMarkerIndexIter) {
       addMarkerIndexIfIncluded(index);
     }
-  } else {
-    // If user doesn't want to filter out the full time range, remove only
-    // markers that we want to remove.
-    for (let i = 0; i < oldMarkers.length; i++) {
-      addMarkerIndexIfIncluded(i);
-    }
   }
-  return newMarkerTable;
+  return {
+    rawMarkerTable: newMarkerTable,
+    oldMarkerIndexToNew,
+  };
 }
 
 export function filterMarkersToRange(

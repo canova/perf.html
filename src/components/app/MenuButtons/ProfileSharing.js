@@ -145,8 +145,8 @@ export class MenuButtonsProfileSharing extends React.PureComponent<
       }
 
       const piiToBeRemoved: RemoveProfileInformation = {
-        shouldRemoveThreads: [],
-        shouldRemoveThreadsWithScreenshots: [],
+        shouldRemoveThreads: new Set(),
+        shouldRemoveThreadsWithScreenshots: new Set(),
         shouldRemoveNetworkUrls: !this.state.shareNetworkUrls,
         shouldRemoveAllUrls: false,
         shouldFilterToCommittedRange: null,

@@ -16,6 +16,14 @@ export function removeURLs(
   const regExpExtension = removeExtensions ? '|moz-extension' : '';
   const regExp = new RegExp(
     '((https?|ftp' + regExpExtension + ')://)([^\\s/$.?#].[^\\s)]*)',
+    // ^                                       ^           ^
+    // |                                       |           matches any characters except
+    // |                                       |           whitespaces and ) character.
+    // |                                       |           Other characters are allowed now
+    // |                                       matches any characters except whitespaces
+    // |                                       and / $ . ? # characters because this is
+    // |                                       start of the URL
+    // Matches http, https, ftp and optionally moz-extension protocols
     'gi'
   );
   return string.replace(regExp, '$1<URL>');

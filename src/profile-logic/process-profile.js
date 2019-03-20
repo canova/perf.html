@@ -11,6 +11,7 @@ import {
   getEmptyExtensions,
   getEmptyFuncTable,
   getEmptyResourceTable,
+  cloneRawMarkerTable,
 } from './data-structures';
 import { immutableUpdate } from '../utils/flow';
 import { removeURLs } from '../utils/string';
@@ -51,6 +52,7 @@ import type {
   IndexIntoStringTable,
   IndexIntoResourceTable,
   JsTracerTable,
+  ThreadIndex,
 } from '../types/profile';
 import type { RemoveProfileInformation } from '../types/profile-derived';
 import type { Milliseconds } from '../types/units';
@@ -1066,11 +1068,12 @@ export function processProfile(
 
 /**
  * Take a processed profile and remove any non-serializable classes such as the
- *  StringTable class
+ * StringTable class.
  */
 export function serializeProfile(profile: Profile): string {
   // stringTable -> stringArray
-  const newProfile = Object.assign({}, profile, {
+  const newProfile = {
+    ...profile,
     threads: profile.threads.map(thread => {
       const stringArray = thread.stringTable.serializeToArray();
       // Has to be any since Threads don't have stringArray.
@@ -1079,7 +1082,7 @@ export function serializeProfile(profile: Profile): string {
       newThread.stringArray = stringArray;
       return newThread;
     }),
-  });
+  };
 
   return JSON.stringify(newProfile);
 }
@@ -1094,62 +1097,64 @@ export function sanitizePII(
   PIIToBeRemoved: RemoveProfileInformation
 ): Profile {
   let urlCounter = 0;
-  const removedThreadIndexes = [];
-  const newProfile = Object.assign({}, profile, {
+  const oldThreadIndexToNew: Map<ThreadIndex, ThreadIndex | null> = new Map();
+  const newProfile = {
+    ...profile,
     meta: {
       ...profile.meta,
       // FIXME: We won't be needing this after PII frontend changes.
+      // See: https://github.com/firefox-devtools/profiler/issues/1863
       networkURLsRemoved: PIIToBeRemoved.shouldRemoveNetworkUrls,
       extensions: PIIToBeRemoved.shouldRemoveExtensions
         ? getEmptyExtensions()
         : profile.meta.extensions,
     },
     pages:
-      (PIIToBeRemoved.shouldRemoveNetworkUrls ||
-        PIIToBeRemoved.shouldRemoveAllUrls) &&
-      profile.pages
-        ? profile.pages.map(page =>
-            Object.assign({}, page, {
-              url: 'Page #' + urlCounter++,
-            })
-          )
+      PIIToBeRemoved.shouldRemoveNetworkUrls ||
+      PIIToBeRemoved.shouldRemoveAllUrls
+        ? profile.pages
+          ? profile.pages.map(page =>
+              Object.assign({}, page, {
+                url: 'Page #' + urlCounter++,
+              })
+            )
+          : profile.pages
         : profile.pages,
     threads: profile.threads.reduce((acc, thread, threadIndex) => {
-      let newThread: any = Object.assign({}, thread);
-
-      newThread = sanitizeThreadPII(newThread, threadIndex, PIIToBeRemoved);
+      const newThread: Thread | null = sanitizeThreadPII(
+        thread,
+        threadIndex,
+        PIIToBeRemoved
+      );
 
       if (newThread === null) {
-        removedThreadIndexes.push(threadIndex);
+        oldThreadIndexToNew.set(threadIndex, null);
         // Filtering out the current thread if it's null.
         return acc;
       }
 
       // Adding the thread to the `threads` list.
+      oldThreadIndexToNew.set(threadIndex, acc.length);
       return acc.concat(newThread);
     }, []),
     // Remove counters which belong to the removed counters.
     // Also adjust other counters to point to the right thread.
     counters: profile.counters
       ? profile.counters.reduce((acc, counter) => {
-          if (removedThreadIndexes.includes(counter.mainThreadIndex)) {
+          const newThreadIndex = oldThreadIndexToNew.get(
+            counter.mainThreadIndex
+          );
+          if (!newThreadIndex) {
             // Filtering out the current counter.
             return acc;
           }
 
-          let reduceBy = 0;
-          for (const threadIndex of removedThreadIndexes) {
-            if (counter.mainThreadIndex > threadIndex) {
-              reduceBy++;
-            }
-          }
-
-          counter.mainThreadIndex -= reduceBy;
+          counter.mainThreadIndex = newThreadIndex;
           // Adding the current counter to the `counters` list.
           return acc.concat(counter);
         }, [])
       : undefined,
-  });
+  };
 
   return newProfile;
 }
@@ -1163,25 +1168,28 @@ function sanitizeThreadPII(
   threadIndex: number,
   PIIToBeRemoved: RemoveProfileInformation
 ): Thread | null {
-  if (PIIToBeRemoved.shouldRemoveThreads.includes(threadIndex)) {
+  if (PIIToBeRemoved.shouldRemoveThreads.has(threadIndex)) {
     // If this is a hidden thread, remove the thread immediately.
     // This will not remove the thread entry from the `threads` array right now
     // and just replace it with a `null` value. We filter out the null values
     // inside `serializeProfile` function.
     return null;
   }
+  // Deep copying the thread since we are gonna mutate it and we don't want to alter
+  // current thread.
   // We need to update the stringTable. It's not possible with UniqueStringArray.
   const stringArray = thread.stringTable.serializeToArray();
+  let markerTable = cloneRawMarkerTable(thread.markers);
 
   // We iterate all the markers and remove/change data depending on the PII
   // status.
-  const markersToDelete = [];
+  const markersToDelete = new Set();
   if (
     PIIToBeRemoved.shouldRemoveNetworkUrls ||
-    PIIToBeRemoved.shouldRemoveThreadsWithScreenshots.length > 0
+    PIIToBeRemoved.shouldRemoveThreadsWithScreenshots.size > 0
   ) {
-    for (let i = 0; i < thread.markers.length; i++) {
-      const currentMarker = thread.markers.data[i];
+    for (let i = 0; i < markerTable.length; i++) {
+      const currentMarker = markerTable.data[i];
 
       // Remove the all network URLs if user wants to remove them.
       if (
@@ -1192,30 +1200,28 @@ function sanitizeThreadPII(
       ) {
         // Remove the URI fields from marker payload.
         // Mutating the payload here but it's safe because we copied the
-        // thread already.
+        // markerTable already.
         removeNetworkMarkerURLs(currentMarker);
 
         // Strip the URL from the marker name
-        const stringIndex = thread.markers.name[i];
+        const stringIndex = markerTable.name[i];
         stringArray[stringIndex] = stringArray[stringIndex].replace(/:.*/, '');
       }
 
       // Remove the screenshots if the current thread index is in the
       // threadsWithScreenshots array
       if (
-        PIIToBeRemoved.shouldRemoveThreadsWithScreenshots.includes(
-          threadIndex
-        ) &&
+        PIIToBeRemoved.shouldRemoveThreadsWithScreenshots.has(threadIndex) &&
         currentMarker &&
         currentMarker.type &&
         currentMarker.type === 'CompositorScreenshot'
       ) {
         const urlIndex = currentMarker.url;
-        // We are mutating the stringArray here but it's okay to mutate this
-        // here since we copied the string at the beginning while converting
-        // the string table to string array.
+        // We are mutating the stringArray here but it's okay to mutate since
+        // we copied them at the beginning while converting the string table
+        // to string array.
         stringArray[urlIndex] = '';
-        markersToDelete.push(i);
+        markersToDelete.add(i);
       }
     }
   }
@@ -1223,23 +1229,33 @@ function sanitizeThreadPII(
   // After iterating (or not iterating at all) the markers, if we have some
   // markers we want to delete or user wants to delete the full time range,
   // reconstruct the marker table and samples table without unwanted information.
+  // Creating a new thread variable since we are gonna mutate samples here.
+  let newThread: Thread;
   if (
-    markersToDelete.length > 0 ||
+    markersToDelete.size > 0 ||
     PIIToBeRemoved.shouldFilterToCommittedRange !== null
   ) {
     // Filter marker table with given range and marker indexes array.
-    thread.markers = filterRawMarkerTableToRangeWithMarkersToDelete(
-      thread.markers,
+    markerTable = filterRawMarkerTableToRangeWithMarkersToDelete(
+      markerTable,
       markersToDelete,
       PIIToBeRemoved.shouldFilterToCommittedRange
-    );
+    ).rawMarkerTable;
 
     // While we are here, we are also filterig the thread samples
     // to range.
     if (PIIToBeRemoved.shouldFilterToCommittedRange !== null) {
       const { start, end } = PIIToBeRemoved.shouldFilterToCommittedRange;
-      thread = (filterThreadSamplesToRange(thread, start, end): any);
+      newThread = filterThreadSamplesToRange(thread, start, end);
+    } else {
+      // Copying the thread even if we don't filter samples because we are gonna
+      // change some fields later.
+      newThread = { ...thread };
     }
+  } else {
+    // Copying the thread even if we don't filter samples because we are gonna
+    // change some fields later.
+    newThread = { ...thread };
   }
 
   // This is expensive but needs to be done somehow.
@@ -1250,9 +1266,11 @@ function sanitizeThreadPII(
     }
   }
 
-  // Remove the old stringTable and replace it with new updated one.
-  thread.stringTable = new UniqueStringArray(stringArray);
-  return thread;
+  // Remove the old stringTable and markerTable and replace it
+  // with new updated ones.
+  newThread.stringTable = new UniqueStringArray(stringArray);
+  newThread.markers = markerTable;
+  return newThread;
 }
 
 /**

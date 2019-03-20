@@ -165,9 +165,9 @@ export type TrackIndex = number;
  */
 export type RemoveProfileInformation = {
   // Remove the given hidden threads if they are provided.
-  shouldRemoveThreads: ThreadIndex[],
+  shouldRemoveThreads: Set<ThreadIndex>,
   // Remove the screenshots if they are provided.
-  shouldRemoveThreadsWithScreenshots: ThreadIndex[],
+  shouldRemoveThreadsWithScreenshots: Set<ThreadIndex>,
   // Remove the full time range if StartEndRange is provided.
   shouldFilterToCommittedRange: StartEndRange | null,
   // Remove all the network URLs if it's true.
