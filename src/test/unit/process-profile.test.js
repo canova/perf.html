@@ -258,18 +258,26 @@ describe('serializeProfile', function() {
 });
 
 describe('sanitizePII', function() {
-  it('should sanitize the threads if they are provided', function() {
-    const profile = processProfile(createGeckoProfile());
-    // There are 3 threads in the beginning.
-    expect(profile.threads.length).toEqual(3);
-    const PIIToRemove: RemoveProfileInformation = {
-      shouldRemoveThreads: [0, 2], // testing this
-      shouldRemoveThreadsWithScreenshots: [],
+  function getRemoveProfileInformation(
+    customFields: Object
+  ): RemoveProfileInformation {
+    return {
+      shouldRemoveThreads: new Set(),
+      shouldRemoveThreadsWithScreenshots: new Set(),
       shouldRemoveNetworkUrls: false,
       shouldRemoveAllUrls: false,
       shouldFilterToCommittedRange: null,
       shouldRemoveExtensions: false,
+      ...customFields,
     };
+  }
+  it('should sanitize the threads if they are provided', function() {
+    const profile = processProfile(createGeckoProfile());
+    // There are 3 threads in the beginning.
+    expect(profile.threads.length).toEqual(3);
+    const PIIToRemove = getRemoveProfileInformation({
+      shouldRemoveThreads: new Set([0, 2]),
+    });
 
     const sanitizedProfile = sanitizePII(profile, PIIToRemove);
     // First and last threads are removed and now there are only 1 thread.
@@ -290,14 +298,9 @@ describe('sanitizePII', function() {
     }
     expect(screenshotMarkerFound).toEqual(true);
 
-    const PIIToRemove: RemoveProfileInformation = {
-      shouldRemoveThreads: [],
-      shouldRemoveThreadsWithScreenshots: [0, 1, 2], // testing this
-      shouldRemoveNetworkUrls: false,
-      shouldRemoveAllUrls: false,
-      shouldFilterToCommittedRange: null,
-      shouldRemoveExtensions: false,
-    };
+    const PIIToRemove = getRemoveProfileInformation({
+      shouldRemoveThreadsWithScreenshots: new Set([0, 1, 2]),
+    });
 
     const sanitizedProfile = sanitizePII(profile, PIIToRemove);
     screenshotMarkerFound = false;
@@ -319,14 +322,9 @@ describe('sanitizePII', function() {
       expect(page.url.includes('http')).toBe(true);
     }
 
-    const PIIToRemove: RemoveProfileInformation = {
-      shouldRemoveThreads: [],
-      shouldRemoveThreadsWithScreenshots: [],
-      shouldRemoveNetworkUrls: true, // testing this
-      shouldRemoveAllUrls: false,
-      shouldFilterToCommittedRange: null,
-      shouldRemoveExtensions: false,
-    };
+    const PIIToRemove = getRemoveProfileInformation({
+      shouldRemoveNetworkUrls: true,
+    });
 
     const sanitizedProfile = sanitizePII(profile, PIIToRemove);
     for (const page of ensureExists(sanitizedProfile.pages)) {
@@ -336,14 +334,9 @@ describe('sanitizePII', function() {
 
   it('should sanitize the network URLS', function() {
     const profile = processProfile(createGeckoProfile());
-    const PIIToRemove: RemoveProfileInformation = {
-      shouldRemoveThreads: [],
-      shouldRemoveThreadsWithScreenshots: [],
-      shouldRemoveNetworkUrls: true, // testing this
-      shouldRemoveAllUrls: false,
-      shouldFilterToCommittedRange: null,
-      shouldRemoveExtensions: false,
-    };
+    const PIIToRemove = getRemoveProfileInformation({
+      shouldRemoveNetworkUrls: true,
+    });
 
     const sanitizedProfile = sanitizePII(profile, PIIToRemove);
     for (const thread of sanitizedProfile.threads) {
@@ -364,16 +357,11 @@ describe('sanitizePII', function() {
     }
   });
 
-  it('should sanitize the network URLS', function() {
+  it('should sanitize all the URLS', function() {
     const profile = processProfile(createGeckoProfile());
-    const PIIToRemove: RemoveProfileInformation = {
-      shouldRemoveThreads: [],
-      shouldRemoveThreadsWithScreenshots: [],
-      shouldRemoveNetworkUrls: false,
-      shouldRemoveAllUrls: true, // testing this
-      shouldFilterToCommittedRange: null,
-      shouldRemoveExtensions: false,
-    };
+    const PIIToRemove = getRemoveProfileInformation({
+      shouldRemoveAllUrls: true,
+    });
 
     const sanitizedProfile = sanitizePII(profile, PIIToRemove);
     for (const thread of sanitizedProfile.threads) {
@@ -398,14 +386,9 @@ describe('sanitizePII', function() {
       expect(extensions.name.length).toEqual(3);
       expect(extensions.baseURL.length).toEqual(3);
     }
-    const PIIToRemove: RemoveProfileInformation = {
-      shouldRemoveThreads: [],
-      shouldRemoveThreadsWithScreenshots: [],
-      shouldRemoveNetworkUrls: false,
-      shouldRemoveAllUrls: false,
-      shouldFilterToCommittedRange: null,
+    const PIIToRemove = getRemoveProfileInformation({
       shouldRemoveExtensions: true,
-    };
+    });
 
     const sanitizedProfile = sanitizePII(profile, PIIToRemove);
     expect(sanitizedProfile.meta.extensions).not.toEqual(undefined);

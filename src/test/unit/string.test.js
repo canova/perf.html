@@ -8,17 +8,17 @@ import { removeURLs } from '../../utils/string';
 
 describe('utils/string', function() {
   describe('removeURLs', function() {
-    it('should remove the URLs successfully', () => {
-      // Basic URLs
+    it('should remove the basic URLs successfully', () => {
       let string = 'https://foo.com/';
       expect(removeURLs(string)).toEqual('https://<URL>');
       string = 'http://foo.com/';
       expect(removeURLs(string)).toEqual('http://<URL>');
       string = 'ftp://foo.com/';
       expect(removeURLs(string)).toEqual('ftp://<URL>');
+    });
 
-      // Different kind of URLs
-      string = 'http://foo.com/bar';
+    it('should remove the different kind of URLs successfully', () => {
+      let string = 'http://foo.com/bar';
       expect(removeURLs(string)).toEqual('http://<URL>');
       string = 'http://foo.com/bar/';
       expect(removeURLs(string)).toEqual('http://<URL>');
@@ -56,30 +56,35 @@ describe('utils/string', function() {
       expect(removeURLs(string)).toEqual('http://<URL>');
       string = 'https://foo_bar.baz.com/';
       expect(removeURLs(string)).toEqual('https://<URL>');
+    });
 
-      // Basic URL with a text before it
-      string = 'Load 123: https://foo.com/';
+    it('should remove the URLs with texts around it successfully', () => {
+      // URL with a text before it
+      let string = 'Load 123: https://foo.com/';
       expect(removeURLs(string)).toEqual('Load 123: https://<URL>');
 
-      // Basic URL with a text after it
+      // URL with a text after it
       string = 'https://foo.com/ bar baz';
       expect(removeURLs(string)).toEqual('https://<URL> bar baz');
 
-      // Basic URL with texts before and after it
+      // URL with texts before and after it
       string = 'foo https://bar.com/ baz';
       expect(removeURLs(string)).toEqual('foo https://<URL> baz');
+    });
 
-      // Basic URL inside parentheses
-      string = '(https://foo.com/)';
+    it('should remove the URL inside parentheses successfully', () => {
+      const string = '(https://foo.com/)';
       expect(removeURLs(string)).toEqual('(https://<URL>)');
+    });
 
-      // URL with file extension and multiple querystrings
-      string =
+    it('should remove the URL with file extension and multiple querystrings successfully', () => {
+      const string =
         'https://px.image.com/test.gif?e=25&q=2&hp=1&kq=1&lo=1&ua=null&pk=1&wk=1&rk=1';
       expect(removeURLs(string)).toEqual('https://<URL>');
+    });
 
-      // Multiple URLs
-      string = 'https://foo.com/ http://bar.com/';
+    it('should remove the multiple URLs successfully', () => {
+      let string = 'https://foo.com/ http://bar.com/';
       expect(removeURLs(string)).toEqual('https://<URL> http://<URL>');
       string = 'https://foo.com/ - http://bar.com - ftp://baz.com/';
       expect(removeURLs(string)).toEqual(

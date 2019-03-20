@@ -700,69 +700,75 @@ describe('filterRawMarkerTableToRangeWithMarkersToDelete', () => {
 
   it('filters generic markers without markerToDelete', () => {
     const markers = [
-      ['0', 0, null],
-      ['1', 1, null],
-      ['2', 2, null],
-      ['3', 3, null],
-      ['4', 4, null],
-      ['5', 5, null],
-      ['6', 6, null],
-      ['7', 7, null],
+      ['A', 0, null],
+      ['B', 1, null],
+      ['C', 2, null],
+      ['D', 3, null],
+      ['E', 4, null],
+      ['F', 5, null],
+      ['G', 6, null],
+      ['H', 7, null],
     ];
-    const { markers: markerTable } = setup(markers);
+    const { markers: markerTable, stringTable } = setup(markers);
     const filteredMarkerTable = filterRawMarkerTableToRangeWithMarkersToDelete(
       markerTable,
-      [],
+      new Set(),
       { start: 2.3, end: 5.6 }
+    ).rawMarkerTable;
+    const filteredMarkerNames = filteredMarkerTable.name.map(stringIndex =>
+      stringTable.getString(stringIndex)
     );
-    // Note: because the test fixture utility adds the strings in order, the
-    // string indices are actually the same as the name themselves, which make
-    // it possible to do an easy and readable assertion.
-    expect(filteredMarkerTable.name).toEqual([3, 4, 5]);
+    expect(filteredMarkerNames).toEqual(['D', 'E', 'F']);
   });
 
   it('filters generic markers with markerToDelete', () => {
     const markers = [
-      ['0', 0, null],
-      ['1', 1, null],
-      ['2', 2, null],
-      ['3', 3, null],
-      ['4', 4, null],
-      ['5', 5, null],
-      ['6', 6, null],
-      ['7', 7, null],
+      ['A', 0, null],
+      ['B', 1, null],
+      ['C', 2, null],
+      ['D', 3, null],
+      ['E', 4, null],
+      ['F', 5, null],
+      ['G', 6, null],
+      ['H', 7, null],
     ];
 
-    const { markers: markerTable } = setup(markers);
-    const markersToDelete = [3, 5];
+    const { markers: markerTable, stringTable } = setup(markers);
+    const markersToDelete = new Set([3, 5]);
     const filteredMarkerTable = filterRawMarkerTableToRangeWithMarkersToDelete(
       markerTable,
       markersToDelete,
       { start: 2.3, end: 5.6 }
-    );
+    ).rawMarkerTable;
 
-    expect(filteredMarkerTable.name).toEqual([4]);
+    const filteredMarkerNames = filteredMarkerTable.name.map(stringIndex =>
+      stringTable.getString(stringIndex)
+    );
+    expect(filteredMarkerNames).toEqual(['E']);
   });
 
   it('filters generic markers with markerToDelete but without time range', () => {
     const markers = [
-      ['0', 0, null],
-      ['1', 1, null],
-      ['2', 2, null],
-      ['3', 3, null],
-      ['4', 4, null],
-      ['5', 5, null],
-      ['6', 6, null],
-      ['7', 7, null],
+      ['A', 0, null],
+      ['B', 1, null],
+      ['C', 2, null],
+      ['D', 3, null],
+      ['E', 4, null],
+      ['F', 5, null],
+      ['G', 6, null],
+      ['H', 7, null],
     ];
-    const { markers: markerTable } = setup(markers);
-    const markersToDelete = [2, 3, 5, 7];
+    const { markers: markerTable, stringTable } = setup(markers);
+    const markersToDelete = new Set([2, 3, 5, 7]);
     const filteredMarkerTable = filterRawMarkerTableToRangeWithMarkersToDelete(
       markerTable,
       markersToDelete,
       null
-    );
+    ).rawMarkerTable;
 
-    expect(filteredMarkerTable.name).toEqual([0, 1, 4, 6]);
+    const filteredMarkerNames = filteredMarkerTable.name.map(stringIndex =>
+      stringTable.getString(stringIndex)
+    );
+    expect(filteredMarkerNames).toEqual(['A', 'B', 'E', 'G']);
   });
 });
