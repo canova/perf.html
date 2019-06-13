@@ -360,7 +360,7 @@ describe('actions/receive-profile', function() {
           additionalData: { attempt: null, message: errorMessage },
         }, // when the error happens
         { phase: 'INITIALIZING' }, // when we could connect to the addon but waiting for the profile
-        { phase: 'DATA_LOADED' }, // yay, we got a profile!
+        { phase: 'PROFILE_LOADED' }, // yay, we got a profile!
       ]);
 
       const state = store.getState();
@@ -469,6 +469,7 @@ describe('actions/receive-profile', function() {
             message: errorMessage,
           },
         },
+        { phase: 'PROFILE_LOADED' },
         { phase: 'DATA_LOADED' },
       ]);
 
@@ -583,6 +584,7 @@ describe('actions/receive-profile', function() {
             message: errorMessage,
           },
         },
+        { phase: 'PROFILE_LOADED' },
         { phase: 'DATA_LOADED' },
       ]);
 
