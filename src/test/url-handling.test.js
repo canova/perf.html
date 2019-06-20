@@ -11,15 +11,21 @@ import {
   changeMarkersSearchString,
   changeNetworkSearchString,
   changeProfileName,
+  addTransformToStack,
 } from '../actions/profile-view';
-import { changeSelectedTab, changeProfilesToCompare } from '../actions/app';
+import {
+  changeSelectedTab,
+  changeProfilesToCompare,
+  updateUrlState,
+} from '../actions/app';
 import {
   stateFromLocation,
   urlStateToUrlObject,
   urlFromState,
   CURRENT_URL_VERSION,
+  upgradeLocationToCurrentVersion,
 } from '../app-logic/url-handling';
-import { blankStore } from './fixtures/stores';
+import { blankStore, storeWithProfile } from './fixtures/stores';
 import { viewProfile } from '../actions/receive-profile';
 import type { Profile } from '../types/profile';
 import getProfile from './fixtures/profiles/call-nodes';
@@ -30,6 +36,8 @@ import {
 } from './fixtures/profiles/tracks';
 import { getProfileFromTextSamples } from './fixtures/profiles/processed-profile';
 import { selectedThreadSelectors } from '../selectors/per-thread';
+import { uintArrayToString } from '../utils/uintarray-encoding';
+import { serializeProfile } from '../profile-logic/process-profile';
 
 function _getStoreWithURL(
   settings: {
@@ -435,6 +443,217 @@ describe('url upgrading', function() {
         v: 2,
       });
       expect(urlStateReducers.getImplementationFilter(getState())).toBe('js');
+    });
+  });
+
+  describe('version 4: transforms todo: write something', function() {
+    it('todo: write someting', function() {
+      // todo: remove the dots before js
+      const {
+        profile,
+        funcNamesDictPerThread: [funcNamesDictPerThread],
+      } = getProfileFromTextSamples(`
+        A
+        B.js
+        C.js
+        DrelevantForJs
+        E
+        F
+        G.js
+      `);
+
+      profile.threads[0].funcTable.relevantForJS[
+        funcNamesDictPerThread['DrelevantForJs']
+      ] = true;
+
+      console.log(serializeProfile(profile));
+
+      const callNodePathBefore = [
+        funcNamesDictPerThread['B.js'],
+        funcNamesDictPerThread['C.js'],
+        funcNamesDictPerThread['G.js'],
+      ];
+
+      // Upgrader
+      const callNodeString = uintArrayToString(callNodePathBefore);
+      const transformString = 'f-js-' + callNodeString;
+      const { query } = upgradeLocationToCurrentVersion(
+        {
+          pathname: '',
+          hash: '',
+          query: {
+            thread: '0',
+            implementation: 'js',
+            transforms: transformString,
+            v: '3',
+          },
+        },
+        profile
+      );
+
+      const callNodePathAfter = [
+        funcNamesDictPerThread['B.js'],
+        funcNamesDictPerThread['C.js'],
+        funcNamesDictPerThread['DrelevantForJs'],
+        funcNamesDictPerThread['G.js'],
+      ];
+
+      const newTransformNodeString = 'f-js-' + uintArrayToString(callNodePathAfter);
+      expect(query.transforms).toEqual(newTransformNodeString);
+    });
+
+    it('todo: write someting 2', function() {
+      // todo: remove the dots before js
+      const {
+        profile,
+        funcNamesDictPerThread: [funcNamesDictPerThread],
+      } = getProfileFromTextSamples(`
+        A
+        BrelevantForJs
+        C.js
+        D
+        E.js
+      `);
+
+      profile.threads[0].funcTable.relevantForJS[
+        funcNamesDictPerThread['BrelevantForJs']
+      ] = true;
+
+      console.log(serializeProfile(profile));
+
+      const callNodePathBefore = [
+        funcNamesDictPerThread['C.js'],
+        funcNamesDictPerThread['E.js'],
+      ];
+
+      // Upgrader
+      const callNodeString = uintArrayToString(callNodePathBefore);
+      const transformString = 'f-js-' + callNodeString;
+      const { query } = upgradeLocationToCurrentVersion(
+        {
+          pathname: '',
+          hash: '',
+          query: {
+            thread: '0',
+            implementation: 'js',
+            transforms: transformString,
+            v: '3',
+          },
+        },
+        profile
+      );
+
+      const callNodePathAfter = [
+        funcNamesDictPerThread['BrelevantForJs'],
+        funcNamesDictPerThread['C.js'],
+        funcNamesDictPerThread['E.js'],
+      ];
+
+      const newTransformNodeString = 'f-js-' + uintArrayToString(callNodePathAfter);
+      expect(query.transforms).toEqual(newTransformNodeString);
+    });
+
+    it('todo: write someting 3', function() {
+      // todo: remove the dots before js
+      const {
+        profile,
+        funcNamesDictPerThread: [funcNamesDictPerThread],
+      } = getProfileFromTextSamples(`
+        A
+        BrelevantForJs
+        C
+        D.js
+        E
+        F.js
+      `);
+
+      profile.threads[0].funcTable.relevantForJS[
+        funcNamesDictPerThread['BrelevantForJs']
+      ] = true;
+
+      console.log(serializeProfile(profile));
+
+      const callNodePathBefore = [
+        funcNamesDictPerThread['D.js'],
+        funcNamesDictPerThread['F.js'],
+      ];
+
+      // Upgrader
+      const callNodeString = uintArrayToString(callNodePathBefore);
+      const transformString = 'f-js-' + callNodeString;
+      const { query } = upgradeLocationToCurrentVersion(
+        {
+          pathname: '',
+          hash: '',
+          query: {
+            thread: '0',
+            implementation: 'js',
+            transforms: transformString,
+            v: '3',
+          },
+        },
+        profile
+      );
+
+      const callNodePathAfter = [
+        funcNamesDictPerThread['BrelevantForJs'],
+        funcNamesDictPerThread['D.js'],
+        funcNamesDictPerThread['F.js'],
+      ];
+
+      const newTransformNodeString = 'f-js-' + uintArrayToString(callNodePathAfter);
+      expect(query.transforms).toEqual(newTransformNodeString);
+    });
+
+    it('todo: write someting 4', function() {
+      // todo: remove the dots before js
+      const {
+        profile,
+        funcNamesDictPerThread: [funcNamesDictPerThread],
+      } = getProfileFromTextSamples(`
+        A               A
+        B.js            B.js
+        H               CrelevantForJs
+        D               D
+        G.js            E.js
+      `);
+
+      profile.threads[0].funcTable.relevantForJS[
+        funcNamesDictPerThread['CrelevantForJs']
+      ] = true;
+
+      console.log(serializeProfile(profile));
+
+      const callNodePathBefore = [
+        funcNamesDictPerThread['B.js'],
+        funcNamesDictPerThread['E.js'],
+      ];
+
+      // Upgrader
+      const callNodeString = uintArrayToString(callNodePathBefore);
+      const transformString = 'f-js-' + callNodeString;
+      const { query } = upgradeLocationToCurrentVersion(
+        {
+          pathname: '',
+          hash: '',
+          query: {
+            thread: '0',
+            implementation: 'js',
+            transforms: transformString,
+            v: '3',
+          },
+        },
+        profile
+      );
+
+      const callNodePathAfter = [
+        funcNamesDictPerThread['B.js'],
+        funcNamesDictPerThread['CrelevantForJs'],
+        funcNamesDictPerThread['E.js'],
+      ];
+
+      const newTransformNodeString = 'f-js-' + uintArrayToString(callNodePathAfter);
+      expect(query.transforms).toEqual(newTransformNodeString);
     });
   });
 

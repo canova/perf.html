@@ -16,10 +16,10 @@ import { assertExhaustiveCheck, toValidTabSlug } from '../utils/flow';
 import { oneLine } from 'common-tags';
 import type { UrlState } from '../types/state';
 import type { DataSource } from '../types/actions';
-import type { Pid } from '../types/profile';
+import type { Pid, Profile } from '../types/profile';
 import type { TrackIndex } from '../types/profile-derived';
 
-export const CURRENT_URL_VERSION = 3;
+export const CURRENT_URL_VERSION = 4;
 
 /**
  * This static piece of state might look like an anti-pattern, but it's a relatively
@@ -298,14 +298,20 @@ type Location = {
   hash: string,
 };
 
-export function stateFromLocation(location: Location): UrlState {
-  const { pathname, query } = upgradeLocationToCurrentVersion({
-    pathname: location.pathname,
-    hash: location.hash,
-    query: queryString.parse(location.search.substr(1), {
-      arrayFormat: 'bracket', // This uses parameters with brackets for arrays.
-    }),
-  });
+export function stateFromLocation(
+  location: Location,
+  profile?: Profile
+): UrlState {
+  const { pathname, query } = upgradeLocationToCurrentVersion(
+    {
+      pathname: location.pathname,
+      hash: location.hash,
+      query: queryString.parse(location.search.substr(1), {
+        arrayFormat: 'bracket', // This uses parameters with brackets for arrays.
+      }),
+    },
+    profile
+  );
 
   const pathParts = pathname.split('/').filter(d => d);
   const dataSource = getDataSourceFromPathParts(pathParts);
@@ -438,7 +444,8 @@ type ProcessedLocationBeforeUpgrade = {|
 |};
 
 export function upgradeLocationToCurrentVersion(
-  processedLocation: ProcessedLocationBeforeUpgrade
+  processedLocation: ProcessedLocationBeforeUpgrade,
+  profile?: Profile
 ): ProcessedLocation {
   const urlVersion = +processedLocation.query.v || 0;
   if (urlVersion === CURRENT_URL_VERSION) {
@@ -459,7 +466,7 @@ export function upgradeLocationToCurrentVersion(
     destVersion++
   ) {
     if (destVersion in _upgraders) {
-      _upgraders[destVersion](processedLocation);
+      _upgraders[destVersion](processedLocation, profile);
     }
   }
 
@@ -471,7 +478,7 @@ export function upgradeLocationToCurrentVersion(
 // Every "upgrader" takes the processedLocation as its single argument and mutates it.
 /* eslint-disable no-useless-computed-key */
 const _upgraders = {
-  [0]: (processedLocation: ProcessedLocationBeforeUpgrade) => {
+  [0]: (processedLocation: ProcessedLocationBeforeUpgrade, _: Profile) => {
     // Version 1 is the first versioned url.
 
     // If the pathname is '/', this could be a very old URL that has its information
@@ -497,7 +504,7 @@ const _upgraders = {
       processedLocation.query.implementation = 'js';
     }
   },
-  [1]: (processedLocation: ProcessedLocationBeforeUpgrade) => {
+  [1]: (processedLocation: ProcessedLocationBeforeUpgrade, _: Profile) => {
     // The transform stack was added. Convert the callTreeFilters into the new
     // transforms format.
     if (processedLocation.query.callTreeFilters) {
@@ -525,7 +532,7 @@ const _upgraders = {
       delete processedLocation.query.callTreeFilters;
     }
   },
-  [2]: (processedLocation: ProcessedLocationBeforeUpgrade) => {
+  [2]: (processedLocation: ProcessedLocationBeforeUpgrade, _: Profile) => {
     // Map the tab "timeline" to "stack-chart".
     // Map the tab "markers" to "marker-table".
     processedLocation.pathname = processedLocation.pathname
@@ -536,13 +543,133 @@ const _upgraders = {
       // Matches:  $1^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       .replace(/^(\/[^/]+\/[^/]+)\/markers\/?/, '$1/marker-table/');
   },
-  [3]: (processedLocation: ProcessedLocationBeforeUpgrade) => {
+  [3]: (processedLocation: ProcessedLocationBeforeUpgrade, _: Profile) => {
     const { query } = processedLocation;
     // Removed "Hide platform details" checkbox from the stack chart.
     if ('hidePlatformDetails' in query) {
       delete query.hidePlatformDetails;
       query.implementation = 'js';
     }
+  },
+  [4]: (
+    processedLocation: ProcessedLocationBeforeUpgrade,
+    profile: Profile
+  ) => {
+    const query = processedLocation.query;
+    const selectedThread = query.thread !== undefined ? +query.thread : null;
+    const transforms = query.transforms
+      ? parseTransforms(query.transforms)
+      : [];
+
+    if (transforms.length === 0) {
+      // We don't have any transforms to upgrade.
+      return;
+    }
+
+    if (selectedThread === null) {
+      return;
+    }
+
+    console.log('upgrader 4 ', profile, selectedThread, query.transforms, transforms);
+    const thread = profile.threads[selectedThread];
+    // TODO: Check this if it's correct.
+    for (let i = 0; i < transforms.length; i++) {
+      const transform = transforms[i];
+      if (
+        !transform.implementation ||
+        transform.implementation !== 'js' ||
+        !transform.callNodePath
+      ) {
+        // Only transfroms with JS implementation filters that have callNodePaths
+        // need to be upgraded.
+        continue;
+      }
+
+      let newCallNodePath = [];
+      // let callNodeIndex = 0;
+      const depthAtCallNodePathLeaf = transform.callNodePath.length - 1;
+      // let doesMatchCallNodePath = [];
+      const stackMatches = [];
+      const stackDepths = [];
+
+      for (
+        let stackIndex = 0;
+        stackIndex < thread.stackTable.length;
+        stackIndex++
+      ) {
+        const frameIndex = thread.stackTable.frame[stackIndex];
+        const prefix = thread.stackTable.prefix[stackIndex];
+        const funcIndex = thread.frameTable.func[frameIndex];
+        const isJS = thread.funcTable.isJS[funcIndex];
+        const relevantForJS = thread.funcTable.relevantForJS[funcIndex];
+        console.log('new stack ', stackIndex, prefix, funcIndex, isJS, relevantForJS);
+
+        const doesPrefixMatch = prefix === null ? true : stackMatches[prefix];
+        const prefixDepth = prefix === null ? -1 : stackDepths[prefix];
+        const currentFuncOnPath = transform.callNodePath[prefixDepth + 1];
+        let stackDepth = prefixDepth;
+
+        if (!doesPrefixMatch) {
+          console.log('prefix does not match');
+          stackMatches[stackIndex] = false;
+          stackDepths[stackIndex] = -1;
+          newCallNodePath = [];
+          continue;
+        }
+
+        if (!isJS && !relevantForJS) {
+          console.log('cpp frame');
+          stackMatches[stackIndex] = true;
+          stackDepths[stackIndex] = prefixDepth;
+          continue;
+        }
+
+        let doesMatchCallNodePath;
+        if (stackDepth < depthAtCallNodePathLeaf) {
+          // This stack's prefixes were in our CallNodePath.
+          if (currentFuncOnPath === funcIndex || relevantForJS) {
+            // This stack's function matches too!
+            console.log('matches');
+            doesMatchCallNodePath = true;
+            newCallNodePath.push(funcIndex);
+
+            if (!relevantForJS) {
+              console.log('js');
+              // Since we found a match, increase the stack depth. This should match
+              // the depth of the implementation filtered stacks.
+              stackDepth++;
+            } else {
+              console.log('relevant for js');
+            }
+            if (stackDepth === depthAtCallNodePathLeaf) {
+              console.log('finished');
+              // we are finished
+              break;
+              // console.log('canova matches ', newCallNodePath);
+              // newCallNodePath = [];
+            }
+          } else {
+            console.log('stack does not match');
+            // While all of the predecessors matched, this stack's function does not :(
+            doesMatchCallNodePath = false;
+            stackDepth = -1;
+            newCallNodePath = [];
+          }
+        } else {
+          console.log('wuut');
+          // This stack is not part of a matching branch of the tree.
+          doesMatchCallNodePath = false;
+          stackDepth = -1;
+        }
+        stackMatches[stackIndex] = doesMatchCallNodePath;
+        stackDepths[stackIndex] = stackDepth;
+      }
+      console.log('canova new call node path', newCallNodePath);
+      transform.callNodePath = newCallNodePath;
+    }
+
+    console.log('new transforms', transforms);
+    processedLocation.query.transforms = stringifyTransforms(transforms);
   },
 };
 
