@@ -77,6 +77,123 @@ process: \\"tab\\" (222)"
       class="timelineTrack timelineTrackLocal"
     >
       <div
+        class="timelineTrackRow timelineTrackLocalRow"
+      >
+        <div
+          class="react-contextmenu-wrapper timelineTrackLabel timelineTrackLocalLabel timelineTrackLocalGrippy"
+          title="Event Delay of thread: \\"GeckoMain\\" (0)
+process: \\"tab\\" (222)"
+        >
+          <button
+            class="timelineTrackNameButton"
+            type="button"
+          >
+            Content Process Event Delay
+          </button>
+        </div>
+        <div
+          class="timelineTrackTrack"
+        >
+          <div
+            class="timelineTrackMemory"
+            style="height: 40px;"
+          >
+            <div
+              class="timelineTrackMemoryGraph"
+            >
+              <canvas
+                class="timelineTrackMemoryCanvas"
+              />
+              <div
+                class="timelineEmptyThreadIndicator"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
+    <li
+      class="timelineTrack timelineTrackLocal"
+    >
+      <div
+        class="timelineTrackRow timelineTrackLocalRow selected"
+      >
+        <div
+          class="react-contextmenu-wrapper timelineTrackLabel timelineTrackLocalLabel timelineTrackLocalGrippy"
+          title="Event Delay of thread: \\"DOM Worker\\" (0)
+process: \\"tab\\" (222)"
+        >
+          <button
+            class="timelineTrackNameButton"
+            type="button"
+          >
+            DOM Worker Event Delay
+          </button>
+        </div>
+        <div
+          class="timelineTrackTrack"
+        >
+          <div
+            class="timelineTrackMemory"
+            style="height: 40px;"
+          >
+            <div
+              class="timelineTrackMemoryGraph"
+            >
+              <canvas
+                class="timelineTrackMemoryCanvas"
+              />
+              <div
+                class="timelineEmptyThreadIndicator"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
+    <li
+      class="timelineTrack timelineTrackLocal"
+    >
+      <div
+        class="timelineTrackRow timelineTrackLocalRow"
+      >
+        <div
+          class="react-contextmenu-wrapper timelineTrackLabel timelineTrackLocalLabel timelineTrackLocalGrippy"
+          title="Event Delay of thread: \\"Style\\" (0)
+process: \\"tab\\" (222)"
+        >
+          <button
+            class="timelineTrackNameButton"
+            type="button"
+          >
+            Style Event Delay
+          </button>
+        </div>
+        <div
+          class="timelineTrackTrack"
+        >
+          <div
+            class="timelineTrackMemory"
+            style="height: 40px;"
+          >
+            <div
+              class="timelineTrackMemoryGraph"
+            >
+              <canvas
+                class="timelineTrackMemoryCanvas"
+              />
+              <div
+                class="timelineEmptyThreadIndicator"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
+    <li
+      class="timelineTrack timelineTrackLocal"
+    >
+      <div
         class="timelineTrackRow timelineTrackLocalRow selected"
       >
         <div
@@ -201,6 +318,45 @@ exports[`timeline/GlobalTrack matches the snapshot of a global process track wit
   <ol
     class="timelineTrackLocalTracks"
   >
+    <li
+      class="timelineTrack timelineTrackLocal"
+    >
+      <div
+        class="timelineTrackRow timelineTrackLocalRow"
+      >
+        <div
+          class="react-contextmenu-wrapper timelineTrackLabel timelineTrackLocalLabel timelineTrackLocalGrippy"
+          title="Event Delay of thread: \\"NoMain\\" (0)
+process: \\"default\\" (5555)"
+        >
+          <button
+            class="timelineTrackNameButton"
+            type="button"
+          >
+            NoMain Event Delay
+          </button>
+        </div>
+        <div
+          class="timelineTrackTrack"
+        >
+          <div
+            class="timelineTrackMemory"
+            style="height: 40px;"
+          >
+            <div
+              class="timelineTrackMemoryGraph"
+            >
+              <canvas
+                class="timelineTrackMemoryCanvas"
+              />
+              <div
+                class="timelineEmptyThreadIndicator"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
     <li
       class="timelineTrack timelineTrackLocal"
     >

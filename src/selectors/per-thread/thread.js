@@ -272,6 +272,16 @@ export function getThreadSelectorsPerThread(threadIndex: ThreadIndex): * {
         : JsTracer.getJsTracerLeafTiming(jsTracerTable, stringTable)
   );
 
+  const getEventDelayStats: Selector<
+    Object | null
+  > = createSelector(
+    getSamplesTable,
+    samplesTable =>
+      getSamplesTable === null
+        ? null
+        : ProfileData.eventDelayStats(samplesTable)
+  );
+
   return {
     getThread,
     getStringTable,
@@ -295,5 +305,6 @@ export function getThreadSelectorsPerThread(threadIndex: ThreadIndex): * {
     getHasJsAllocations,
     getHasNativeAllocations,
     getCanShowRetainedMemory,
+    getEventDelayStats,
   };
 }

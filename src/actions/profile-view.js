@@ -292,6 +292,10 @@ export function selectTrack(trackReference: TrackReference): ThunkAction<void> {
           selectedThreadIndex = counter.mainThreadIndex;
           break;
         }
+        case 'event-delay': {
+          selectedThreadIndex = localTrack.threadIndex;
+          break;
+        }
         default:
           throw assertExhaustiveCheck(localTrack, `Unhandled LocalTrack type.`);
       }

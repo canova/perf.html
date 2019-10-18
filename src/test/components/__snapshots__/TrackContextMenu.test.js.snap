@@ -78,6 +78,14 @@ exports[`timeline/TrackContextMenu selected global track matches the snapshot of
       role="menuitem"
       tabindex="-1"
     >
+      Empty Event Delay
+    </div>
+    <div
+      aria-disabled="false"
+      class="react-contextmenu-item checkable indented checked"
+      role="menuitem"
+      tabindex="-1"
+    >
       Empty
     </div>
   </div>
@@ -133,6 +141,14 @@ exports[`timeline/TrackContextMenu selected global track matches the snapshot of
         )
       </span>
     </div>
+    <div
+      aria-disabled="false"
+      class="react-contextmenu-item checkable indented checked"
+      role="menuitem"
+      tabindex="-1"
+    >
+      GeckoMain Event Delay
+    </div>
   </div>
   <div>
     <div
@@ -155,6 +171,30 @@ exports[`timeline/TrackContextMenu selected global track matches the snapshot of
         222
         )
       </span>
+    </div>
+    <div
+      aria-disabled="false"
+      class="react-contextmenu-item checkable indented checked"
+      role="menuitem"
+      tabindex="-1"
+    >
+      Content Process Event Delay
+    </div>
+    <div
+      aria-disabled="false"
+      class="react-contextmenu-item checkable indented checked"
+      role="menuitem"
+      tabindex="-1"
+    >
+      DOM Worker Event Delay
+    </div>
+    <div
+      aria-disabled="false"
+      class="react-contextmenu-item checkable indented checked"
+      role="menuitem"
+      tabindex="-1"
+    >
+      Style Event Delay
     </div>
     <div
       aria-disabled="false"
@@ -217,6 +257,14 @@ exports[`timeline/TrackContextMenu selected local track matches the snapshot of 
         )
       </span>
     </div>
+    <div
+      aria-disabled="false"
+      class="react-contextmenu-item checkable indented checked"
+      role="menuitem"
+      tabindex="-1"
+    >
+      GeckoMain Event Delay
+    </div>
   </div>
   <div>
     <div
@@ -239,6 +287,30 @@ exports[`timeline/TrackContextMenu selected local track matches the snapshot of 
         222
         )
       </span>
+    </div>
+    <div
+      aria-disabled="false"
+      class="react-contextmenu-item checkable indented checked"
+      role="menuitem"
+      tabindex="-1"
+    >
+      Content Process Event Delay
+    </div>
+    <div
+      aria-disabled="false"
+      class="react-contextmenu-item checkable indented checked"
+      role="menuitem"
+      tabindex="-1"
+    >
+      DOM Worker Event Delay
+    </div>
+    <div
+      aria-disabled="false"
+      class="react-contextmenu-item checkable indented checked"
+      role="menuitem"
+      tabindex="-1"
+    >
+      Style Event Delay
     </div>
     <div
       aria-disabled="false"

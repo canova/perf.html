@@ -40,13 +40,13 @@ exports[`Timeline renders the header 1`] = `
     <span
       class="timelineSettingsHiddenTracksNumber"
     >
-      4
+      7
     </span>
      / 
     <span
       class="timelineSettingsHiddenTracksNumber"
     >
-      4
+      7
        
     </span>
     tracks visible
@@ -7501,6 +7501,210 @@ Array [
   Array [
     "set fillStyle",
     Object {},
+  ],
+  Array [
+    "clearRect",
+    0,
+    0,
+    300,
+    40,
+  ],
+  Array [
+    "set lineWidth",
+    2,
+  ],
+  Array [
+    "set strokeStyle",
+    "#ff9400",
+  ],
+  Array [
+    "set fillStyle",
+    "#ff940088",
+  ],
+  Array [
+    "beginPath",
+  ],
+  Array [
+    "moveTo",
+    0,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    33.333333333333336,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    66.66666666666667,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    100,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    133.33333333333334,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    166.66666666666666,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    200,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    233.33333333333334,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    266.6666666666667,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    267.6666666666667,
+    NaN,
+  ],
+  Array [
+    "stroke",
+  ],
+  Array [
+    "lineTo",
+    267.6666666666667,
+    40,
+  ],
+  Array [
+    "lineTo",
+    1,
+    40,
+  ],
+  Array [
+    "fill",
+  ],
+  Array [
+    "clearRect",
+    0,
+    0,
+    300,
+    40,
+  ],
+  Array [
+    "set lineWidth",
+    2,
+  ],
+  Array [
+    "set strokeStyle",
+    "#ff9400",
+  ],
+  Array [
+    "set fillStyle",
+    "#ff940088",
+  ],
+  Array [
+    "beginPath",
+  ],
+  Array [
+    "moveTo",
+    133.33333333333334,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    166.66666666666666,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    200,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    201,
+    NaN,
+  ],
+  Array [
+    "stroke",
+  ],
+  Array [
+    "lineTo",
+    201,
+    40,
+  ],
+  Array [
+    "lineTo",
+    134.33333333333334,
+    40,
+  ],
+  Array [
+    "fill",
+  ],
+  Array [
+    "clearRect",
+    0,
+    0,
+    300,
+    40,
+  ],
+  Array [
+    "set lineWidth",
+    2,
+  ],
+  Array [
+    "set strokeStyle",
+    "#ff9400",
+  ],
+  Array [
+    "set fillStyle",
+    "#ff940088",
+  ],
+  Array [
+    "beginPath",
+  ],
+  Array [
+    "moveTo",
+    133.33333333333334,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    166.66666666666666,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    200,
+    NaN,
+  ],
+  Array [
+    "lineTo",
+    201,
+    NaN,
+  ],
+  Array [
+    "stroke",
+  ],
+  Array [
+    "lineTo",
+    201,
+    40,
+  ],
+  Array [
+    "lineTo",
+    134.33333333333334,
+    40,
+  ],
+  Array [
+    "fill",
   ],
   Array [
     "clearRect",

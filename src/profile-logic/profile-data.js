@@ -1241,6 +1241,24 @@ export function accumulateCounterSamples(
   return accumulatedSamples;
 }
 
+export function eventDelayStats(
+  samples: SamplesTable
+): Object {
+  let minDelay = 0;
+  let maxDelay = 0;
+  // let accumulated = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const delay = samples.responsiveness[i];
+    if (delay) {
+      minDelay = Math.min(delay, minDelay);
+      maxDelay = Math.max(delay, maxDelay);
+    }
+  }
+  const delayRange = maxDelay - minDelay;
+
+  return { minDelay, maxDelay, delayRange };
+}
+
 // --------------- CallNodePath and CallNodeIndex manipulations ---------------
 
 // Returns a list of CallNodeIndex from CallNodePaths. This function uses a map
