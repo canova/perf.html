@@ -15,10 +15,7 @@ import Tooltip from '../tooltip/Tooltip';
 import EmptyThreadIndicator from './EmptyThreadIndicator';
 import bisection from 'bisection';
 
-import type {
-  Thread,
-  ThreadIndex,
-} from '../../types/profile';
+import type { Thread, ThreadIndex } from '../../types/profile';
 import type { Milliseconds, CssPixels, StartEndRange } from '../../types/units';
 import type { SizeProps } from '../shared/WithSize';
 import type { ConnectedProps } from '../../utils/connect';
@@ -35,8 +32,7 @@ type CanvasProps = {|
   +width: CssPixels,
   +height: CssPixels,
   +lineWidth: CssPixels,
-  +thread: Thread,
-  +eventDelayStats: Object,
+  +eventDelays: Object,
 |};
 
 /**
@@ -56,8 +52,7 @@ class TrackEventDelayCanvas extends React.PureComponent<CanvasProps> {
       width,
       lineWidth,
       interval,
-      thread,
-      eventDelayStats,
+      eventDelays,
     } = this.props;
     if (width === 0) {
       // This is attempting to draw before the canvas was laid out.
@@ -77,13 +72,12 @@ class TrackEventDelayCanvas extends React.PureComponent<CanvasProps> {
     canvas.height = Math.round(deviceHeight);
     ctx.clearRect(0, 0, deviceWidth, deviceHeight);
 
-    const { samples } = thread;
-    if (samples.length === 0) {
+    const { delays, delayRange, minTime } = eventDelays;
+
+    if (delays.length === 0) {
       // There's no reason to draw the samples, there are none.
       return;
     }
-
-    const { delayRange } = eventDelayStats;
 
     {
       // Draw the chart.
@@ -96,19 +90,19 @@ class TrackEventDelayCanvas extends React.PureComponent<CanvasProps> {
       // The x and y are used after the loop.
       let x = 0;
       let y = 0;
-      for (let i = 0; i < samples.length; i++) {
+      for (const [time, delay] of delays) {
         // Create a path for the top of the chart. This is the line that will have
         // a stroke applied to it.
-        x = (deviceWidth * (samples.time[i] - rangeStart)) / rangeLength;
+        x = (deviceWidth * (time - rangeStart)) / rangeLength;
         // Add on half the stroke's line width so that it won't be cut off the edge
         // of the graph.
         // FIXME: what to do when there is no event delay data? Currently defaulted to 0.
-        const unitGraphCount = (samples.responsiveness[i] || 0) / delayRange;
+        const unitGraphCount = (delay || 0) / delayRange;
         y =
           innerDeviceHeight -
           innerDeviceHeight * unitGraphCount +
           deviceLineHalfWidth;
-        if (i === 0) {
+        if (time === 0) {
           // This is the first iteration, only move the line.
           ctx.moveTo(x, y);
         } else {
@@ -126,7 +120,7 @@ class TrackEventDelayCanvas extends React.PureComponent<CanvasProps> {
       // of the canvas.
       ctx.lineTo(x + interval, deviceHeight);
       ctx.lineTo(
-        (deviceWidth * (samples.time[0] - rangeStart)) / rangeLength + interval,
+        (deviceWidth * (minTime - rangeStart)) / rangeLength + interval,
         deviceHeight
       );
       ctx.fill();
@@ -172,8 +166,7 @@ type StateProps = {|
   +interval: Milliseconds,
   +filteredThread: Thread,
   +unfilteredSamplesRange: StartEndRange | null,
-  +eventDelayStats: Object,
-  thread: Thread,
+  +eventDelays: Object,
 |};
 
 type DispatchProps = {||};
@@ -207,23 +200,22 @@ class TrackEventDelayGraphImpl extends React.PureComponent<Props, State> {
     const { pageX: mouseX, pageY: mouseY } = event;
     // Get the offset from here, and apply it to the time lookup.
     const { left } = event.currentTarget.getBoundingClientRect();
-    const { width, rangeStart, rangeEnd, interval, thread } = this.props;
+    const { width, rangeStart, rangeEnd, interval, eventDelays } = this.props;
     const rangeLength = rangeEnd - rangeStart;
     const timeAtMouse = rangeStart + ((mouseX - left) / width) * rangeLength;
-    const { samples } = thread;
-    if (
-      timeAtMouse < samples.time[0] ||
-      timeAtMouse > samples.time[samples.length - 1] + interval
-    ) {
+    const { delays, minTime } = eventDelays;
+    const lastKey = delays.keys()[delays.length - 1];
+    if (timeAtMouse < minTime || timeAtMouse > delays[lastKey] + interval) {
       // We are outside the range of the samples, do not display hover information.
       this.setState({ hoveredDelay: null });
     } else {
-      let hoveredDelay = bisection.right(samples.time, timeAtMouse);
-      if (hoveredDelay === samples.length) {
+      const delayTimes = delays.map(d => d[0]);
+      let hoveredDelay = bisection.right(delayTimes, timeAtMouse);
+      if (hoveredDelay === delayTimes.length) {
         // When hovering the last sample, it's possible the mouse is past the time.
         // In this case, hover over the last sample. This happens because of the
         // ` + interval` line in the `if` condition above.
-        hoveredDelay = samples.time.length - 1;
+        hoveredDelay = delays.length - 1;
       }
 
       this.setState({
@@ -235,14 +227,12 @@ class TrackEventDelayGraphImpl extends React.PureComponent<Props, State> {
   };
 
   _renderTooltip(delayIndex: number): React.Node {
-    const { delayRange } = this.props.eventDelayStats;
-    const eventDelays = this.props.thread.samples.responsiveness;
-    const delay = eventDelays[delayIndex] || 0;
+    const { delays, delayRange } = this.props.eventDelays;
     return (
       <div className="timelineTrackMemoryTooltip">
         <div className="timelineTrackMemoryTooltipLine">
           <span className="timelineTrackMemoryTooltipNumber">
-            {formatMilliseconds(delay)}
+            {formatMilliseconds(delays[delayIndex][1])}
           </span>
           {' event delay'}
         </div>
@@ -267,15 +257,13 @@ class TrackEventDelayGraphImpl extends React.PureComponent<Props, State> {
       graphHeight,
       width,
       lineWidth,
-      thread,
-      eventDelayStats,
+      eventDelays,
     } = this.props;
-    const { responsiveness: eventDelays, time } = thread.samples;
+    const { delayRange, delays } = eventDelays;
     const rangeLength = rangeEnd - rangeStart;
-    const left = (width * (time[delayIndex] - rangeStart)) / rangeLength;
+    const left = (width * (delays[delayIndex][0] - rangeStart)) / rangeLength;
 
-    const { delayRange } = eventDelayStats;
-    const unitSampleCount = (eventDelays[delayIndex] || 0) / delayRange;
+    const unitSampleCount = (delays[delayIndex][1] || 0) / delayRange;
     const innerTrackHeight = graphHeight - lineWidth / 2;
     const top =
       innerTrackHeight - unitSampleCount * innerTrackHeight + lineWidth / 2;
@@ -296,8 +284,7 @@ class TrackEventDelayGraphImpl extends React.PureComponent<Props, State> {
       graphHeight,
       width,
       lineWidth,
-      thread,
-      eventDelayStats,
+      eventDelays,
     } = this.props;
 
     return (
@@ -313,8 +300,7 @@ class TrackEventDelayGraphImpl extends React.PureComponent<Props, State> {
           width={width}
           lineWidth={lineWidth}
           interval={interval}
-          thread={thread}
-          eventDelayStats={eventDelayStats}
+          eventDelays={eventDelays}
         />
         {hoveredDelay === null ? null : (
           <>
@@ -347,13 +333,12 @@ export const TrackEventDelayGraph = explicitConnect<
     const selectors = getThreadSelectors(threadIndex);
     return {
       threadIndex: threadIndex,
-      thread: selectors.getThread(state),
       rangeStart: start,
       rangeEnd: end,
       interval: getProfileInterval(state),
       filteredThread: selectors.getFilteredThread(state),
       unfilteredSamplesRange: selectors.unfilteredSamplesRange(state),
-      eventDelayStats: selectors.getEventDelayStats(state),
+      eventDelays: selectors.getEventDelays(state),
     };
   },
   component: withSize<Props>(TrackEventDelayGraphImpl),

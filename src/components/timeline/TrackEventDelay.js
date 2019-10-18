@@ -13,7 +13,6 @@ import {
 } from '../../app-logic/constants';
 
 import type { ThreadIndex } from '../../types/profile';
-import type { Milliseconds } from '../../types/units';
 import type { ConnectedProps } from '../../utils/connect';
 
 import './TrackMemory.css';

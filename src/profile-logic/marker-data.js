@@ -48,46 +48,45 @@ import type { StartEndRange } from '../types/units';
 export function deriveJankMarkers(
   samples: SamplesTable,
   thresholdInMs: number,
+  eventDelays: Object,
   otherCategoryIndex: IndexIntoCategoryList
 ): Marker[] {
   const addMarker = () =>
     jankInstances.push({
-      start: lastTimestamp - lastResponsiveness,
-      dur: lastResponsiveness,
-      title: `${lastResponsiveness.toFixed(2)}ms event processing delay`,
+      start: startJank,
+      dur: j - startJank,
+      title: `${(j - startJank).toFixed(2)}ms event processing delay`,
       name: 'Jank',
       category: otherCategoryIndex,
       data: null,
     });
 
-  let lastResponsiveness: number = 0;
-  let lastTimestamp: number = 0;
   const jankInstances = [];
-  for (let i = 0; i < samples.length; i++) {
-    let currentResponsiveness;
-    if (samples.eventDelay) {
-      currentResponsiveness = samples.eventDelay[i];
-    } else if (samples.responsiveness) {
-      currentResponsiveness = samples.responsiveness[i];
-    }
+  const { delays, earliestSubmission, lastTimestamp } = eventDelays;
+  let j = 0;
 
-    if (currentResponsiveness === null || currentResponsiveness === undefined) {
-      // Ignore anything that's not numeric. This can happen if there is no responsiveness
-      // information, or if the sampler failed to collect a responsiveness value. This
-      // can happen intermittently.
-      //
-      // See Bug 1506226.
-      continue;
-    }
-    if (currentResponsiveness < lastResponsiveness) {
-      if (lastResponsiveness >= thresholdInMs) {
-        addMarker();
+  // Now look at the array of event delays and generate Jank markers
+  let inJank = false;
+  let startJank = 0;
+  const delayMap = new Map(delays);
+
+  for (
+    j = Math.trunc(earliestSubmission);
+    j <= Math.trunc(lastTimestamp);
+    j++
+  ) {
+    const delay = delayMap.get(j);
+    if (!inJank) {
+      if (delay && delay >= thresholdInMs) {
+        startJank = j;
+        inJank = true;
       }
+    } else if (delay && delay < thresholdInMs) {
+      addMarker();
+      inJank = false;
     }
-    lastResponsiveness = currentResponsiveness;
-    lastTimestamp = samples.time[i];
   }
-  if (lastResponsiveness >= thresholdInMs) {
+  if (inJank) {
     addMarker();
   }
   return jankInstances;

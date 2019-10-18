@@ -1241,14 +1241,51 @@ export function accumulateCounterSamples(
   return accumulatedSamples;
 }
 
-export function eventDelayStats(
-  samples: SamplesTable
-): Object {
+export function eventDelays(samples: SamplesTable): Object {
+  let lastTimestamp: number = samples.time[0];
+  let earliestSubmission: number = samples.time[0];
+  // eventDelays will be filled in using ms from earliestSubmission to the lasttimestamp
+  // using integer indexes
+  const eventDelays = new Map();
+
+  for (let i = 0; i < samples.length; i++) {
+    const currentResponsiveness = samples.responsiveness[i];
+    if (currentResponsiveness === null || currentResponsiveness === undefined) {
+      // Ignore anything that's not numeric. This can happen if there is no responsiveness
+      // information, or if the sampler failed to collect a responsiveness value. This
+      // can happen intermittently.
+      //
+      // See Bug 1506226.
+      // XXX see if this is still the case...
+      continue;
+    }
+
+    const effectiveSubmission = samples.time[i] - currentResponsiveness;
+    if (effectiveSubmission < earliestSubmission) {
+      earliestSubmission = effectiveSubmission;
+    }
+    const delta = samples.time[i] - lastTimestamp;
+
+    for (
+      let j = Math.trunc(effectiveSubmission);
+      j <= Math.trunc(samples.time[i]);
+      j++
+    ) {
+      let delay = eventDelays.get(j);
+      if (!delay) {
+        delay = 0;
+      }
+      delay += delta;
+      eventDelays.set(j, delay);
+    }
+
+    lastTimestamp = samples.time[i];
+  }
+
   let minDelay = 0;
   let maxDelay = 0;
-  // let accumulated = 0;
-  for (let i = 0; i < samples.length; i++) {
-    const delay = samples.responsiveness[i];
+
+  for (const [, delay] of eventDelays) {
     if (delay) {
       minDelay = Math.min(delay, minDelay);
       maxDelay = Math.max(delay, maxDelay);
@@ -1256,7 +1293,16 @@ export function eventDelayStats(
   }
   const delayRange = maxDelay - minDelay;
 
-  return { minDelay, maxDelay, delayRange };
+  return {
+    delays: [...eventDelays.entries()].sort(),
+    minDelay,
+    maxDelay,
+    delayRange,
+    minTime: samples.time[0],
+    maxTime: samples.time[samples.length - 1],
+    lastTimestamp,
+    earliestSubmission,
+  };
 }
 
 // --------------- CallNodePath and CallNodeIndex manipulations ---------------
