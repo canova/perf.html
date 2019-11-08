@@ -1293,8 +1293,12 @@ export function eventDelays(samples: SamplesTable): Object {
   }
   const delayRange = maxDelay - minDelay;
 
+  const delays = [...eventDelays.entries()].sort();
+  console.log('Raw event delays', samples.responsiveness);
+  console.log('Processed event delays', delays);
+
   return {
-    delays: [...eventDelays.entries()].sort(),
+    delays: delays,
     minDelay,
     maxDelay,
     delayRange,
