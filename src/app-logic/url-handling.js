@@ -26,6 +26,7 @@ import type {
   Profile,
   Thread,
   IndexIntoStackTable,
+  BrowsingContextID,
 } from '../types/profile';
 import type { TrackIndex, CallNodePath } from '../types/profile-derived';
 
@@ -99,6 +100,7 @@ type BaseQuery = {|
   hiddenThreads: string, // "0-1"
   profiles: string[],
   profileName: string,
+  showTabOnly: BrowsingContextID,
 |};
 
 type CallTreeQuery = {|
@@ -190,6 +192,7 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
     profiles: urlState.profilesToCompare || undefined,
     v: CURRENT_URL_VERSION,
     profileName: urlState.profileName || undefined,
+    showTabOnly: urlState.showTabOnly || undefined,
   };
 
   // Add the parameter hiddenGlobalTracks only when needed.
@@ -369,6 +372,7 @@ export function stateFromLocation(
     selectedTab: toValidTabSlug(pathParts[selectedTabPathPart]) || 'calltree',
     pathInZipFile: query.file || null,
     profileName: query.profileName,
+    showTabOnly: query.showTabOnly ? Number(query.showTabOnly) : null,
     profileSpecific: {
       implementation,
       lastSelectedCallTreeSummaryStrategy: toValidCallTreeSummaryStrategy(

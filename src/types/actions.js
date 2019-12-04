@@ -11,6 +11,7 @@ import type {
   ThreadIndex,
   IndexIntoFuncTable,
   Pid,
+  BrowsingContextID,
 } from './profile';
 import type {
   CallNodePath,
@@ -356,6 +357,10 @@ type UrlStateAction =
   | {|
       +type: 'SET_DATA_SOURCE',
       +dataSource: DataSource,
+    |}
+  | {|
+      +type: 'CHANGE_SHOW_TAB_ONLY',
+      +showTabOnly: BrowsingContextID | null,
     |};
 
 type IconsAction =
