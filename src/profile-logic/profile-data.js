@@ -1033,6 +1033,7 @@ export function filterThreadByTab(
 ): Thread {
   return timeCode('filterThreadByTab', () => {
     if (relevantPages.size === 0) {
+      // Either there is no relevant page or "active tab only" view is not active.
       return thread;
     }
 
