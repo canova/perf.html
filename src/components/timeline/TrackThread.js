@@ -61,6 +61,7 @@ type OwnProps = {|
 type StateProps = {|
   +fullThread: Thread,
   +filteredThread: Thread,
+  +tabFilteredThread: Thread,
   +callNodeInfo: CallNodeInfo,
   +selectedCallNodeIndex: IndexIntoCallNodeTable | null,
   +unfilteredSamplesRange: StartEndRange | null,
@@ -123,6 +124,7 @@ class TimelineTrackThread extends PureComponent<Props> {
     const {
       filteredThread,
       fullThread,
+      tabFilteredThread,
       threadIndex,
       interval,
       rangeStart,
@@ -195,6 +197,7 @@ class TimelineTrackThread extends PureComponent<Props> {
             className="threadStackGraph"
             interval={interval}
             thread={filteredThread}
+            tabFilteredThread={tabFilteredThread}
             rangeStart={rangeStart}
             rangeEnd={rangeEnd}
             callNodeInfo={callNodeInfo}
@@ -228,6 +231,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     return {
       filteredThread: selectors.getFilteredThread(state),
       fullThread: selectors.getRangeFilteredThread(state),
+      tabFilteredThread: selectors.getTabFilteredThread(state),
       callNodeInfo: selectors.getCallNodeInfo(state),
       selectedCallNodeIndex,
       unfilteredSamplesRange: selectors.unfilteredSamplesRange(state),

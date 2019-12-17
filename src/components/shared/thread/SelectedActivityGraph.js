@@ -50,6 +50,7 @@ type CanvasProps = {|
   +rangeEnd: Milliseconds,
   +fullThread: Thread,
   +filteredThread: Thread,
+  +tabFilteredThread: Thread,
   +callNodeInfo: CallNodeInfo,
   +selectedCallNodeIndex: IndexIntoCallNodeTable | null,
   +categories: CategoryList,
@@ -94,6 +95,7 @@ class SelectedThreadActivityGraphCanvas extends PureComponent<CanvasProps> {
     const {
       fullThread,
       filteredThread,
+      tabFilteredThread,
       interval,
       rangeStart,
       rangeEnd,
@@ -120,6 +122,7 @@ class SelectedThreadActivityGraphCanvas extends PureComponent<CanvasProps> {
         <ThreadStackGraph
           interval={interval}
           thread={filteredThread}
+          tabFilteredThread={tabFilteredThread}
           className="selectedThreadStackGraph"
           rangeStart={rangeStart}
           rangeEnd={rangeEnd}
@@ -156,6 +159,7 @@ type StateProps = {|
   +rangeEnd: Milliseconds,
   +fullThread: Thread,
   +filteredThread: Thread,
+  +tabFilteredThread: Thread,
   +callNodeInfo: CallNodeInfo,
   +selectedCallNodeIndex: IndexIntoCallNodeTable | null,
   +categories: CategoryList,
@@ -182,6 +186,7 @@ class SelectedThreadActivityGraph extends PureComponent<Props> {
       selectedThreadIndex,
       fullThread,
       filteredThread,
+      tabFilteredThread,
       rangeStart,
       rangeEnd,
       callNodeInfo,
@@ -202,6 +207,7 @@ class SelectedThreadActivityGraph extends PureComponent<Props> {
           selectedThreadIndex,
           fullThread,
           filteredThread,
+          tabFilteredThread,
           rangeStart,
           rangeEnd,
           callNodeInfo,
@@ -245,6 +251,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
       selectedThreadIndex: getSelectedThreadIndex(state),
       fullThread: selectedThreadSelectors.getRangeFilteredThread(state),
       filteredThread: selectedThreadSelectors.getFilteredThread(state),
+      tabFilteredThread: selectedThreadSelectors.getTabFilteredThread(state),
       rangeStart,
       rangeEnd,
       callNodeInfo: selectedThreadSelectors.getCallNodeInfo(state),
