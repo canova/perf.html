@@ -515,9 +515,11 @@ export const getIsLocalTrackHidden: DangerousSelectorWithArguments<
   );
 
   if (hiddenLocalTracks.has(trackIndex)) {
+    // Return early as hidden if that track is inside hidden tracks already.
     return true;
   }
 
+  // Check if we are in the "active tab only" mode and hide the local tracks depending on that.
   if (UrlState.getShowTabOnly(state)) {
     const tracks = ensureExists(
       getLocalTracksByPid(state).get(pid),
@@ -531,8 +533,28 @@ export const getIsLocalTrackHidden: DangerousSelectorWithArguments<
         // Hide those local track types because we want to hide as much as
         // possible from web developers for now.
         return true;
-      case 'thread':
-        break;
+      case 'thread': {
+        // We don't want to display empty tracks if the tab filtered version is empty.
+        const threadIndex = tracks[trackIndex].threadIndex;
+
+        // const threadSelectors = getThreadSelectors(threadIndex);
+        // const tabFilteredThread = threadSelectors.getTabFilteredThread(state);
+
+        // for (const stackIndex of tabFilteredThread.samples.stack) {
+        //   if (stackIndex !== null) {
+        //     return false;
+        //   }
+        // }
+
+        // const tabFilteredMarkers = threadSelectors.getCommittedRangeAndTabFilteredMarkerIndexes(
+        //   state,
+        //   false
+        // );
+
+        // console.log('canova filtered markers', tabFilteredMarkers);
+
+        return false;
+      }
       default:
         throw assertExhaustiveCheck(trackType, `Unhandled LocalTrack type.`);
     }

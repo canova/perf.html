@@ -191,12 +191,21 @@ export function getMarkerSelectorsPerThread(threadSelectors: *) {
    */
   const getCommittedRangeAndTabFilteredMarkerIndexes: Selector<
     MarkerIndex[]
-  > = createSelector(
-    getMarkerGetter,
-    getCommittedRangeFilteredMarkerIndexes,
-    ProfileSelectors.getRelevantPagesForActiveTab,
-    MarkerData.getTabFilteredMarkerIndexes
-  );
+  > = (includeGlobalMarkers: boolean = true) => {
+    return createSelector(
+      getMarkerGetter,
+      getCommittedRangeFilteredMarkerIndexes,
+      ProfileSelectors.getRelevantPagesForActiveTab,
+      (getMarker, markerIndexes, relevantPages) => {
+        return MarkerData.getTabFilteredMarkerIndexes(
+          getMarker,
+          markerIndexes,
+          relevantPages,
+          includeGlobalMarkers
+        );
+      }
+    );
+  };
 
   /**
    * This selector filters out markers that are usually too long to be displayed

@@ -166,7 +166,8 @@ export function getSearchFilteredMarkerIndexes(
 export function getTabFilteredMarkerIndexes(
   getMarker: MarkerIndex => Marker,
   markerIndexes: MarkerIndex[],
-  relevantPages: Set<InnerWindowID>
+  relevantPages: Set<InnerWindowID>,
+  includeGlobalMarkers: boolean
 ): MarkerIndex[] {
   if (relevantPages.size === 0) {
     return markerIndexes;
@@ -180,9 +181,11 @@ export function getTabFilteredMarkerIndexes(
     // We are checking those before and pushing those markers to the new array.
     // As of now, those markers are:
     // - Jank markers
-    if (name === 'Jank') {
-      newMarkers.push(markerIndex);
-      continue;
+    if (includeGlobalMarkers) {
+      if (name === 'Jank') {
+        newMarkers.push(markerIndex);
+        continue;
+      }
     }
 
     if (data && data.innerWindowID && relevantPages.has(data.innerWindowID)) {
