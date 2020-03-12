@@ -5,7 +5,6 @@
 // @flow
 import * as React from 'react';
 import {
-  TIMELINE_MARGIN_LEFT,
   TIMELINE_MARGIN_RIGHT,
   JS_TRACER_MAXIMUM_CHART_ZOOM,
 } from '../../app-logic/constants';
@@ -33,6 +32,7 @@ import {
   changeSelectedCallNode,
   changeRightClickedCallNode,
 } from '../../actions/profile-view';
+import { getTimelineMarginLeft } from '../../selectors/app';
 
 import { getCallNodePathFromIndex } from '../../profile-logic/profile-data';
 import type { Thread, CategoryList, PageList } from '../../types/profile';
@@ -70,6 +70,7 @@ type StateProps = {|
   +scrollToSelectionGeneration: number,
   +getMarker: MarkerIndex => Marker,
   +userTimings: MarkerIndex[],
+  +timelineMarginLeft: number,
 |};
 
 type DispatchProps = {|
@@ -152,6 +153,7 @@ class StackChartGraph extends React.PureComponent<Props> {
       pages,
       getMarker,
       userTimings,
+      timelineMarginLeft,
     } = this.props;
 
     const maxViewportHeight = maxStackDepth * STACK_FRAME_HEIGHT;
@@ -181,7 +183,7 @@ class StackChartGraph extends React.PureComponent<Props> {
                   timeRange,
                   maxViewportHeight,
                   viewportNeedsUpdate,
-                  marginLeft: TIMELINE_MARGIN_LEFT,
+                  marginLeft: timelineMarginLeft,
                   marginRight: TIMELINE_MARGIN_RIGHT,
                   maximumZoom: this.getMaximumZoom(),
                   containerRef: this._takeViewportRef,
@@ -206,6 +208,7 @@ class StackChartGraph extends React.PureComponent<Props> {
                   onRightClick: this._onRightClickedCallNodeChange,
                   shouldDisplayTooltips: this._shouldDisplayTooltips,
                   scrollToSelectionGeneration,
+                  timelineMarginLeft,
                 }}
               />
             </div>
@@ -243,6 +246,7 @@ export default explicitConnect<{||}, StateProps, DispatchProps>({
       pages: getPageList(state),
       getMarker: selectedThreadSelectors.getMarkerGetter(state),
       userTimings: selectedThreadSelectors.getUserTimingMarkerIndexes(state),
+      timelineMarginLeft: getTimelineMarginLeft(state),
     };
   },
   mapDispatchToProps: {

@@ -6,10 +6,7 @@
 import { GREY_30 } from 'photon-colors';
 import * as React from 'react';
 import memoize from 'memoize-immutable';
-import {
-  TIMELINE_MARGIN_LEFT,
-  TIMELINE_MARGIN_RIGHT,
-} from '../../app-logic/constants';
+import { TIMELINE_MARGIN_RIGHT } from '../../app-logic/constants';
 import {
   withChartViewport,
   type WithChartViewport,
@@ -68,6 +65,7 @@ type OwnProps = {|
   +onRightClick: (IndexIntoCallNodeTable | null) => void,
   +shouldDisplayTooltips: () => boolean,
   +scrollToSelectionGeneration: number,
+  +timelineMarginLeft: number,
 |};
 
 type Props = $ReadOnly<{|
@@ -158,6 +156,7 @@ class StackChartCanvas extends React.PureComponent<Props> {
       categories,
       callNodeInfo: { callNodeTable },
       getMarker,
+      timelineMarginLeft,
       viewport: {
         containerWidth,
         containerHeight,
@@ -191,7 +190,7 @@ class StackChartCanvas extends React.PureComponent<Props> {
     const endDepth = Math.ceil(viewportBottom / stackFrameHeight);
 
     const innerContainerWidth =
-      containerWidth - TIMELINE_MARGIN_LEFT - TIMELINE_MARGIN_RIGHT;
+      containerWidth - timelineMarginLeft - TIMELINE_MARGIN_RIGHT;
     const innerDevicePixelsWidth = innerContainerWidth * devicePixelRatio;
 
     const pixelAtViewportPosition = (
@@ -199,7 +198,7 @@ class StackChartCanvas extends React.PureComponent<Props> {
     ): DevicePixels =>
       devicePixelRatio *
       // The right hand side of this formula is all in CSS pixels.
-      (TIMELINE_MARGIN_LEFT +
+      (timelineMarginLeft +
         ((viewportPosition - viewportLeft) * innerContainerWidth) /
           viewportLength);
 
@@ -234,7 +233,7 @@ class StackChartCanvas extends React.PureComponent<Props> {
       const timeAtStart: Milliseconds =
         rangeStart +
         rangeLength * viewportLeft -
-        timePerPixel * TIMELINE_MARGIN_LEFT;
+        timePerPixel * timelineMarginLeft;
       const timeAtEnd: Milliseconds = rangeStart + rangeLength * viewportRight;
 
       let lastDrawnPixelX = 0;
@@ -522,17 +521,18 @@ class StackChartCanvas extends React.PureComponent<Props> {
       rangeStart,
       rangeEnd,
       combinedTimingRows,
+      timelineMarginLeft,
       viewport: { viewportLeft, viewportRight, viewportTop, containerWidth },
     } = this.props;
 
     const innerDevicePixelsWidth =
-      containerWidth - TIMELINE_MARGIN_LEFT - TIMELINE_MARGIN_RIGHT;
+      containerWidth - timelineMarginLeft - TIMELINE_MARGIN_RIGHT;
     const rangeLength: Milliseconds = rangeEnd - rangeStart;
     const viewportLength: UnitIntervalOfProfileRange =
       viewportRight - viewportLeft;
     const unitIntervalTime: UnitIntervalOfProfileRange =
       viewportLeft +
-      viewportLength * ((x - TIMELINE_MARGIN_LEFT) / innerDevicePixelsWidth);
+      viewportLength * ((x - timelineMarginLeft) / innerDevicePixelsWidth);
     const time: Milliseconds = rangeStart + unitIntervalTime * rangeLength;
     const depth = Math.floor((y + viewportTop) / ROW_CSS_PIXELS_HEIGHT);
     const stackTiming = combinedTimingRows[depth];
