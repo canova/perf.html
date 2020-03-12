@@ -18,7 +18,6 @@ import {
   typeof changeRightClickedMarker as ChangeRightClickedMarker,
 } from '../../actions/profile-view';
 import { BLUE_40 } from '../../utils/colors';
-import { TIMELINE_MARGIN_LEFT } from '../../app-logic/constants';
 import type {
   Milliseconds,
   CssPixels,
@@ -54,6 +53,7 @@ type OwnProps = {|
   +marginRight: CssPixels,
   +rightClickedMarker: MarkerIndex | null,
   +shouldDisplayTooltips: () => boolean,
+  +marginLeft: number,
 |};
 
 type Props = {|
@@ -337,14 +337,15 @@ class MarkerChartCanvas extends React.PureComponent<Props, State> {
   clearRow(ctx: CanvasRenderingContext2D, rowIndex: number) {
     const {
       rowHeight,
+      marginLeft,
       viewport: { viewportTop, containerWidth },
     } = this.props;
 
     ctx.fillStyle = '#fff';
     ctx.fillRect(
-      TIMELINE_MARGIN_LEFT,
+      marginLeft,
       rowIndex * rowHeight - viewportTop + 1, // Add plus one for borders.
-      containerWidth - TIMELINE_MARGIN_LEFT,
+      containerWidth - marginLeft,
       rowHeight - 2 // Subtract 2 for borders.
     );
   }
@@ -398,10 +399,7 @@ class MarkerChartCanvas extends React.PureComponent<Props, State> {
       }
 
       const y = rowIndex * rowHeight - viewportTop;
-      const fittedText = textMeasurement.getFittedText(
-        name,
-        TIMELINE_MARGIN_LEFT
-      );
+      const fittedText = textMeasurement.getFittedText(name, marginLeft);
       ctx.fillText(fittedText, 5, y + TEXT_OFFSET_TOP);
     }
 
@@ -425,7 +423,7 @@ class MarkerChartCanvas extends React.PureComponent<Props, State> {
 
       // Draw the text.
       ctx.fillStyle = '#000000';
-      ctx.fillText(bucketName, 5 + TIMELINE_MARGIN_LEFT, y + TEXT_OFFSET_TOP);
+      ctx.fillText(bucketName, 5 + marginLeft, y + TEXT_OFFSET_TOP);
     }
   }
 

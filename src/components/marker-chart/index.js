@@ -4,10 +4,7 @@
 
 // @flow
 import * as React from 'react';
-import {
-  TIMELINE_MARGIN_LEFT,
-  TIMELINE_MARGIN_RIGHT,
-} from '../../app-logic/constants';
+import { TIMELINE_MARGIN_RIGHT } from '../../app-logic/constants';
 import explicitConnect from '../../utils/connect';
 import MarkerChartCanvas from './Canvas';
 import MarkerChartEmptyReasons from './MarkerChartEmptyReasons';
@@ -25,6 +22,7 @@ import {
   changeRightClickedMarker,
 } from '../../actions/profile-view';
 import ContextMenuTrigger from '../shared/ContextMenuTrigger';
+import { getTimelineMarginLeft } from '../../selectors/app';
 
 import type {
   Marker,
@@ -56,6 +54,7 @@ type StateProps = {|
   +threadIndex: number,
   +previewSelection: PreviewSelection,
   +rightClickedMarker: MarkerIndex | null,
+  +timelineMarginLeft: number,
 |};
 
 type Props = ConnectedProps<{||}, StateProps, DispatchProps>;
@@ -100,6 +99,7 @@ class MarkerChart extends React.PureComponent<Props> {
       updatePreviewSelection,
       changeRightClickedMarker,
       rightClickedMarker,
+      timelineMarginLeft,
     } = this.props;
 
     // The viewport needs to know about the height of what it's drawing, calculate
@@ -131,7 +131,7 @@ class MarkerChart extends React.PureComponent<Props> {
                 maxViewportHeight,
                 viewportNeedsUpdate,
                 maximumZoom: this.getMaximumZoom(),
-                marginLeft: TIMELINE_MARGIN_LEFT,
+                marginLeft: timelineMarginLeft,
                 marginRight: TIMELINE_MARGIN_RIGHT,
                 containerRef: this._takeViewportRef,
               }}
@@ -145,7 +145,7 @@ class MarkerChart extends React.PureComponent<Props> {
                 rangeEnd: timeRange.end,
                 rowHeight: ROW_HEIGHT,
                 threadIndex,
-                marginLeft: TIMELINE_MARGIN_LEFT,
+                marginLeft: timelineMarginLeft,
                 marginRight: TIMELINE_MARGIN_RIGHT,
                 rightClickedMarker,
                 shouldDisplayTooltips: this._shouldDisplayTooltips,
@@ -182,6 +182,7 @@ export default explicitConnect<{||}, StateProps, DispatchProps>({
       rightClickedMarker: selectedThreadSelectors.getRightClickedMarkerIndex(
         state
       ),
+      timelineMarginLeft: getTimelineMarginLeft(state),
     };
   },
   mapDispatchToProps: { updatePreviewSelection, changeRightClickedMarker },
