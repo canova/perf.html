@@ -5,7 +5,6 @@
 // @flow
 import * as React from 'react';
 import {
-  TIMELINE_MARGIN_LEFT,
   TIMELINE_MARGIN_RIGHT,
   JS_TRACER_MAXIMUM_CHART_ZOOM,
 } from '../../app-logic/constants';
@@ -19,6 +18,7 @@ import {
 import { selectedThreadSelectors } from '../../selectors/per-thread';
 import { getSelectedThreadIndex } from '../../selectors/url-state';
 import { updatePreviewSelection } from '../../actions/profile-view';
+import { getTimelineMarginLeft } from '../../selectors/app';
 import { ensureExists } from '../../utils/flow';
 
 import type { UniqueStringArray } from '../../utils/unique-string-array';
@@ -52,6 +52,7 @@ type StateProps = {|
   +timeRange: { start: Milliseconds, end: Milliseconds },
   +threadIndex: number,
   +previewSelection: PreviewSelection,
+  timelineMarginLeft: number,
 |};
 
 type Props = ConnectedProps<OwnProps, StateProps, DispatchProps>;
@@ -81,6 +82,7 @@ class JsTracerExpensiveChartImpl extends React.PureComponent<Props> {
       previewSelection,
       updatePreviewSelection,
       doFadeIn,
+      timelineMarginLeft,
     } = this.props;
 
     // The viewport needs to know about the height of what it's drawing, calculate
@@ -96,7 +98,7 @@ class JsTracerExpensiveChartImpl extends React.PureComponent<Props> {
           maxViewportHeight,
           viewportNeedsUpdate,
           maximumZoom: this.getMaximumZoom(),
-          marginLeft: TIMELINE_MARGIN_LEFT,
+          marginLeft: timelineMarginLeft,
           marginRight: TIMELINE_MARGIN_RIGHT,
         }}
         chartProps={{
@@ -109,6 +111,7 @@ class JsTracerExpensiveChartImpl extends React.PureComponent<Props> {
           rowHeight: ROW_HEIGHT,
           threadIndex,
           doFadeIn,
+          timelineMarginLeft,
         }}
       />
     );
@@ -142,6 +145,7 @@ const JsTracerExpensiveChart = explicitConnect<
         : selectedThreadSelectors.getExpensiveJsTracerTiming(state),
       'The JS tracer information must exist when mounting this component'
     ),
+    timelineMarginLeft: getTimelineMarginLeft(state),
   }),
   mapDispatchToProps: { updatePreviewSelection },
   component: JsTracerExpensiveChartImpl,

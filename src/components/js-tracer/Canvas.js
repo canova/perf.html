@@ -6,10 +6,7 @@
 import { GREY_20 } from 'photon-colors';
 import * as React from 'react';
 import classNames from 'classnames';
-import {
-  TIMELINE_MARGIN_LEFT,
-  TIMELINE_MARGIN_RIGHT,
-} from '../../app-logic/constants';
+import { TIMELINE_MARGIN_RIGHT } from '../../app-logic/constants';
 import {
   withChartViewport,
   type WithChartViewport,
@@ -46,6 +43,7 @@ type OwnProps = {|
   +updatePreviewSelection: WrapFunctionInDispatch<
     typeof updatePreviewSelection
   >,
+  +timelineMarginLeft: number,
 |};
 
 type Props = {|
@@ -105,6 +103,7 @@ class JsTracerCanvas extends React.PureComponent<Props, State> {
     const {
       rowHeight,
       jsTracerTimingRows,
+      timelineMarginLeft,
       viewport: {
         viewportTop,
         viewportBottom,
@@ -133,14 +132,14 @@ class JsTracerCanvas extends React.PureComponent<Props, State> {
         // Convert many of the common values provided by the Props into DevicePixels.
         containerWidth: containerWidth * devicePixelRatio,
         innerContainerWidth:
-          (containerWidth - TIMELINE_MARGIN_LEFT - TIMELINE_MARGIN_RIGHT) *
+          (containerWidth - timelineMarginLeft - TIMELINE_MARGIN_RIGHT) *
           devicePixelRatio,
         containerHeight: containerHeight * devicePixelRatio,
         textOffsetStart: TEXT_OFFSET_START * devicePixelRatio,
         textOffsetTop: TEXT_OFFSET_TOP * devicePixelRatio,
         rowHeight: rowHeight * devicePixelRatio,
         viewportTop: viewportTop * devicePixelRatio,
-        timelineMarginLeft: TIMELINE_MARGIN_LEFT * devicePixelRatio,
+        timelineMarginLeft: timelineMarginLeft * devicePixelRatio,
         timelineMarginRight: TIMELINE_MARGIN_RIGHT * devicePixelRatio,
         oneCssPixel: devicePixelRatio,
         rowLabelOffsetLeft: ROW_LABEL_OFFSET_LEFT * devicePixelRatio,
@@ -533,25 +532,26 @@ class JsTracerCanvas extends React.PureComponent<Props, State> {
    * to get coverage with the tooltip component work.
    */
   hitTest = (x: CssPixels, y: CssPixels): IndexIntoJsTracerEvents | null => {
-    if (x < TIMELINE_MARGIN_LEFT) {
-      return null;
-    }
     const {
       rangeStart,
       rangeEnd,
       jsTracerTimingRows,
       rowHeight,
+      timelineMarginLeft,
       viewport: { viewportLeft, viewportRight, viewportTop, containerWidth },
     } = this.props;
+    if (x < timelineMarginLeft) {
+      return null;
+    }
     const innerContainerWidth =
-      containerWidth - TIMELINE_MARGIN_LEFT - TIMELINE_MARGIN_RIGHT;
+      containerWidth - timelineMarginLeft - TIMELINE_MARGIN_RIGHT;
 
     const rangeLength: Milliseconds = rangeEnd - rangeStart;
     const viewportLength: UnitIntervalOfProfileRange =
       viewportRight - viewportLeft;
     const unitIntervalTime: UnitIntervalOfProfileRange =
       viewportLeft +
-      viewportLength * ((x - TIMELINE_MARGIN_LEFT) / innerContainerWidth);
+      viewportLength * ((x - timelineMarginLeft) / innerContainerWidth);
     const time: Milliseconds = rangeStart + unitIntervalTime * rangeLength;
     const rowIndex = Math.floor((y + viewportTop) / rowHeight);
     const timing = jsTracerTimingRows[rowIndex];

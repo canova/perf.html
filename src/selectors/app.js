@@ -23,6 +23,7 @@ import {
   TIMELINE_RULER_HEIGHT,
   TIMELINE_SETTINGS_HEIGHT,
   TRACK_VISUAL_PROGRESS_HEIGHT,
+  TIMELINE_MARGIN_LEFT,
 } from '../app-logic/constants';
 
 import type { TabSlug } from '../app-logic/tabs-handling';
@@ -200,4 +201,9 @@ export const getIsNewProfileLoadAllowed: Selector<boolean> = createSelector(
       zipPhase === 'PROCESS_PROFILE_FROM_ZIP_FILE';
     return !isLoading;
   }
+);
+
+export const getTimelineMarginLeft: Selector<number> = createSelector(
+  getShowTabOnly,
+  showTabOnly => (showTabOnly === null ? TIMELINE_MARGIN_LEFT : 0)
 );
