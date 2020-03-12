@@ -5,7 +5,7 @@
 // @flow
 
 import * as React from 'react';
-import TimelineGlobalTrack from './GlobalTrack';
+import ActiveTabGlobalTrack from './ActiveTabGlobalTrack';
 import TimelineRuler from './Ruler';
 import TimelineSelection from './Selection';
 import OverflowEdgeIndicator from './OverflowEdgeIndicator';
@@ -118,7 +118,7 @@ class Timeline extends React.PureComponent<Props, State> {
               onChangeOrder={changeGlobalTrackOrder}
             >
               {globalTracks.map((globalTrack, trackIndex) => (
-                <TimelineGlobalTrack
+                <ActiveTabGlobalTrack
                   key={trackIndex}
                   trackIndex={trackIndex}
                   trackReference={globalTrackReferences[trackIndex]}
