@@ -25,7 +25,6 @@ import {
 import {
   getGlobalTrackOrder,
   getTimelineType,
-  getShowTabOnly,
 } from '../../selectors/url-state';
 import {
   TIMELINE_MARGIN_LEFT,
@@ -60,6 +59,10 @@ import type {
 import type { Milliseconds, StartEndRange } from '../../types/units';
 import type { ConnectedProps } from '../../utils/connect';
 
+type OwnProps = {|
+  +showTabOnly: BrowsingContextID,
+|};
+
 type StateProps = {|
   +committedRange: StartEndRange,
   +globalTracks: GlobalTrack[],
@@ -70,7 +73,6 @@ type StateProps = {|
   +timelineType: TimelineType,
   +hiddenTrackCount: HiddenTrackCount,
   +activeBrowsingContextID: BrowsingContextID | null,
-  +showTabOnly: BrowsingContextID | null,
 |};
 
 type DispatchProps = {|
@@ -84,7 +86,7 @@ type DispatchProps = {|
 
 type Props = {|
   ...SizeProps,
-  ...ConnectedProps<{||}, StateProps, DispatchProps>,
+  ...ConnectedProps<OwnProps, StateProps, DispatchProps>,
 |};
 
 type State = {|
@@ -302,7 +304,7 @@ class Timeline extends React.PureComponent<Props, State> {
   }
 }
 
-export default explicitConnect<{||}, StateProps, DispatchProps>({
+export default explicitConnect<OwnProps, StateProps, DispatchProps>({
   mapStateToProps: state => ({
     globalTracks: getGlobalTracks(state),
     globalTrackOrder: getGlobalTrackOrder(state),
@@ -313,7 +315,6 @@ export default explicitConnect<{||}, StateProps, DispatchProps>({
     timelineType: getTimelineType(state),
     hiddenTrackCount: getHiddenTrackCount(state),
     activeBrowsingContextID: getActiveBrowsingContextID(state),
-    showTabOnly: getShowTabOnly(state),
   }),
   mapDispatchToProps: {
     changeGlobalTrackOrder,

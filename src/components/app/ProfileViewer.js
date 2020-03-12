@@ -137,7 +137,11 @@ class ProfileViewer extends PureComponent<Props> {
             secondaryInitialSize={270}
             onDragEnd={invalidatePanelLayout}
           >
-            {showTabOnly === null ? <Timeline /> : <ActiveTabTimeline />}
+            {showTabOnly === null ? (
+              <Timeline />
+            ) : (
+              <ActiveTabTimeline showTabOnly={showTabOnly} />
+            )}
             <DetailsContainer />
           </SplitterLayout>
           <WindowTitle />
