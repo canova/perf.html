@@ -83,7 +83,10 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
     trackThreadHeights,
     showTabOnly
   ) => {
-    let height = TIMELINE_RULER_HEIGHT + TIMELINE_SETTINGS_HEIGHT;
+    let height = TIMELINE_RULER_HEIGHT;
+    if (showTabOnly === null) {
+      height += TIMELINE_SETTINGS_HEIGHT;
+    }
     const border = 1;
 
     for (const [trackIndex, globalTrack] of globalTracks.entries()) {
