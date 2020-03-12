@@ -13,7 +13,10 @@ import OverflowEdgeIndicator from './OverflowEdgeIndicator';
 import Reorderable from '../shared/Reorderable';
 import { withSize } from '../shared/WithSize';
 import explicitConnect from '../../utils/connect';
-import { getPanelLayoutGeneration } from '../../selectors/app';
+import {
+  getPanelLayoutGeneration,
+  getTimelineMarginLeft,
+} from '../../selectors/app';
 import {
   getCommittedRange,
   getZeroAt,
@@ -28,7 +31,6 @@ import {
   getShowTabOnly,
 } from '../../selectors/url-state';
 import {
-  TIMELINE_MARGIN_LEFT,
   TIMELINE_MARGIN_RIGHT,
   TIMELINE_SETTINGS_HEIGHT,
 } from '../../app-logic/constants';
@@ -71,6 +73,7 @@ type StateProps = {|
   +hiddenTrackCount: HiddenTrackCount,
   +activeBrowsingContextID: BrowsingContextID | null,
   +showTabOnly: BrowsingContextID | null,
+  +timelineMarginLeft: number,
 |};
 
 type DispatchProps = {|
@@ -239,10 +242,11 @@ class Timeline extends React.PureComponent<Props, State> {
       activeBrowsingContextID,
       showTabOnly,
       changeShowTabOnly,
+      timelineMarginLeft,
     } = this.props;
 
     // Do not include the left and right margins when computing the timeline width.
-    const timelineWidth = width - TIMELINE_MARGIN_LEFT - TIMELINE_MARGIN_RIGHT;
+    const timelineWidth = width - timelineMarginLeft - TIMELINE_MARGIN_RIGHT;
 
     return (
       <>
@@ -266,7 +270,12 @@ class Timeline extends React.PureComponent<Props, State> {
             changeShowTabOnly={changeShowTabOnly}
           />
         </div>
-        <TimelineSelection width={timelineWidth}>
+        <TimelineSelection
+          width={timelineWidth}
+          style={{
+            '--thread-label-column-width': `${timelineMarginLeft}px`,
+          }}
+        >
           <TimelineRuler
             zeroAt={zeroAt}
             rangeStart={committedRange.start}
@@ -314,6 +323,7 @@ export default explicitConnect<{||}, StateProps, DispatchProps>({
     hiddenTrackCount: getHiddenTrackCount(state),
     activeBrowsingContextID: getActiveBrowsingContextID(state),
     showTabOnly: getShowTabOnly(state),
+    timelineMarginLeft: getTimelineMarginLeft(state),
   }),
   mapDispatchToProps: {
     changeGlobalTrackOrder,
