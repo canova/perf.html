@@ -11,7 +11,6 @@ import {
   changeLocalTrackOrder,
   selectTrack,
 } from '../../actions/profile-view';
-import ContextMenuTrigger from '../shared/ContextMenuTrigger';
 import {
   getSelectedThreadIndex,
   getLocalTrackOrder,
@@ -21,14 +20,12 @@ import explicitConnect from '../../utils/connect';
 import {
   getGlobalTracks,
   getLocalTracks,
-  getGlobalTrackName,
   getProcessesWithMemoryTrack,
   getVisualProgress,
   getPerceptualSpeedIndexProgress,
   getContentfulSpeedIndexProgress,
   getComputedHiddenGlobalTracks,
 } from '../../selectors/profile';
-import { getThreadSelectors } from '../../selectors/per-thread';
 import './Track.css';
 import TimelineTrackThread from './TrackThread';
 import TimelineTrackScreenshots from './TrackScreenshots';
@@ -56,11 +53,9 @@ type OwnProps = {|
 |};
 
 type StateProps = {|
-  +trackName: string,
   +globalTrack: GlobalTrack,
   +isSelected: boolean,
   +isHidden: boolean,
-  +titleText: string | null,
   +localTrackOrder: TrackIndex[],
   +localTracks: LocalTrack[],
   +pid: Pid | null,
@@ -225,16 +220,7 @@ class GlobalTrackComponent extends PureComponent<Props> {
   }
 
   render() {
-    const {
-      isSelected,
-      isHidden,
-      titleText,
-      trackName,
-      style,
-      localTracks,
-      pid,
-      globalTrack,
-    } = this.props;
+    const { isSelected, isHidden, style, localTracks, pid } = this.props;
 
     if (isHidden) {
       // If this global track is hidden, render out a stub element so that the
@@ -250,32 +236,6 @@ class GlobalTrackComponent extends PureComponent<Props> {
           })}
           onClick={this._selectCurrentTrack}
         >
-          <ContextMenuTrigger
-            id="TimelineTrackContextMenu"
-            renderTag="div"
-            attributes={{
-              title: titleText,
-              className: 'timelineTrackLabel timelineTrackGlobalGrippy',
-              onMouseDown: this._onLabelMouseDown,
-            }}
-          >
-            <button type="button" className="timelineTrackNameButton">
-              {trackName}
-              {
-                // Only show the PID if:
-                //   1. It is a real number. A string PID is an artificially generated
-                //      value that is not useful, and a null value does not exist.
-                //   2. The global track actually points to a real thread. A stub
-                //      process track is created
-              }
-              {typeof pid === 'number' &&
-              globalTrack.mainThreadIndex !== null ? (
-                <div className="timelineTrackNameButtonAdditionalDetails">
-                  PID: {pid}
-                </div>
-              ) : null}
-            </button>
-          </ContextMenuTrigger>
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
         {localTracks.length > 0 && pid !== null
@@ -299,7 +259,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     // These get assigned based on the track type.
     let threadIndex = null;
     let isSelected = false;
-    let titleText = null;
 
     let localTrackOrder = EMPTY_TRACK_ORDER;
     let localTracks = EMPTY_LOCAL_TRACKS;
@@ -312,11 +271,9 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
         // Look up the thread information for the process if it exists.
         if (globalTrack.mainThreadIndex !== null) {
           threadIndex = globalTrack.mainThreadIndex;
-          const selectors = getThreadSelectors(threadIndex);
           isSelected =
             threadIndex === getSelectedThreadIndex(state) &&
             selectedTab !== 'network-chart';
-          titleText = selectors.getThreadProcessDetails(state);
         }
         pid = globalTrack.pid;
         localTrackOrder = getLocalTrackOrder(state, pid);
@@ -326,15 +283,12 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
       case 'screenshots':
         break;
       case 'visual-progress':
-        titleText = 'Visual Progress';
         progressGraphData = getVisualProgress(state);
         break;
       case 'perceptual-visual-progress':
-        titleText = 'Perceptual Visual Progress';
         progressGraphData = getPerceptualSpeedIndexProgress(state);
         break;
       case 'contentful-visual-progress':
-        titleText = 'Contentful Visual Progress';
         progressGraphData = getContentfulSpeedIndexProgress(state);
         break;
       default:
@@ -342,8 +296,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     }
 
     return {
-      trackName: getGlobalTrackName(state, trackIndex),
-      titleText,
       globalTrack,
       isSelected,
       localTrackOrder,

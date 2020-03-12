@@ -20,10 +20,6 @@ import {
   getGlobalTrackReferences,
 } from '../../selectors/profile';
 import { getGlobalTrackOrder } from '../../selectors/url-state';
-import {
-  TIMELINE_MARGIN_LEFT,
-  TIMELINE_MARGIN_RIGHT,
-} from '../../app-logic/constants';
 
 import './index.css';
 
@@ -92,17 +88,19 @@ class Timeline extends React.PureComponent<Props, State> {
       panelLayoutGeneration,
     } = this.props;
 
-    // Do not include the left and right margins when computing the timeline width.
-    const timelineWidth = width - TIMELINE_MARGIN_LEFT - TIMELINE_MARGIN_RIGHT;
-
     return (
       <>
-        <TimelineSelection width={timelineWidth}>
+        <TimelineSelection
+          width={width}
+          style={{
+            '--thread-label-column-width': `0px`,
+          }}
+        >
           <TimelineRuler
             zeroAt={zeroAt}
             rangeStart={committedRange.start}
             rangeEnd={committedRange.end}
-            width={timelineWidth}
+            width={width}
           />
           <OverflowEdgeIndicator
             className="timelineOverflowEdgeIndicator"

@@ -270,7 +270,12 @@ class Timeline extends React.PureComponent<Props, State> {
             />
           )}
         </div>
-        <TimelineSelection width={timelineWidth}>
+        <TimelineSelection
+          width={timelineWidth}
+          style={{
+            '--thread-label-column-width': `${TIMELINE_SETTINGS_HEIGHT}px`,
+          }}
+        >
           <TimelineRuler
             zeroAt={zeroAt}
             rangeStart={committedRange.start}
