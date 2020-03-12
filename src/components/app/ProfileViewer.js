@@ -12,8 +12,9 @@ import MenuButtons from './MenuButtons';
 import WindowTitle from '../shared/WindowTitle';
 import SymbolicationStatusOverlay from './SymbolicationStatusOverlay';
 import { returnToZipFileList } from '../../actions/zipped-profiles';
-import { getProfileName } from '../../selectors/url-state';
+import { getProfileName, getShowTabOnly } from '../../selectors/url-state';
 import Timeline from '../timeline';
+import ActiveTabTimeline from '../timeline/ActiveTabTimeline';
 import { getHasZipFile } from '../../selectors/zipped-profiles';
 import SplitterLayout from 'react-splitter-layout';
 import { invalidatePanelLayout } from '../../actions/app';
@@ -31,6 +32,7 @@ import classNames from 'classnames';
 import type { CssPixels } from '../../types/units';
 import type { ConnectedProps } from '../../utils/connect';
 import type { IconWithClassName } from '../../types/state';
+import type { BrowsingContextID } from '../../types/profile';
 
 require('./ProfileViewer.css');
 
@@ -43,6 +45,7 @@ type StateProps = {|
   +isHidingStaleProfile: boolean,
   +hasSanitizedProfile: boolean,
   +icons: IconWithClassName[],
+  +showTabOnly: BrowsingContextID | null,
 |};
 
 type DispatchProps = {|
@@ -65,6 +68,7 @@ class ProfileViewer extends PureComponent<Props> {
       isHidingStaleProfile,
       hasSanitizedProfile,
       icons,
+      showTabOnly,
     } = this.props;
 
     return (
@@ -133,7 +137,7 @@ class ProfileViewer extends PureComponent<Props> {
             secondaryInitialSize={270}
             onDragEnd={invalidatePanelLayout}
           >
-            <Timeline />
+            {showTabOnly === null ? <Timeline /> : <ActiveTabTimeline />}
             <DetailsContainer />
           </SplitterLayout>
           <WindowTitle />
@@ -154,6 +158,7 @@ export default explicitConnect<{||}, StateProps, DispatchProps>({
     isHidingStaleProfile: getIsHidingStaleProfile(state),
     hasSanitizedProfile: getHasSanitizedProfile(state),
     icons: getIconsWithClassNames(state),
+    showTabOnly: getShowTabOnly(state),
   }),
   mapDispatchToProps: {
     returnToZipFileList,
