@@ -15,6 +15,7 @@ import ContextMenuTrigger from '../shared/ContextMenuTrigger';
 import {
   getSelectedThreadIndex,
   getSelectedTab,
+  getShowTabOnly,
 } from '../../selectors/url-state';
 import explicitConnect from '../../utils/connect';
 import {
@@ -28,7 +29,7 @@ import TrackNetwork from './TrackNetwork';
 import { TrackMemory } from './TrackMemory';
 import { TrackIPC } from './TrackIPC';
 import type { TrackReference } from '../../types/actions';
-import type { Pid } from '../../types/profile';
+import type { Pid, BrowsingContextID } from '../../types/profile';
 import type { TrackIndex, LocalTrack } from '../../types/profile-derived';
 import type { ConnectedProps } from '../../utils/connect';
 
@@ -45,6 +46,7 @@ type StateProps = {|
   +isSelected: boolean,
   +isHidden: boolean,
   +titleText: string | null,
+  +showTabOnly: BrowsingContextID | null,
 |};
 
 type DispatchProps = {|
@@ -101,7 +103,14 @@ class LocalTrackComponent extends PureComponent<Props> {
   }
 
   render() {
-    const { isSelected, isHidden, titleText, trackName, style } = this.props;
+    const {
+      isSelected,
+      isHidden,
+      titleText,
+      trackName,
+      style,
+      showTabOnly,
+    } = this.props;
 
     if (isHidden) {
       // If this global track is hidden, render out a stub element so that the
@@ -118,20 +127,22 @@ class LocalTrackComponent extends PureComponent<Props> {
           })}
           onClick={this._onLineClick}
         >
-          <ContextMenuTrigger
-            id="TimelineTrackContextMenu"
-            renderTag="div"
-            attributes={{
-              title: titleText,
-              className:
-                'timelineTrackLabel timelineTrackLocalLabel timelineTrackLocalGrippy',
-              onMouseDown: this._onLabelMouseDown,
-            }}
-          >
-            <button type="button" className="timelineTrackNameButton">
-              {trackName}
-            </button>
-          </ContextMenuTrigger>
+          {showTabOnly === null ? (
+            <ContextMenuTrigger
+              id="TimelineTrackContextMenu"
+              renderTag="div"
+              attributes={{
+                title: titleText,
+                className:
+                  'timelineTrackLabel timelineTrackLocalLabel timelineTrackLocalGrippy',
+                onMouseDown: this._onLabelMouseDown,
+              }}
+            >
+              <button type="button" className="timelineTrackNameButton">
+                {trackName}
+              </button>
+            </ContextMenuTrigger>
+          ) : null}
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
       </li>
@@ -191,6 +202,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
       titleText,
       isSelected,
       isHidden: getComputedHiddenLocalTracks(state, pid).has(trackIndex),
+      showTabOnly: getShowTabOnly(state),
     };
   },
   mapDispatchToProps: {

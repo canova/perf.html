@@ -16,6 +16,7 @@ import {
   getSelectedThreadIndex,
   getLocalTrackOrder,
   getSelectedTab,
+  getShowTabOnly,
 } from '../../selectors/url-state';
 import explicitConnect from '../../utils/connect';
 import {
@@ -39,7 +40,11 @@ import { TRACK_PROCESS_BLANK_HEIGHT } from '../../app-logic/constants';
 
 import type { TabSlug } from '../../app-logic/tabs-handling';
 import type { GlobalTrackReference } from '../../types/actions';
-import type { Pid, ProgressGraphData } from '../../types/profile';
+import type {
+  Pid,
+  ProgressGraphData,
+  BrowsingContextID,
+} from '../../types/profile';
 import type {
   TrackIndex,
   GlobalTrack,
@@ -67,6 +72,7 @@ type StateProps = {|
   +selectedTab: TabSlug,
   +processesWithMemoryTrack: Set<Pid>,
   +progressGraphData: ProgressGraphData[] | null,
+  +showTabOnly: BrowsingContextID | null,
 |};
 
 type DispatchProps = {|
@@ -234,6 +240,7 @@ class GlobalTrackComponent extends PureComponent<Props> {
       localTracks,
       pid,
       globalTrack,
+      showTabOnly,
     } = this.props;
 
     if (isHidden) {
@@ -250,32 +257,34 @@ class GlobalTrackComponent extends PureComponent<Props> {
           })}
           onClick={this._selectCurrentTrack}
         >
-          <ContextMenuTrigger
-            id="TimelineTrackContextMenu"
-            renderTag="div"
-            attributes={{
-              title: titleText,
-              className: 'timelineTrackLabel timelineTrackGlobalGrippy',
-              onMouseDown: this._onLabelMouseDown,
-            }}
-          >
-            <button type="button" className="timelineTrackNameButton">
-              {trackName}
-              {
-                // Only show the PID if:
-                //   1. It is a real number. A string PID is an artificially generated
-                //      value that is not useful, and a null value does not exist.
-                //   2. The global track actually points to a real thread. A stub
-                //      process track is created
-              }
-              {typeof pid === 'number' &&
-              globalTrack.mainThreadIndex !== null ? (
-                <div className="timelineTrackNameButtonAdditionalDetails">
-                  PID: {pid}
-                </div>
-              ) : null}
-            </button>
-          </ContextMenuTrigger>
+          {showTabOnly === null ? (
+            <ContextMenuTrigger
+              id="TimelineTrackContextMenu"
+              renderTag="div"
+              attributes={{
+                title: titleText,
+                className: 'timelineTrackLabel timelineTrackGlobalGrippy',
+                onMouseDown: this._onLabelMouseDown,
+              }}
+            >
+              <button type="button" className="timelineTrackNameButton">
+                {trackName}
+                {
+                  // Only show the PID if:
+                  //   1. It is a real number. A string PID is an artificially generated
+                  //      value that is not useful, and a null value does not exist.
+                  //   2. The global track actually points to a real thread. A stub
+                  //      process track is created
+                }
+                {typeof pid === 'number' &&
+                globalTrack.mainThreadIndex !== null ? (
+                  <div className="timelineTrackNameButtonAdditionalDetails">
+                    PID: {pid}
+                  </div>
+                ) : null}
+              </button>
+            </ContextMenuTrigger>
+          ) : null}
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
         {localTracks.length > 0 && pid !== null
@@ -295,6 +304,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     const globalTracks = getGlobalTracks(state);
     const globalTrack = globalTracks[trackIndex];
     const selectedTab = getSelectedTab(state);
+    const showTabOnly = getShowTabOnly(state);
 
     // These get assigned based on the track type.
     let threadIndex = null;
@@ -353,6 +363,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
       selectedTab,
       processesWithMemoryTrack: getProcessesWithMemoryTrack(state),
       progressGraphData,
+      showTabOnly,
     };
   },
   mapDispatchToProps: {
