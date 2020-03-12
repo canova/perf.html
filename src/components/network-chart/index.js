@@ -21,6 +21,7 @@ import {
 } from '../../selectors/profile';
 import { selectedThreadSelectors } from '../../selectors/per-thread';
 import { getSelectedThreadIndex } from '../../selectors/url-state';
+import { getTimelineMarginLeft } from '../../selectors/app';
 import { changeRightClickedMarker } from '../../actions/profile-view';
 
 import type { SizeProps } from '../shared/WithSize';
@@ -45,6 +46,7 @@ type StateProps = {|
   +disableOverscan: boolean,
   +timeRange: StartEndRange,
   +threadIndex: number,
+  +timelineMarginLeft: number,
 |};
 
 type OwnProps = {| ...SizeProps |};
@@ -89,6 +91,7 @@ class NetworkChart extends React.PureComponent<Props> {
       rightClickedMarkerIndex,
       timeRange,
       width,
+      timelineMarginLeft,
     } = this.props;
     const marker = getMarker(markerIndex);
 
@@ -116,6 +119,7 @@ class NetworkChart extends React.PureComponent<Props> {
         shouldDisplayTooltips={this._shouldDisplayTooltips}
         isRightClicked={rightClickedMarkerIndex === markerIndex}
         onRightClick={this._onRightClick}
+        timelineMarginLeft={timelineMarginLeft}
       />
     );
   };
@@ -184,6 +188,7 @@ const ConnectedComponent = explicitConnect<OwnProps, StateProps, DispatchProps>(
         timeRange: getPreviewSelectionRange(state),
         disableOverscan: getPreviewSelection(state).isModifying,
         threadIndex: getSelectedThreadIndex(state),
+        timelineMarginLeft: getTimelineMarginLeft(state),
       };
     },
     mapDispatchToProps: { changeRightClickedMarker },

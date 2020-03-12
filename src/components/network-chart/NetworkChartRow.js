@@ -14,10 +14,7 @@ import {
   getColorClassNameForMimeType,
 } from '../../profile-logic/marker-data';
 import { formatNumber } from '../../utils/format-numbers';
-import {
-  TIMELINE_MARGIN_LEFT,
-  TIMELINE_MARGIN_RIGHT,
-} from '../../app-logic/constants';
+import { TIMELINE_MARGIN_RIGHT } from '../../app-logic/constants';
 
 import type { CssPixels, Milliseconds, StartEndRange } from '../../types/units';
 import type { ThreadIndex } from '../../types/profile';
@@ -110,6 +107,7 @@ export type NetworkChartRowBarProps = {|
   // Pass the payload in as well, since our types can't express a Marker with
   // a specific payload.
   +networkPayload: NetworkPayload,
+  +timelineMarginLeft: number,
 |};
 
 // This component splits a network marker duration in different phases,
@@ -121,14 +119,14 @@ class NetworkChartRowBar extends React.PureComponent<NetworkChartRowBarProps> {
    * as passed in by the WithSize component.
    */
   _timeToCssPixels(time: Milliseconds): CssPixels {
-    const { timeRange, width } = this.props;
+    const { timeRange, width, timelineMarginLeft } = this.props;
     const timeRangeTotal = timeRange.end - timeRange.start;
     const innerContainerWidth =
-      width - TIMELINE_MARGIN_LEFT - TIMELINE_MARGIN_RIGHT;
+      width - timelineMarginLeft - TIMELINE_MARGIN_RIGHT;
 
     const markerPosition =
       ((time - timeRange.start) / timeRangeTotal) * innerContainerWidth +
-      TIMELINE_MARGIN_LEFT;
+      timelineMarginLeft;
 
     return markerPosition;
   }
@@ -316,6 +314,7 @@ type NetworkChartRowProps = {|
   +onLeftClick?: MarkerIndex => mixed,
   +onRightClick?: MarkerIndex => mixed,
   +shouldDisplayTooltips: () => boolean,
+  +timelineMarginLeft: number,
 |};
 
 type State = {|
@@ -442,6 +441,7 @@ class NetworkChartRow extends React.PureComponent<NetworkChartRowProps, State> {
       timeRange,
       isRightClicked,
       shouldDisplayTooltips,
+      timelineMarginLeft,
     } = this.props;
 
     if (networkPayload === null) {
@@ -472,6 +472,7 @@ class NetworkChartRow extends React.PureComponent<NetworkChartRowProps, State> {
           networkPayload={networkPayload}
           width={width}
           timeRange={timeRange}
+          timelineMarginLeft={timelineMarginLeft}
         />
         {shouldDisplayTooltips() && this.state.hovered ? (
           // This magic value "5" avoids the tooltip of being too close of the
