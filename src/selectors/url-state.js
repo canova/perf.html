@@ -60,6 +60,14 @@ export const getShowJsTracerSummary: Selector<boolean> = state =>
   getFullProfileSpecificState(state).showJsTracerSummary;
 
 /**
+ * Active tab specific url state
+ */
+export const getActiveTabProfileSpecificState: Selector<*> = state =>
+  getProfileSpecificState(state).activeTab;
+export const getIsActiveTabResourcesOpen: Selector<boolean> = state =>
+  getActiveTabProfileSpecificState(state).resourcesOpen;
+
+/**
  * Raw search strings, before any splitting has been performed.
  */
 export const getCurrentSearchString: Selector<string> = state =>

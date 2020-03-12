@@ -4,13 +4,24 @@
 // @flow
 
 import type { ScreenshotPayload } from '../types/markers';
-import type { Profile, Thread, ThreadIndex, Pid } from '../types/profile';
+import type {
+  Profile,
+  Thread,
+  ThreadIndex,
+  Pid,
+  InnerWindowID,
+  Page,
+} from '../types/profile';
 import type {
   GlobalTrack,
   LocalTrack,
   TrackIndex,
 } from '../types/profile-derived';
-import { defaultThreadOrder, getFriendlyThreadName } from './profile-data';
+import {
+  defaultThreadOrder,
+  getFriendlyThreadName,
+  getActiveTabFriendlyThreadName,
+} from './profile-data';
 import { ensureExists, assertExhaustiveCheck } from '../utils/flow';
 
 /**
@@ -223,7 +234,7 @@ export function computeLocalTracksByPid(
       localTracksByPid.set(pid, tracks);
     }
 
-    if (!_isMainThread(thread)) {
+    if (!isMainThread(thread)) {
       // This thread has not been added as a GlobalTrack, so add it as a local track.
       tracks.push({ type: 'thread', threadIndex });
     }
@@ -290,7 +301,7 @@ export function computeGlobalTracks(profile: Profile): GlobalTrack[] {
   ) {
     const thread = profile.threads[threadIndex];
     const { pid, markers, stringTable } = thread;
-    if (_isMainThread(thread)) {
+    if (isMainThread(thread)) {
       // This is a main thread, a global track needs to be created or updated with
       // the main thread info.
       let globalTrack = globalTracksByPid.get(pid);
@@ -536,6 +547,40 @@ export function getVisibleThreads(
   return visibleThreads;
 }
 
+/**
+ * Gets the global and resource tracks and returns the visible track indexes for
+ * active tab view.
+ */
+export function getVisibleActiveTabThreadIndexes(
+  globalTracks: GlobalTrack[],
+  resourceTracks: LocalTrack[],
+  isResourcesOpen: boolean
+): ThreadIndex[] {
+  const visibleThreads = [];
+
+  // For the active tab view, there must be only one global thread track.
+  // But making it more generic here.
+  for (const globalTrack of globalTracks) {
+    if (globalTrack.type === 'process') {
+      const { mainThreadIndex } = globalTrack;
+      if (mainThreadIndex !== null) {
+        visibleThreads.push(mainThreadIndex);
+      }
+    }
+  }
+
+  // Get the resource track indexes if the resources panel open.
+  if (isResourcesOpen) {
+    for (const resourceTrack of resourceTracks) {
+      if (resourceTrack.type === 'thread') {
+        visibleThreads.push(resourceTrack.threadIndex);
+      }
+    }
+  }
+
+  return visibleThreads;
+}
+
 export function getGlobalTrackName(
   globalTrack: GlobalTrack,
   threads: Thread[]
@@ -724,7 +769,7 @@ function _findDefaultThread(threads: Thread[]): Thread | null {
   return threads[defaultThreadIndex];
 }
 
-function _isMainThread(thread: Thread): boolean {
+export function isMainThread(thread: Thread): boolean {
   return (
     thread.name === 'GeckoMain' ||
     // If the pid is a string, then it's not one that came from the system.
@@ -743,4 +788,27 @@ function _indexesAreValid(listLength: number, indexes: number[]) {
       .sort()
       .every((value, arrayIndex) => value === arrayIndex)
   );
+}
+
+export function getActiveTabResourceTrackName(
+  resourceTrack: LocalTrack,
+  threads: Thread[],
+  innerWindowIDToPageMap: Map<InnerWindowID, Page>
+): string {
+  switch (resourceTrack.type) {
+    case 'thread': {
+      return getActiveTabFriendlyThreadName(
+        threads[resourceTrack.threadIndex],
+        innerWindowIDToPageMap
+      );
+    }
+    case 'network':
+    case 'memory':
+    case 'ipc':
+      throw new Error(
+        `Local track type ${resourceTrack.type} is not implemented for the active tab`
+      );
+    default:
+      throw assertExhaustiveCheck(resourceTrack, 'Unhandled LocalTrack type.');
+  }
 }

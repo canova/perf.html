@@ -5,17 +5,25 @@
 // @flow
 import { createSelector } from 'reselect';
 
-import { getDataSource, getSelectedTab, getShowTabOnly } from './url-state';
+import {
+  getDataSource,
+  getSelectedTab,
+  getShowTabOnly,
+  getIsActiveTabResourcesOpen,
+  getHiddenGlobalTracks,
+  getHiddenLocalTracksByPid,
+} from './url-state';
 import {
   getGlobalTracks,
   getLocalTracksByPid,
-  getComputedHiddenGlobalTracks,
-  getComputedHiddenLocalTracksByPid,
+  getActiveTabGlobalTracks,
+  getActiveTabResourceTracks,
 } from './profile';
 import { getZipFileState } from './zipped-profiles.js';
 import { assertExhaustiveCheck, ensureExists } from '../utils/flow';
 import {
   TRACK_SCREENSHOT_HEIGHT,
+  TRACK_ACTIVE_TAB_SCREENSHOT_HEIGHT,
   TRACK_NETWORK_HEIGHT,
   TRACK_MEMORY_HEIGHT,
   TRACK_IPC_HEIGHT,
@@ -71,26 +79,43 @@ export const getIsDragAndDropOverlayRegistered: Selector<boolean> = state =>
 export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
   getGlobalTracks,
   getLocalTracksByPid,
-  getComputedHiddenGlobalTracks,
-  getComputedHiddenLocalTracksByPid,
+  getActiveTabGlobalTracks,
+  getActiveTabResourceTracks,
+  getHiddenGlobalTracks,
+  getHiddenLocalTracksByPid,
   getTrackThreadHeights,
   getShowTabOnly,
+  getIsActiveTabResourcesOpen,
   (
     globalTracks,
     localTracksByPid,
+    activeTabGlobalTracks,
+    activeTabResourceTracks,
     hiddenGlobalTracks,
     hiddenLocalTracksByPid,
     trackThreadHeights,
-    showTabOnly
+    showTabOnly,
+    isActiveTabResourcesOpen
   ) => {
-    let height = TIMELINE_RULER_HEIGHT + TIMELINE_SETTINGS_HEIGHT;
+    let height = TIMELINE_RULER_HEIGHT;
+    let effectiveGlobalTracks;
+    if (showTabOnly === null) {
+      effectiveGlobalTracks = globalTracks;
+      height += TIMELINE_SETTINGS_HEIGHT;
+    } else {
+      effectiveGlobalTracks = activeTabGlobalTracks;
+    }
     const border = 1;
 
-    for (const [trackIndex, globalTrack] of globalTracks.entries()) {
+    for (const [trackIndex, globalTrack] of effectiveGlobalTracks.entries()) {
       if (!hiddenGlobalTracks.has(trackIndex)) {
         switch (globalTrack.type) {
           case 'screenshots':
-            height += TRACK_SCREENSHOT_HEIGHT + border;
+            if (showTabOnly === null) {
+              height += TRACK_SCREENSHOT_HEIGHT + border;
+            } else {
+              height += TRACK_ACTIVE_TAB_SCREENSHOT_HEIGHT + border;
+            }
             break;
           case 'visual-progress':
           case 'perceptual-visual-progress':
@@ -106,6 +131,7 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
                 height += TRACK_PROCESS_BLANK_HEIGHT + border;
               } else {
                 const trackThreadHeight = trackThreadHeights[mainThreadIndex];
+                console.log('canova trackThreadHeight', trackThreadHeight);
                 if (trackThreadHeight === undefined) {
                   // The height isn't computed yet, return.
                   return null;
@@ -129,53 +155,82 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
       }
     }
 
-    for (const [pid, localTracks] of localTracksByPid) {
-      if (hiddenPids.has(pid)) {
-        // This track is hidden already.
-        continue;
+    if (showTabOnly === null) {
+      for (const [pid, localTracks] of localTracksByPid) {
+        if (hiddenPids.has(pid)) {
+          // This track is hidden already.
+          continue;
+        }
+        for (const [trackIndex, localTrack] of localTracks.entries()) {
+          const hiddenLocalTracks = ensureExists(
+            hiddenLocalTracksByPid.get(pid),
+            'Could not look up the hidden local tracks from the given PID'
+          );
+          if (!hiddenLocalTracks.has(trackIndex)) {
+            switch (localTrack.type) {
+              case 'thread':
+                {
+                  // The thread tracks have enough complexity that it warrants measuring
+                  // them rather than statically using a value like the other tracks.
+                  const trackThreadHeight =
+                    trackThreadHeights[localTrack.threadIndex];
+                  if (trackThreadHeight === undefined) {
+                    // The height isn't computed yet, return.
+                    return null;
+                  }
+                  height += trackThreadHeight + border;
+                }
+                break;
+              case 'network':
+                height += TRACK_NETWORK_HEIGHT + border;
+                break;
+              case 'memory':
+                height += TRACK_MEMORY_HEIGHT + border;
+                break;
+              case 'ipc':
+                height += TRACK_IPC_HEIGHT + border;
+                break;
+              default:
+                throw assertExhaustiveCheck(localTrack);
+            }
+          }
+        }
       }
-      for (const [trackIndex, localTrack] of localTracks.entries()) {
-        const hiddenLocalTracks = ensureExists(
-          hiddenLocalTracksByPid.get(pid),
-          'Could not look up the hidden local tracks from the given PID'
-        );
-        if (!hiddenLocalTracks.has(trackIndex)) {
-          switch (localTrack.type) {
+    } else {
+      if (activeTabResourceTracks.length > 0) {
+        // FIXME: this is height of resources
+        height += 20;
+      }
+      if (isActiveTabResourcesOpen) {
+        for (const resourceTrack of activeTabResourceTracks) {
+          switch (resourceTrack.type) {
             case 'thread':
               {
                 // The thread tracks have enough complexity that it warrants measuring
                 // them rather than statically using a value like the other tracks.
                 const trackThreadHeight =
-                  trackThreadHeights[localTrack.threadIndex];
+                  trackThreadHeights[resourceTrack.threadIndex];
                 if (trackThreadHeight === undefined) {
                   // The height isn't computed yet, return.
                   return null;
                 }
-                height += trackThreadHeight + border;
+                // FIXME: move that 20 to constants, this is the label of the resources tracks.
+                height += trackThreadHeight + 20 + border;
               }
-
               break;
             case 'network':
-              if (!showTabOnly) {
-                height += TRACK_NETWORK_HEIGHT + border;
-              }
-              break;
             case 'memory':
-              if (!showTabOnly) {
-                height += TRACK_MEMORY_HEIGHT + border;
-              }
-              break;
             case 'ipc':
-              if (!showTabOnly) {
-                height += TRACK_IPC_HEIGHT + border;
-              }
-              break;
+              throw new Error(
+                `Local track ${resourceTrack.type} is not implemented for resource tracks`
+              );
             default:
-              throw assertExhaustiveCheck(localTrack);
+              throw assertExhaustiveCheck(resourceTrack);
           }
         }
       }
     }
+
     return height;
   }
 );

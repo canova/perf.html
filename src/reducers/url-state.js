@@ -286,7 +286,6 @@ const showJsTracerSummary: Reducer<boolean> = (state = false, action) => {
 const globalTrackOrder: Reducer<TrackIndex[]> = (state = [], action) => {
   switch (action.type) {
     case 'VIEW_FULL_PROFILE':
-    case 'VIEW_ACTIVE_TAB_PROFILE':
     case 'CHANGE_GLOBAL_TRACK_ORDER':
       return action.globalTrackOrder;
     case 'SANITIZED_PROFILE_PUBLISHED':
@@ -304,7 +303,6 @@ const hiddenGlobalTracks: Reducer<Set<TrackIndex>> = (
 ) => {
   switch (action.type) {
     case 'VIEW_FULL_PROFILE':
-    case 'VIEW_ACTIVE_TAB_PROFILE':
     case 'ISOLATE_LOCAL_TRACK':
     case 'ISOLATE_PROCESS':
     case 'ISOLATE_PROCESS_MAIN_THREAD':
@@ -335,7 +333,6 @@ const hiddenLocalTracksByPid: Reducer<Map<Pid, Set<TrackIndex>>> = (
 ) => {
   switch (action.type) {
     case 'VIEW_FULL_PROFILE':
-    case 'VIEW_ACTIVE_TAB_PROFILE':
       return action.hiddenLocalTracksByPid;
     case 'HIDE_LOCAL_TRACK': {
       const hiddenLocalTracksByPid = new Map(state);
@@ -371,7 +368,6 @@ const localTrackOrderByPid: Reducer<Map<Pid, TrackIndex[]>> = (
 ) => {
   switch (action.type) {
     case 'VIEW_FULL_PROFILE':
-    case 'VIEW_ACTIVE_TAB_PROFILE':
       return action.localTrackOrderByPid;
     case 'CHANGE_LOCAL_TRACK_ORDER': {
       const localTrackOrderByPid = new Map(state);
@@ -427,6 +423,18 @@ const showTabOnly: Reducer<BrowsingContextID | null> = (
 };
 
 /**
+ * Active tab specific profile url states
+ */
+const resourcesOpen: Reducer<boolean> = (state = false, action) => {
+  switch (action.type) {
+    case 'TOGGLE_RESOURCES_PANEL':
+      return !state;
+    default:
+      return state;
+  }
+};
+
+/**
  * These values are specific to an individual full profile.
  */
 const fullProfileSpecific = combineReducers({
@@ -447,7 +455,9 @@ const fullProfileSpecific = combineReducers({
 /**
  * These values are specific to an individual active tab profile.
  */
-// const activeTabProfileSpecific = combineReducers({});
+const activeTabProfileSpecific = combineReducers({
+  resourcesOpen,
+});
 
 /**
  * These values are specific to an individual profile.
@@ -464,9 +474,7 @@ const profileSpecific = combineReducers({
   networkSearchString,
   transforms,
   full: fullProfileSpecific,
-  // Currently this is commented out because it's empty and redux doesn't allow
-  // empty objects without reducers. Uncomment it after adding a state in it.
-  // activeTab: activeTabProfileSpecific,
+  activeTab: activeTabProfileSpecific,
 });
 
 /**

@@ -202,6 +202,8 @@ export type LocalTrack =
 export type Track = GlobalTrack | LocalTrack;
 export type TrackIndex = number;
 
+export type TrackType = 'global' | 'local' | 'resource';
+
 /**
  * Type that holds the values of personally identifiable information that user
  * wants to remove.

@@ -14,7 +14,6 @@ import { oneLine } from 'common-tags';
 
 import type { Profile } from '../../../types/profile';
 import type { State } from '../../../types/state';
-import { ensureExists } from '../../../utils/flow';
 
 /**
  * This function takes the current timeline tracks, and generates a human readable result
@@ -43,23 +42,9 @@ export function getHumanReadableTracks(state: State): string[] {
   const threads = profileViewSelectors.getThreads(state);
   const globalTracks = profileViewSelectors.getGlobalTracks(state);
   const hiddenGlobalTracks = urlStateSelectors.getHiddenGlobalTracks(state);
-  const activeTabHiddenGlobalTracks = profileViewSelectors.getActiveTabHiddenGlobalTracksGetter(
-    state
-  )();
-  const activeTabHiddenLocalTracksByPid = profileViewSelectors.getActiveTabHiddenLocalTracksByPidGetter(
-    state
-  )();
   const selectedThreadIndex = urlStateSelectors.getSelectedThreadIndex(state);
-  const showTabOnly = urlStateSelectors.getShowTabOnly(state);
   const text: string[] = [];
   for (const globalTrackIndex of urlStateSelectors.getGlobalTrackOrder(state)) {
-    if (
-      showTabOnly !== null &&
-      activeTabHiddenGlobalTracks.has(globalTrackIndex)
-    ) {
-      // If we are in active tab view, hide this track(and its local tracks) completely,
-      continue;
-    }
     const globalTrack = globalTracks[globalTrackIndex];
     const globalHiddenText = hiddenGlobalTracks.has(globalTrackIndex)
       ? 'hide'
@@ -109,15 +94,6 @@ export function getHumanReadableTracks(state: State): string[] {
           globalTrack.pid
         );
 
-        if (showTabOnly !== null) {
-          const activeTabHiddenLocalTracks = ensureExists(
-            activeTabHiddenLocalTracksByPid.get(globalTrack.pid)
-          );
-          if (activeTabHiddenLocalTracks.has(trackIndex)) {
-            // If we are in active tab view, hide this track completely,
-            continue;
-          }
-        }
         const hiddenText = hiddenTracks.has(trackIndex) ? 'hide' : 'show';
         const selected =
           track.threadIndex === selectedThreadIndex ? ' SELECTED' : '';

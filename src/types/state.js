@@ -57,15 +57,18 @@ export type RightClickedMarker = {|
  * NOTE: This state is empty for now, but will be used later, do not remove.
  * globalTracks and localTracksByPid states will be here in the future.
  */
-export type FullProfileViewState = {||};
+export type FullProfileViewState = {|
+  globalTracks: GlobalTrack[],
+  localTracksByPid: Map<Pid, LocalTrack[]>,
+|};
 
 /**
  * Active tab profile view state
  * They should not be used from the full view.
  */
 export type ActiveTabProfileViewState = {|
-  hiddenGlobalTracksGetter: () => Set<TrackIndex>,
-  hiddenLocalTracksByPidGetter: () => Map<Pid, Set<TrackIndex>>,
+  globalTracks: GlobalTrack[],
+  resourceTracks: LocalTrack[],
 |};
 
 /**
@@ -84,12 +87,8 @@ export type ProfileViewState = {
     rightClickedCallNode: RightClickedCallNode | null,
     rightClickedMarker: RightClickedMarker | null,
   |},
-  globalTracks: GlobalTrack[],
-  localTracksByPid: Map<Pid, LocalTrack[]>,
   +profile: Profile | null,
-  // NOTE: Currently commented out to fix the flow warnings, but will be used soon.
-  // Do not remove.
-  // +full: FullProfileViewState,
+  +full: FullProfileViewState,
   +activeTab: ActiveTabProfileViewState,
 };
 
@@ -212,7 +211,9 @@ export type FullProfileSpecificUrlState = {|
  * They should not be used from the full view.
  * NOTE: This state is empty for now, but will be used later, do not remove.
  */
-export type ActiveTabSpecificProfileUrlState = {||};
+export type ActiveTabSpecificProfileUrlState = {|
+  resourcesOpen: boolean,
+|};
 
 export type ProfileSpecificUrlState = {|
   selectedThread: ThreadIndex | null,
@@ -226,9 +227,7 @@ export type ProfileSpecificUrlState = {|
   networkSearchString: string,
   transforms: TransformStacksPerThread,
   full: FullProfileSpecificUrlState,
-  // NOTE: Currently commented out to fix the flow warnings, but will be used soon.
-  // Do not remove.
-  // activeTab: ActiveTabSpecificProfileUrlState,
+  activeTab: ActiveTabSpecificProfileUrlState,
 |};
 
 export type UrlState = {|

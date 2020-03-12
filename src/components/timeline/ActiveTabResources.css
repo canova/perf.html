@@ -1,0 +1,117 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+.timelineTrack:not(:first-child) .timelineTrackGlobalRow.activeTab .timelineTrackThread {
+  padding-top: 10px;
+  border-top: 1px solid var(--grey-30);
+}
+
+.timelineResourceTracks {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.timelineResources {
+  background-color: #fff;
+}
+
+.timelineResourcesHeader {
+  position: relative;
+  margin-left: 20px;
+  cursor: default;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.timelineResourcesHeader::before {
+  position: absolute;
+  top: 5px;
+  left: -11px;
+  width: 0;
+  height: 0;
+
+  /* Drawing the arrow */
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 5px solid #979797;
+  content: '';
+  transition: transform 0.2s;
+}
+
+.timelineResourcesHeader.opened::before {
+  transform: rotate(90deg);
+}
+
+.timelineTrackResource:first-child {
+  border-top: none;
+}
+
+.timelineTrackResourceRow {
+  position: relative;
+  flex-direction: column;
+  /* transition: all 0.2s; */
+}
+
+.timelineTrackResourceRow .timelineTrackThreadMarkers {
+  /* position: absolute; */
+  width: 100%;
+}
+
+.timelineTrackResourceRow .timelineMarkers {
+  height: 3px;
+}
+
+.timelineTrackResourceRow .timelineMarkersGeckoMain {
+  height: 9px;
+}
+
+.timelineTrackResourceRow .threadActivityGraph {
+  transition: height 0.2s;
+}
+.timelineTrackResourceRow:not(.selected) .threadActivityGraph {
+  height: 6px;
+}
+
+.timelineTrackResourceLabel {
+  max-width: calc(100% - 55px);
+  pointer-events: none;
+  /* position: absolute; */
+  z-index: 3;
+  line-height: 20px;
+  top: 0;
+  padding: 0 5px 0 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timelineTrackResourceRow.selected .timelineTrackResourceLabel {
+  position: relative;
+}
+
+.timelineTrackResourceLabel::before {
+  position: absolute;
+  top: 5px;
+  left: 20px;
+  width: 0;
+  height: 0;
+
+  /* Drawing the arrow */
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 5px solid #979797;
+  content: '';
+  transition: transform 0.2s;
+}
+
+.timelineTrackResourceRow.selected .timelineTrackResourceLabel::before {
+  transform: rotate(90deg);
+}
+
+.timelineTrackResourceLabel span {
+  font-weight: bold;
+}

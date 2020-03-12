@@ -76,7 +76,14 @@ export type LocalTrackReference = {|
   +trackIndex: TrackIndex,
   +pid: Pid,
 |};
-export type TrackReference = GlobalTrackReference | LocalTrackReference;
+export type ResourceTrackReference = {|
+  +type: 'resource',
+  +trackIndex: TrackIndex,
+|};
+export type TrackReference =
+  | GlobalTrackReference
+  | LocalTrackReference
+  | ResourceTrackReference;
 
 export type RequestedLib = {|
   +debugName: string,
@@ -266,13 +273,7 @@ type ReceiveProfileAction =
       +type: 'VIEW_ACTIVE_TAB_PROFILE',
       +selectedThreadIndex: ThreadIndex,
       +globalTracks: GlobalTrack[],
-      +globalTrackOrder: TrackIndex[],
-      +hiddenGlobalTracks: Set<TrackIndex>,
-      +localTracksByPid: Map<Pid, LocalTrack[]>,
-      +hiddenLocalTracksByPid: Map<Pid, Set<TrackIndex>>,
-      +localTrackOrderByPid: Map<Pid, TrackIndex[]>,
-      +activeTabHiddenGlobalTracksGetter: () => Set<TrackIndex>,
-      +activeTabHiddenLocalTracksByPidGetter: () => Map<Pid, Set<TrackIndex>>,
+      +resourceTracks: LocalTrack[],
       +showTabOnly?: BrowsingContextID | null,
     |}
   | {|
@@ -374,7 +375,10 @@ type UrlStateAction =
   | {|
       +type: 'SET_DATA_SOURCE',
       +dataSource: DataSource,
-    |};
+    |}
+  | {
+      +type: 'TOGGLE_RESOURCES_PANEL',
+    };
 
 type IconsAction =
   | {| +type: 'ICON_HAS_LOADED', +icon: string |}

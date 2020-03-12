@@ -35,10 +35,7 @@ import {
 import { getProfileFromTextSamples } from './fixtures/profiles/processed-profile';
 import { selectedThreadSelectors } from '../selectors/per-thread';
 import { uintArrayToString } from '../utils/uintarray-encoding';
-import {
-  getActiveTabHiddenGlobalTracksGetter,
-  getActiveTabHiddenLocalTracksByPidGetter,
-} from '../selectors/profile';
+import { getActiveTabGlobalTracks } from '../selectors/profile';
 
 function _getStoreWithURL(
   settings: {
@@ -422,15 +419,7 @@ describe('showTabOnly', function() {
     const { getState } = _getStoreWithURL({
       search: '?showTabOnly1=123',
     });
-    expect(getActiveTabHiddenGlobalTracksGetter(getState())).toBeInstanceOf(
-      Function
-    );
-    const activeTabHiddenLocalTracksByPidGetter = getActiveTabHiddenLocalTracksByPidGetter(
-      getState()
-    );
-    expect(activeTabHiddenLocalTracksByPidGetter).toBeInstanceOf(Function);
-    const hiddenLocalTracksByPid = activeTabHiddenLocalTracksByPidGetter();
-    expect(hiddenLocalTracksByPid.size).toBe(1);
+    expect(getActiveTabGlobalTracks(getState())).not.toBe(0);
   });
 
   it('should remove other full view url states if present', function() {

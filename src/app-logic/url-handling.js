@@ -95,7 +95,9 @@ type FullProfileSpecificBaseQuery = {|
 |};
 
 // Base query that only applies to active tab profile view.
-type ActiveTabProfileSpecificBaseQuery = {||};
+type ActiveTabProfileSpecificBaseQuery = {|
+  resourcesOpen: null | void,
+|};
 
 // "null | void" in the query objects are flags which map to true for null, and false
 // for void. False flags do not show up the URL.
@@ -252,6 +254,11 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
   } else {
     // Add the active tab profile specific state query here.
     baseQuery = ({}: ActiveTabProfileSpecificBaseQueryShape);
+
+    // Add the resources open state to url.
+    baseQuery.resourcesOpen = urlState.profileSpecific.activeTab.resourcesOpen
+      ? null
+      : undefined;
   }
 
   baseQuery = ({
@@ -304,6 +311,7 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
         'timing'
           ? undefined
           : urlState.profileSpecific.lastSelectedCallTreeSummaryStrategy;
+
       break;
     }
     case 'marker-table':
@@ -468,9 +476,9 @@ export function stateFromLocation(
           ? query.hiddenThreads.split('-').map(index => Number(index))
           : null,
       },
-      // Currently this is commented out because it's empty and redux doesn't allow
-      // empty objects without reducers. Uncomment it after adding a state in it.
-      // activeTab: {},
+      activeTab: {
+        resourcesOpen: query.resourcesOpen !== undefined,
+      },
     },
   };
 }

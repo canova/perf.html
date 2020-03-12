@@ -13,11 +13,7 @@ import * as ProfileData from '../profile-logic/profile-data';
 import { arePathsEqual, PathSet } from '../utils/path';
 
 import type { Profile, Pid } from '../types/profile';
-import type {
-  LocalTrack,
-  GlobalTrack,
-  TrackIndex,
-} from '../types/profile-derived';
+import type { LocalTrack, GlobalTrack } from '../types/profile-derived';
 import type { StartEndRange } from '../types/units';
 import type {
   PreviewSelection,
@@ -92,7 +88,6 @@ const profile: Reducer<Profile | null> = (state = null, action) => {
 const globalTracks: Reducer<GlobalTrack[]> = (state = [], action) => {
   switch (action.type) {
     case 'VIEW_FULL_PROFILE':
-    case 'VIEW_ACTIVE_TAB_PROFILE':
       return action.globalTracks;
     default:
       return state;
@@ -109,7 +104,6 @@ const localTracksByPid: Reducer<Map<Pid, LocalTrack[]>> = (
 ) => {
   switch (action.type) {
     case 'VIEW_FULL_PROFILE':
-    case 'VIEW_ACTIVE_TAB_PROFILE':
       return action.localTracksByPid;
     default:
       return state;
@@ -117,32 +111,24 @@ const localTracksByPid: Reducer<Map<Pid, LocalTrack[]>> = (
 };
 
 /**
- * This information is stored, rather than derived via selectors, since the coalesced
- * function update would force it to be recomputed on every symbolication update
- * pass. It is valid for the lifetime of the profile.
+ * TODO: write
  */
-const activeTabHiddenGlobalTracksGetter: Reducer<() => Set<TrackIndex>> = (
-  state = () => new Set(),
-  action
-) => {
+const activeTabGlobalTracks: Reducer<GlobalTrack[]> = (state = [], action) => {
   switch (action.type) {
     case 'VIEW_ACTIVE_TAB_PROFILE':
-      return action.activeTabHiddenGlobalTracksGetter;
+      return action.globalTracks;
     default:
       return state;
   }
 };
 
 /**
- * This can be derived like the globalTracks information, but is stored in the state
- * for the same reason.
+ * TODO: write
  */
-const activeTabHiddenLocalTracksByPidGetter: Reducer<
-  () => Map<Pid, Set<TrackIndex>>
-> = (state = () => new Map(), action) => {
+const resourceTracks: Reducer<LocalTrack[]> = (state = [], action) => {
   switch (action.type) {
     case 'VIEW_ACTIVE_TAB_PROFILE':
-      return action.activeTabHiddenLocalTracksByPidGetter;
+      return action.resourceTracks;
     default:
       return state;
   }
@@ -452,6 +438,7 @@ const scrollToSelectionGeneration: Reducer<number> = (state = 0, action) => {
     case 'HIDE_GLOBAL_TRACK':
     case 'HIDE_LOCAL_TRACK':
     case 'CHANGE_SELECTED_MARKER':
+    case 'DATA_RELOAD':
       return state + 1;
     default:
       return state;
@@ -619,12 +606,14 @@ const profileViewReducer: Reducer<ProfileViewState> = wrapReducerInResetter(
       rightClickedCallNode,
       rightClickedMarker,
     }),
-    globalTracks,
-    localTracksByPid,
     profile,
+    full: combineReducers({
+      globalTracks,
+      localTracksByPid,
+    }),
     activeTab: combineReducers({
-      hiddenGlobalTracksGetter: activeTabHiddenGlobalTracksGetter,
-      hiddenLocalTracksByPidGetter: activeTabHiddenLocalTracksByPidGetter,
+      globalTracks: activeTabGlobalTracks,
+      resourceTracks,
     }),
   })
 );

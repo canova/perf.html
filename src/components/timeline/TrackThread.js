@@ -49,12 +49,14 @@ import type {
   CallNodeInfo,
   IndexIntoCallNodeTable,
   SelectedState,
+  TrackType,
 } from '../../types/profile-derived';
 import type { State } from '../../types/state';
 import type { ConnectedProps } from '../../utils/connect';
 
 type OwnProps = {|
   +threadIndex: ThreadIndex,
+  +trackType: TrackType,
   +showMemoryMarkers?: boolean,
 |};
 
@@ -142,6 +144,7 @@ class TimelineTrackThread extends PureComponent<Props> {
       showMemoryMarkers,
       samplesSelectedStates,
       treeOrderSampleComparator,
+      trackType,
     } = this.props;
 
     const processType = filteredThread.processType;
@@ -154,38 +157,6 @@ class TimelineTrackThread extends PureComponent<Props> {
 
     return (
       <div className="timelineTrackThread">
-        {showMemoryMarkers ? (
-          <TimelineMarkersMemory
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            threadIndex={threadIndex}
-            onSelect={this._onMarkerSelect}
-          />
-        ) : null}
-        {hasFileIoMarkers ? (
-          <TimelineMarkersFileIo
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            threadIndex={threadIndex}
-            onSelect={this._onMarkerSelect}
-          />
-        ) : null}
-        {displayJank ? (
-          <TimelineMarkersJank
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            threadIndex={threadIndex}
-            onSelect={this._onMarkerSelect}
-          />
-        ) : null}
-        {displayMarkers ? (
-          <TimelineMarkersOverview
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            threadIndex={threadIndex}
-            onSelect={this._onMarkerSelect}
-          />
-        ) : null}
         {timelineType === 'category' && !filteredThread.isJsTracer ? (
           <ThreadActivityGraph
             className="threadActivityGraph"
@@ -197,6 +168,7 @@ class TimelineTrackThread extends PureComponent<Props> {
             categories={categories}
             samplesSelectedStates={samplesSelectedStates}
             treeOrderSampleComparator={treeOrderSampleComparator}
+            trackType={trackType}
           />
         ) : (
           <ThreadStackGraph
@@ -212,6 +184,44 @@ class TimelineTrackThread extends PureComponent<Props> {
             onSampleClick={this._onSampleClick}
           />
         )}
+        <div className="timelineTrackThreadMarkers">
+          {trackType !== 'resource' && showMemoryMarkers ? (
+            <TimelineMarkersMemory
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              threadIndex={threadIndex}
+              onSelect={this._onMarkerSelect}
+              trackType={trackType}
+            />
+          ) : null}
+          {trackType !== 'resource' && hasFileIoMarkers ? (
+            <TimelineMarkersFileIo
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              threadIndex={threadIndex}
+              onSelect={this._onMarkerSelect}
+              trackType={trackType}
+            />
+          ) : null}
+          {displayJank ? (
+            <TimelineMarkersJank
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              threadIndex={threadIndex}
+              onSelect={this._onMarkerSelect}
+              trackType={trackType}
+            />
+          ) : null}
+          {trackType !== 'resource' && displayMarkers ? (
+            <TimelineMarkersOverview
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              threadIndex={threadIndex}
+              onSelect={this._onMarkerSelect}
+              trackType={trackType}
+            />
+          ) : null}
+        </div>
         <EmptyThreadIndicator
           thread={filteredThread}
           interval={interval}

@@ -32,6 +32,7 @@ type MouseHandler = (event: MouseEvent) => void;
 type OwnProps = {|
   +width: number,
   +children: React.Node,
+  +style?: Object,
 |};
 
 type StateProps = {|
@@ -339,7 +340,7 @@ class TimelineRulerAndSelection extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { children, previewSelection } = this.props;
+    const { children, previewSelection, style } = this.props;
     const { hoverLocation } = this.state;
 
     return (
@@ -348,6 +349,7 @@ class TimelineRulerAndSelection extends React.PureComponent<Props, State> {
         ref={this._containerCreated}
         onMouseDown={this._onMouseDown}
         onMouseMove={this._onMouseMove}
+        style={style}
       >
         {children}
         {previewSelection.hasSelection

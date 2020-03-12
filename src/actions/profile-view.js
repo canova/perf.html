@@ -13,9 +13,8 @@ import {
   getLocalTrackFromReference,
   getGlobalTrackFromReference,
   getPreviewSelection,
-  getComputedHiddenGlobalTracks,
-  getComputedHiddenLocalTracks,
-  getActiveTabHiddenGlobalTracksGetter,
+  getActiveTabResourceTrackFromReference,
+  getActiveTabGlobalTrackFromReference,
 } from '../selectors/profile';
 import {
   getThreadSelectors,
@@ -28,6 +27,8 @@ import {
   getGlobalTrackOrder,
   getLocalTrackOrder,
   getSelectedTab,
+  getShowTabOnly,
+  getHiddenLocalTracks,
 } from '../selectors/url-state';
 import {
   getCallNodePathFromIndex,
@@ -233,10 +234,10 @@ export function selectTrack(trackReference: TrackReference): ThunkAction<void> {
     switch (trackReference.type) {
       case 'global': {
         // Handle the case of global tracks.
-        const globalTrack = getGlobalTrackFromReference(
-          getState(),
-          trackReference
-        );
+        const globalTrack =
+          getShowTabOnly(getState()) === null
+            ? getGlobalTrackFromReference(getState(), trackReference)
+            : getActiveTabGlobalTrackFromReference(getState(), trackReference);
 
         // Go through each type, and determine the selected slug and thread index.
         switch (globalTrack.type) {
@@ -308,10 +309,39 @@ export function selectTrack(trackReference: TrackReference): ThunkAction<void> {
         }
         break;
       }
+      case 'resource': {
+        // Handle the case of resource tracks. This is used by active tab view.
+        const localTrack = getActiveTabResourceTrackFromReference(
+          getState(),
+          trackReference
+        );
+
+        // Go through each type, and determine the tab slug and thread index.
+        switch (localTrack.type) {
+          case 'thread': {
+            // Ensure a relevant thread-based tab is used.
+            selectedThreadIndex = localTrack.threadIndex;
+            break;
+          }
+          case 'network':
+          case 'ipc':
+          case 'memory': {
+            throw new Error(
+              `This LocalTrack type ${localTrack.type} is not implemented by resource tracks.`
+            );
+          }
+          default:
+            throw assertExhaustiveCheck(
+              localTrack,
+              `Unhandled LocalTrack type.`
+            );
+        }
+        break;
+      }
       default:
         throw assertExhaustiveCheck(
           trackReference,
-          'Unhandled TrackReference type'
+          `Unhandled TrackReference type.`
         );
     }
 
@@ -389,7 +419,7 @@ export function changeGlobalTrackOrder(globalTrackOrder: TrackIndex[]): Action {
  */
 export function hideGlobalTrack(trackIndex: TrackIndex): ThunkAction<void> {
   return (dispatch, getState) => {
-    const hiddenGlobalTracks = getComputedHiddenGlobalTracks(getState());
+    const hiddenGlobalTracks = getHiddenGlobalTracks(getState());
     if (hiddenGlobalTracks.has(trackIndex)) {
       // This track is already hidden, don't do anything.
       return;
@@ -641,15 +671,11 @@ function _findOtherVisibleThread(
   // Either this global track is already hidden, or it has been taken into account.
   globalTrackIndexToIgnore?: TrackIndex,
   // This is helpful when hiding a new local track index, it won't be selected.
-  localTrackIndexToIgnore?: TrackIndex,
-  transitioningToActiveTab?: boolean = false
+  localTrackIndexToIgnore?: TrackIndex
 ): ThreadIndex | null {
   const globalTracks = getGlobalTracks(getState());
   const globalTrackOrder = getGlobalTrackOrder(getState());
-  const globalHiddenTracks = getComputedHiddenGlobalTracks(getState());
-  const activeTabHiddenGlobalTracksGetter = getActiveTabHiddenGlobalTracksGetter(
-    getState()
-  );
+  const globalHiddenTracks = getHiddenGlobalTracks(getState());
 
   for (const globalTrackIndex of globalTrackOrder) {
     const globalTrack = globalTracks[globalTrackIndex];
@@ -664,15 +690,6 @@ function _findOtherVisibleThread(
       continue;
     }
 
-    if (
-      transitioningToActiveTab &&
-      activeTabHiddenGlobalTracksGetter().has(globalTrackIndex)
-    ) {
-      // We are transitioning to the active tab view. We should be able to select
-      // the track that is not hidden by it as well.
-      continue;
-    }
-
     if (globalTrack.mainThreadIndex !== null) {
       // Found a thread index from a global track.
       return globalTrack.mainThreadIndex;
@@ -680,10 +697,7 @@ function _findOtherVisibleThread(
 
     const localTracks = getLocalTracks(getState(), globalTrack.pid);
     const localTrackOrder = getLocalTrackOrder(getState(), globalTrack.pid);
-    const hiddenLocalTracks = getComputedHiddenLocalTracks(
-      getState(),
-      globalTrack.pid
-    );
+    const hiddenLocalTracks = getHiddenLocalTracks(getState(), globalTrack.pid);
 
     for (const trackIndex of localTrackOrder) {
       const track = localTracks[trackIndex];
@@ -713,7 +727,7 @@ export function hideLocalTrack(
 ): ThunkAction<void> {
   return (dispatch, getState) => {
     const localTracks = getLocalTracks(getState(), pid);
-    const hiddenLocalTracks = getComputedHiddenLocalTracks(getState(), pid);
+    const hiddenLocalTracks = getHiddenLocalTracks(getState(), pid);
     const localTrackToHide = localTracks[trackIndexToHide];
     const selectedThreadIndex = getSelectedThreadIndex(getState());
     let nextSelectedThreadIndex: ThreadIndex | null =

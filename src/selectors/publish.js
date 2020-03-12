@@ -13,9 +13,8 @@ import {
   getGlobalTracks,
   getLocalTracksByPid,
   getHasPreferenceMarkers,
-  getComputedHiddenGlobalTracks,
-  getComputedHiddenLocalTracksByPid,
 } from './profile';
+import { getHiddenGlobalTracks, getHiddenLocalTracksByPid } from './url-state';
 import { compress } from '../utils/gz';
 import { serializeProfile } from '../profile-logic/process-profile';
 import {
@@ -69,8 +68,8 @@ export const getRemoveProfileInformation: Selector<RemoveProfileInformation | nu
   getCheckedSharingOptions,
   getProfile,
   getCommittedRange,
-  getComputedHiddenGlobalTracks,
-  getComputedHiddenLocalTracksByPid,
+  getHiddenGlobalTracks,
+  getHiddenLocalTracksByPid,
   getGlobalTracks,
   getLocalTracksByPid,
   getHasPreferenceMarkers,

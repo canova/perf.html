@@ -66,6 +66,7 @@ export class TrackIPCImpl extends React.PureComponent<Props, State> {
           rangeEnd={rangeEnd}
           threadIndex={threadIndex}
           onSelect={this._onMarkerSelect}
+          trackType="local"
         />
       </div>
     );

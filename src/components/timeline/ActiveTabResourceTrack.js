@@ -11,40 +11,26 @@ import {
   selectTrack,
 } from '../../actions/profile-view';
 import { assertExhaustiveCheck } from '../../utils/flow';
-import ContextMenuTrigger from '../shared/ContextMenuTrigger';
 import {
   getSelectedThreadIndex,
   getSelectedTab,
-  getHiddenLocalTracks,
 } from '../../selectors/url-state';
 import explicitConnect from '../../utils/connect';
-import {
-  getLocalTrackName,
-  getCounterSelectors,
-} from '../../selectors/profile';
-import { getThreadSelectors } from '../../selectors/per-thread';
+import { getActiveTabResourceTrackName } from '../../selectors/profile';
 import TrackThread from './TrackThread';
-import TrackNetwork from './TrackNetwork';
-import { TrackMemory } from './TrackMemory';
-import { TrackIPC } from './TrackIPC';
 import type { TrackReference } from '../../types/actions';
-import type { Pid } from '../../types/profile';
 import type { TrackIndex, LocalTrack } from '../../types/profile-derived';
 import type { ConnectedProps } from '../../utils/connect';
 
 type OwnProps = {|
-  +pid: Pid,
   +localTrack: LocalTrack,
   +trackIndex: TrackIndex,
-  +style?: Object /* This is used by Reorderable */,
   +setIsInitialSelectedPane: (value: boolean) => void,
 |};
 
 type StateProps = {|
   +trackName: string,
   +isSelected: boolean,
-  +isHidden: boolean,
-  +titleText: string | null,
 |};
 
 type DispatchProps = {|
@@ -68,8 +54,8 @@ class LocalTrackComponent extends PureComponent<Props> {
   };
 
   _getTrackReference(): TrackReference {
-    const { pid, trackIndex } = this.props;
-    return { type: 'local', pid, trackIndex };
+    const { trackIndex } = this.props;
+    return { type: 'resource', trackIndex };
   }
 
   _onLineClick = () => {
@@ -77,18 +63,21 @@ class LocalTrackComponent extends PureComponent<Props> {
   };
 
   renderTrack() {
-    const { localTrack } = this.props;
+    const { localTrack, isSelected } = this.props;
     switch (localTrack.type) {
       case 'thread':
         return (
-          <TrackThread threadIndex={localTrack.threadIndex} trackType="local" />
+          <TrackThread
+            threadIndex={localTrack.threadIndex}
+            trackType={isSelected ? 'local' : 'resource'}
+          />
         );
       case 'network':
-        return <TrackNetwork threadIndex={localTrack.threadIndex} />;
       case 'memory':
-        return <TrackMemory counterIndex={localTrack.counterIndex} />;
       case 'ipc':
-        return <TrackIPC threadIndex={localTrack.threadIndex} />;
+        throw new Error(
+          'Local track type is not implemented for resource tracks'
+        );
       default:
         console.error('Unhandled localTrack type', (localTrack: empty));
         return null;
@@ -103,37 +92,20 @@ class LocalTrackComponent extends PureComponent<Props> {
   }
 
   render() {
-    const { isSelected, isHidden, titleText, trackName, style } = this.props;
-
-    if (isHidden) {
-      // If this global track is hidden, render out a stub element so that the
-      // Reorderable Component still works across all the tracks.
-      return <li className="timelineTrackHidden" />;
-    }
+    const { isSelected, trackName } = this.props;
 
     return (
-      <li className="timelineTrack timelineTrackLocal" style={style}>
+      <li className="timelineTrack timelineTrackResource">
         {/* This next div is used to mirror the structure of the TimelineGlobalTrack */}
         <div
-          className={classNames('timelineTrackRow timelineTrackLocalRow', {
+          className={classNames('timelineTrackRow timelineTrackResourceRow', {
             selected: isSelected,
           })}
           onClick={this._onLineClick}
         >
-          <ContextMenuTrigger
-            id="TimelineTrackContextMenu"
-            renderTag="div"
-            attributes={{
-              title: titleText,
-              className:
-                'timelineTrackLabel timelineTrackLocalLabel timelineTrackLocalGrippy',
-              onMouseDown: this._onLabelMouseDown,
-            }}
-          >
-            <button type="button" className="timelineTrackNameButton">
-              {trackName}
-            </button>
-          </ContextMenuTrigger>
+          <div className="timelineTrackResourceLabel">
+            <span>Frame:</span> {trackName}
+          </div>
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
       </li>
@@ -142,9 +114,8 @@ class LocalTrackComponent extends PureComponent<Props> {
 }
 
 export default explicitConnect<OwnProps, StateProps, DispatchProps>({
-  mapStateToProps: (state, { pid, localTrack, trackIndex }) => {
+  mapStateToProps: (state, { localTrack, trackIndex }) => {
     // These get assigned based on the track type.
-    let titleText = null;
     let isSelected = false;
 
     // Run different selectors based on the track type.
@@ -154,45 +125,25 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
         const threadIndex = localTrack.threadIndex;
         const selectedThreadIndex = getSelectedThreadIndex(state);
         const selectedTab = getSelectedTab(state);
-        const selectors = getThreadSelectors(threadIndex);
         isSelected =
           threadIndex === selectedThreadIndex &&
           selectedTab !== 'network-chart';
-        titleText = selectors.getThreadProcessDetails(state);
         break;
       }
-      case 'network': {
-        const threadIndex = localTrack.threadIndex;
-        const selectedThreadIndex = getSelectedThreadIndex(state);
-        const selectedTab = getSelectedTab(state);
-        isSelected =
-          threadIndex === selectedThreadIndex &&
-          selectedTab === 'network-chart';
-        break;
-      }
-      case 'memory': {
-        titleText = getCounterSelectors(localTrack.counterIndex).getDescription(
-          state
-        );
-        break;
-      }
+      case 'network':
+      case 'memory':
       case 'ipc': {
-        const threadIndex = localTrack.threadIndex;
-        const selectedThreadIndex = getSelectedThreadIndex(state);
-        const selectedTab = getSelectedTab(state);
-        isSelected =
-          threadIndex === selectedThreadIndex && selectedTab === 'marker-chart';
-        break;
+        throw new Error(
+          'Local track type is not implemented for resource tracks'
+        );
       }
       default:
         throw assertExhaustiveCheck(localTrack, `Unhandled LocalTrack type.`);
     }
 
     return {
-      trackName: getLocalTrackName(state, pid, trackIndex),
-      titleText,
+      trackName: getActiveTabResourceTrackName(state, trackIndex),
       isSelected,
-      isHidden: getHiddenLocalTracks(state, pid).has(trackIndex),
     };
   },
   mapDispatchToProps: {

@@ -5,14 +5,17 @@
 
 import { getThreadSelectors } from '../selectors/per-thread';
 import { assertExhaustiveCheck } from '../utils/flow';
+import { isMainThread } from './tracks';
 
 import type { State } from '../types/state';
-import type { ThreadIndex, Pid } from '../types/profile';
+import type { ThreadIndex, Pid, Profile } from '../types/profile';
 import type {
   GlobalTrack,
   LocalTrack,
   TrackIndex,
 } from '../types/profile-derived';
+
+import type { ScreenshotPayload } from '../types/markers';
 
 /**
  * Take the global tracks and decide which one to hide during the active tab view.
@@ -137,4 +140,131 @@ function isTabFilteredThreadEmpty(
   }
 
   return true;
+}
+
+/**
+ * Take a profile and figure out what active tab GlobalTracks it contains.
+ * The returned array should contain only one thread and screenshot tracks
+ */
+export function computeActiveTabGlobalTracks(
+  profile: Profile,
+  state: State
+): {| globalTracks: GlobalTrack[], resourceTracks: LocalTrack[] |} {
+  const globalTracks: GlobalTrack[] = [];
+  const globalTrackCandidates = [];
+  const globalTrackSampleCountByIdx: Map<number, number> = new Map();
+  let globalTrackIdx = 0;
+  const resourceTracks = [];
+
+  for (
+    let threadIndex = 0;
+    threadIndex < profile.threads.length;
+    threadIndex++
+  ) {
+    const thread = profile.threads[threadIndex];
+    const { pid, markers, stringTable } = thread;
+
+    if (isMainThread(thread)) {
+      // This is a main thread, there is a possibility that it can be a global
+      // track, check if the thread contains active tab data and add it to candidates if it does.
+
+      const sampleCount = getThreadSampleCountOrNull(threadIndex, state);
+      if (sampleCount !== null) {
+        // This thread is not completly empty. Add it to the candidates.
+        globalTrackCandidates[globalTrackIdx] = {
+          type: 'process',
+          pid,
+          mainThreadIndex: threadIndex,
+        };
+        globalTrackSampleCountByIdx.set(globalTrackIdx, sampleCount);
+        globalTrackIdx++;
+      }
+    } else {
+      // This is not a main thread, it's not possible that this can be a global
+      // track. Find out if that thread contains the active tab data, and add it
+      // as a resource track if it does.
+      if (!isTabFilteredThreadEmpty(threadIndex, state)) {
+        resourceTracks.push({ type: 'thread', threadIndex });
+      }
+    }
+
+    // Check for screenshots.
+    const windowIDs: Set<string> = new Set();
+    if (stringTable.hasString('CompositorScreenshot')) {
+      const screenshotNameIndex = stringTable.indexForString(
+        'CompositorScreenshot'
+      );
+      for (let markerIndex = 0; markerIndex < markers.length; markerIndex++) {
+        if (markers.name[markerIndex] === screenshotNameIndex) {
+          // Coerce the payload to a screenshot one. Don't do a runtime check that
+          // this is correct.
+          const data: ScreenshotPayload = (markers.data[markerIndex]: any);
+          windowIDs.add(data.windowID);
+        }
+      }
+      for (const id of windowIDs) {
+        globalTracks.push({ type: 'screenshots', id, threadIndex });
+      }
+    }
+  }
+
+  // Now we know the global track candidates, find the most crowded one and add it.
+  let heaviestTrackIndex = -1;
+  let heaviestTrackSampleCount = -1;
+  for (const [trackIndex, sampleCount] of globalTrackSampleCountByIdx) {
+    if (sampleCount > heaviestTrackSampleCount) {
+      heaviestTrackIndex = trackIndex;
+      heaviestTrackSampleCount = sampleCount;
+    }
+  }
+
+  if (heaviestTrackIndex === -1) {
+    throw new Error('Main global track could not found');
+  }
+
+  // Put the main global track to the last element since we want to display the screenshots first.
+  globalTracks.push(globalTrackCandidates[heaviestTrackIndex]);
+  // Put the other candidates under the resources
+  globalTrackCandidates.splice(heaviestTrackIndex, 1);
+  resourceTracks.unshift(
+    ...globalTrackCandidates.map(track => ({
+      type: 'thread',
+      threadIndex: track.mainThreadIndex,
+    }))
+  );
+
+  return { globalTracks, resourceTracks };
+}
+
+/**
+ * It's null if the thread is copletly empty, and a number if it's not.
+ * !!!THIS FUNCTION IS VERY(BUT VEEERY) EXPENSIVE!!!
+ */
+function getThreadSampleCountOrNull(
+  threadIndex: ThreadIndex,
+  state: State
+): number | null {
+  // Have to get the thread selectors to look if the thread is empty or not.
+  const threadSelectors = getThreadSelectors(threadIndex);
+  const tabFilteredThread = threadSelectors.getActiveTabFilteredThread(state);
+  let nonNullSampleCount = 0;
+  // Check the samples first to see if they are all empty or not.
+  for (const stackIndex of tabFilteredThread.samples.stack) {
+    if (stackIndex !== null) {
+      // Samples are not empty, increment the counter.
+      nonNullSampleCount++;
+    }
+  }
+
+  const tabFilteredMarkers = threadSelectors.getActiveTabFilteredMarkerIndexesWithoutGlobals(
+    state
+  );
+  if (tabFilteredMarkers.length > 0) {
+    // Thread has some markers in it. Don't hide and skip to the next global track.
+    return nonNullSampleCount;
+  }
+
+  // There are no markers in this thread, check the samples and return null
+  // if they are empty as well.
+  return nonNullSampleCount === 0 ? null : nonNullSampleCount;
 }

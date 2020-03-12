@@ -26,6 +26,7 @@ import {
   getLegacyThreadOrder,
   getLegacyHiddenThreads,
   getShowTabOnly,
+  getIsActiveTabResourcesOpen,
 } from '../selectors/url-state';
 import {
   stateFromLocation,
@@ -40,11 +41,9 @@ import {
   initializeSelectedThreadIndex,
   initializeHiddenGlobalTracks,
   getVisibleThreads,
+  getVisibleActiveTabThreadIndexes,
 } from '../profile-logic/tracks';
-import {
-  computeActiveTabHiddenGlobalTracks,
-  computeActiveTabHiddenLocalTracksByPid,
-} from '../profile-logic/active-tab';
+import { computeActiveTabGlobalTracks } from '../profile-logic/active-tab';
 import { getProfileOrNull, getProfile } from '../selectors/profile';
 import { getView } from '../selectors/app';
 import { setDataSource } from './profile-view';
@@ -63,7 +62,7 @@ import type {
   IndexIntoFuncTable,
   BrowsingContextID,
 } from '../types/profile';
-import { assertExhaustiveCheck } from '../utils/flow';
+import { assertExhaustiveCheck, ensureExists } from '../utils/flow';
 
 /**
  * This file collects all the actions that are used for receiving the profile in the
@@ -294,106 +293,48 @@ export function finalizeActiveTabProfileView(
   showTabOnly?: BrowsingContextID | null
 ): ThunkAction<void> {
   return (dispatch, getState) => {
-    const hasUrlInfo = selectedThreadIndex !== null;
-
-    const globalTracks = computeGlobalTracks(profile);
-    const globalTrackOrder = initializeGlobalTrackOrder(
-      globalTracks,
-      hasUrlInfo ? getGlobalTrackOrder(getState()) : null,
-      getLegacyThreadOrder(getState())
-    );
-    let hiddenGlobalTracks = initializeHiddenGlobalTracks(
-      globalTracks,
+    const { globalTracks, resourceTracks } = computeActiveTabGlobalTracks(
       profile,
-      globalTrackOrder,
-      hasUrlInfo ? getHiddenGlobalTracks(getState()) : null,
-      getLegacyHiddenThreads(getState())
-    );
-    // Pre-compute which tracks are not available for the active tab.
-    const activeTabHiddenGlobalTracksGetter = () =>
-      computeActiveTabHiddenGlobalTracks(
-        globalTracks,
-        getState() // we need to access per thread selectors inside
-      );
-    const localTracksByPid = computeLocalTracksByPid(profile);
-    const localTrackOrderByPid = initializeLocalTrackOrderByPid(
-      hasUrlInfo ? getLocalTrackOrderByPid(getState()) : null,
-      localTracksByPid,
-      getLegacyThreadOrder(getState())
-    );
-    let hiddenLocalTracksByPid = initializeHiddenLocalTracksByPid(
-      hasUrlInfo ? getHiddenLocalTracksByPid(getState()) : null,
-      localTracksByPid,
-      profile,
-      getLegacyHiddenThreads(getState())
-    );
-    // Pre-compute which local tracks are not available for the active tab.
-    const activeTabHiddenLocalTracksByPidGetter = () =>
-      computeActiveTabHiddenLocalTracksByPid(
-        localTracksByPid,
-        getState() // we need to access per thread selectors inside
-      );
-    let visibleThreadIndexes = getVisibleThreads(
-      globalTracks,
-      hiddenGlobalTracks,
-      localTracksByPid,
-      hiddenLocalTracksByPid
+      getState()
     );
 
-    // This validity check can't be extracted into a separate function, as it needs
-    // to update a lot of the local variables in this function.
-    if (visibleThreadIndexes.length === 0) {
-      // All threads are hidden, since this can't happen normally, revert them all.
-      visibleThreadIndexes = profile.threads.map(
-        (_, threadIndex) => threadIndex
-      );
-      hiddenGlobalTracks = new Set();
-      const newHiddenTracksByPid = new Map();
-      for (const [pid] of hiddenLocalTracksByPid) {
-        newHiddenTracksByPid.set(pid, new Set());
-      }
-      hiddenLocalTracksByPid = newHiddenTracksByPid;
+    // Check if there is a main track and fall back to full view if it's not there.
+    const mainGlobalTracks = globalTracks.filter(
+      track => track.type === 'process'
+    );
+    if (mainGlobalTracks.length !== 1) {
+      // There must be only one mainTrack. Fall back if otherwise.
+      dispatch(finalizeFullProfileView(profile, selectedThreadIndex, null));
+      return;
     }
 
-    selectedThreadIndex = initializeSelectedThreadIndex(
-      selectedThreadIndex,
-      visibleThreadIndexes,
-      profile
+    // Get the visible thread indexes so we can check the selectedThreadIndex
+    // variable later.
+    const isResourcesOpen = getIsActiveTabResourcesOpen(getState());
+    const visibleThreadIndexes = getVisibleActiveTabThreadIndexes(
+      globalTracks,
+      resourceTracks,
+      isResourcesOpen
     );
 
-    // If all of the local tracks were hidden for a process, and the main thread was
-    // not recorded for that process, hide the (empty) process track as well.
-    for (const [pid, localTracks] of localTracksByPid) {
-      const hiddenLocalTracks = hiddenLocalTracksByPid.get(pid);
-      if (!hiddenLocalTracks) {
-        continue;
+    // Now checking the selectedThreadIndex to see if its one of the tracks that
+    // are visible. Selecting the main track if it's not.
+    if (!visibleThreadIndexes.includes(selectedThreadIndex)) {
+      const mainGlobalTrack = ensureExists(mainGlobalTracks[0]);
+      if (mainGlobalTrack.type !== 'process') {
+        // We already checked this with filter function above, but flow doesn't
+        // refine its type on filter and we had to check this here. But this
+        // can't happen as long as the filter above is the same.
+        throw new Error('Expected a process for the main track');
       }
-      if (hiddenLocalTracks.size === localTracks.length) {
-        // All of the local tracks were hidden.
-        const globalTrackIndex = globalTracks.findIndex(
-          globalTrack =>
-            globalTrack.type === 'process' &&
-            globalTrack.pid === pid &&
-            globalTrack.mainThreadIndex === null
-        );
-        if (globalTrackIndex !== -1) {
-          // An empty global track was found, hide it.
-          hiddenGlobalTracks.add(globalTrackIndex);
-        }
-      }
+      selectedThreadIndex = ensureExists(mainGlobalTrack.mainThreadIndex);
     }
 
     dispatch({
       type: 'VIEW_ACTIVE_TAB_PROFILE',
       selectedThreadIndex,
       globalTracks,
-      globalTrackOrder,
-      hiddenGlobalTracks,
-      localTracksByPid,
-      hiddenLocalTracksByPid,
-      localTrackOrderByPid,
-      activeTabHiddenGlobalTracksGetter,
-      activeTabHiddenLocalTracksByPidGetter,
+      resourceTracks,
       showTabOnly,
     });
   };

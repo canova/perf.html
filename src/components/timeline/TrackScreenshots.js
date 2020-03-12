@@ -13,10 +13,18 @@ import {
 import { getThreadSelectors } from '../../selectors/per-thread';
 import { withSize, type SizeProps } from '../shared/WithSize';
 import { createPortal } from 'react-dom';
-import { TRACK_SCREENSHOT_HEIGHT } from '../../app-logic/constants';
+import {
+  TRACK_SCREENSHOT_HEIGHT,
+  TRACK_ACTIVE_TAB_SCREENSHOT_HEIGHT,
+} from '../../app-logic/constants';
+import { getShowTabOnly } from '../../selectors/url-state';
 
 import type { ScreenshotPayload } from '../../types/markers';
-import type { ThreadIndex, Thread } from '../../types/profile';
+import type {
+  ThreadIndex,
+  Thread,
+  BrowsingContextID,
+} from '../../types/profile';
 import type { Marker } from '../../types/profile-derived';
 import type { Milliseconds } from '../../types/units';
 import type { ConnectedProps } from '../../utils/connect';
@@ -35,6 +43,7 @@ type StateProps = {|
   +screenshots: Marker[],
   +threadName: string,
   +isMakingPreviewSelection: boolean,
+  +showTabOnly: BrowsingContextID | null,
 |};
 type DispatchProps = {||};
 type Props = {|
@@ -79,12 +88,19 @@ class Screenshots extends PureComponent<Props, State> {
       width,
       rangeStart,
       rangeEnd,
+      showTabOnly,
     } = this.props;
     const { pageX, offsetX, containerTop } = this.state;
     return (
       <div
         className="timelineTrackScreenshot"
-        style={{ height: TRACK_SCREENSHOT_HEIGHT }}
+        style={{
+          height:
+            // FIXME: use a selector for this
+            showTabOnly !== null
+              ? TRACK_ACTIVE_TAB_SCREENSHOT_HEIGHT
+              : TRACK_SCREENSHOT_HEIGHT,
+        }}
         onMouseLeave={this._handleMouseLeave}
         onMouseMove={this._handleMouseMove}
       >
@@ -94,6 +110,7 @@ class Screenshots extends PureComponent<Props, State> {
           rangeStart={rangeStart}
           rangeEnd={rangeEnd}
           screenshots={screenshots}
+          showTabOnly={showTabOnly}
         />
         <HoverPreview
           screenshots={screenshots}
@@ -105,6 +122,7 @@ class Screenshots extends PureComponent<Props, State> {
           containerTop={containerTop}
           rangeEnd={rangeEnd}
           rangeStart={rangeStart}
+          showTabOnly={showTabOnly}
         />
       </div>
     );
@@ -129,6 +147,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
       rangeEnd: end,
       isMakingPreviewSelection:
         previewSelection.hasSelection && previewSelection.isModifying,
+      showTabOnly: getShowTabOnly(state),
     };
   },
   component: withSize<Props>(Screenshots),
@@ -144,6 +163,7 @@ type HoverPreviewProps = {|
   +pageX: null | number,
   +containerTop: null | number,
   +width: number,
+  +showTabOnly: BrowsingContextID | null,
 |};
 
 const MAXIMUM_HOVER_SIZE = 350;
@@ -182,6 +202,7 @@ class HoverPreview extends PureComponent<HoverPreviewProps> {
       pageX,
       offsetX,
       containerTop,
+      showTabOnly,
     } = this.props;
 
     if (isMakingPreviewSelection || offsetX === null || pageX === null) {
@@ -206,8 +227,11 @@ class HoverPreview extends PureComponent<HoverPreviewProps> {
     let hoverHeight = windowHeight * coefficient;
     let hoverWidth = windowWidth * coefficient;
 
-    const distanceToTopFromTrackCenter =
-      TRACK_SCREENSHOT_HEIGHT / 2 + containerTop;
+    const trackHeight =
+      showTabOnly !== null
+        ? TRACK_ACTIVE_TAB_SCREENSHOT_HEIGHT
+        : TRACK_SCREENSHOT_HEIGHT;
+    const distanceToTopFromTrackCenter = trackHeight / 2 + containerTop;
     // If the hover height exceeds the top of screen,
     // set it to the value so that it reaches the top of screen when it is centered.
     if (hoverHeight > 2 * distanceToTopFromTrackCenter) {
@@ -225,7 +249,7 @@ class HoverPreview extends PureComponent<HoverPreviewProps> {
     hoverHeight = Math.round(hoverHeight);
 
     // Set the top so it centers around the track.
-    let top = containerTop + (TRACK_SCREENSHOT_HEIGHT - hoverHeight) * 0.5;
+    let top = containerTop + (trackHeight - hoverHeight) * 0.5;
     // Round top value to integer.
     top = Math.floor(top);
     if (top < 0) {
@@ -272,6 +296,7 @@ type ScreenshotStripProps = {|
   +rangeEnd: Milliseconds,
   +screenshots: Marker[],
   +width: number,
+  +showTabOnly: BrowsingContextID | null,
 |};
 
 class ScreenshotStrip extends PureComponent<ScreenshotStripProps> {
@@ -282,6 +307,7 @@ class ScreenshotStrip extends PureComponent<ScreenshotStripProps> {
       rangeStart,
       rangeEnd,
       screenshots,
+      showTabOnly,
     } = this.props;
 
     if (screenshots.length === 0) {
@@ -290,7 +316,12 @@ class ScreenshotStrip extends PureComponent<ScreenshotStripProps> {
 
     const images = [];
     const rangeLength = rangeEnd - rangeStart;
-    const imageContainerWidth = TRACK_SCREENSHOT_HEIGHT * 0.75;
+
+    const trackHeight =
+      showTabOnly !== null
+        ? TRACK_ACTIVE_TAB_SCREENSHOT_HEIGHT
+        : TRACK_SCREENSHOT_HEIGHT;
+    const imageContainerWidth = trackHeight * 0.75;
     const timeToPixel = time =>
       (outerContainerWidth * (time - rangeStart)) / rangeLength;
 
@@ -313,8 +344,7 @@ class ScreenshotStrip extends PureComponent<ScreenshotStripProps> {
       const payload: ScreenshotPayload = (screenshots[screenshotIndex]
         .data: any);
       const { url: urlStringIndex, windowWidth, windowHeight } = payload;
-      const scaledImageWidth =
-        (TRACK_SCREENSHOT_HEIGHT * windowWidth) / windowHeight;
+      const scaledImageWidth = (trackHeight * windowWidth) / windowHeight;
       images.push(
         <div
           className="timelineTrackScreenshotImgContainer"
@@ -327,7 +357,7 @@ class ScreenshotStrip extends PureComponent<ScreenshotStripProps> {
             src={thread.stringTable.getString(urlStringIndex)}
             style={{
               width: scaledImageWidth,
-              height: TRACK_SCREENSHOT_HEIGHT,
+              height: trackHeight,
             }}
           />
         </div>

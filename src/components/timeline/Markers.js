@@ -20,7 +20,11 @@ import ContextMenuTrigger from '../shared/ContextMenuTrigger';
 import './Markers.css';
 
 import type { Milliseconds, CssPixels } from '../../types/units';
-import type { Marker, MarkerIndex } from '../../types/profile-derived';
+import type {
+  Marker,
+  MarkerIndex,
+  TrackType,
+} from '../../types/profile-derived';
 import type { SizeProps } from '../shared/WithSize';
 import type { ConnectedProps } from '../../utils/connect';
 import type { ThreadIndex } from '../../types/profile';
@@ -49,6 +53,7 @@ type CanvasProps = {|
   +onMouseUp: MouseEventHandler,
   +onMouseMove: MouseEventHandler,
   +onMouseOut: MouseEventHandler,
+  +trackType: TrackType,
 |};
 
 function _drawRoundedRect(
@@ -102,6 +107,7 @@ class TimelineMarkersCanvas extends React.PureComponent<CanvasProps> {
       height,
       getMarker,
       markerIndexes,
+      trackType,
     } = this.props;
 
     if (height === 0 || width === 0) {
@@ -113,7 +119,11 @@ class TimelineMarkersCanvas extends React.PureComponent<CanvasProps> {
       ? c.ownerDocument.defaultView.devicePixelRatio
       : 1;
     const pixelWidth = Math.round(width * devicePixelRatio);
-    const pixelHeight = Math.round(height * devicePixelRatio);
+    let pixelHeight = Math.round(height * devicePixelRatio);
+
+    if (trackType === 'resource') {
+      pixelHeight *= 2;
+    }
 
     if (c.width !== pixelWidth || c.height !== pixelHeight) {
       c.width = pixelWidth;
@@ -251,6 +261,7 @@ export type OwnProps = {|
   +rangeEnd: Milliseconds,
   +threadIndex: ThreadIndex,
   +onSelect: (ThreadIndex, Milliseconds, Milliseconds) => mixed,
+  +trackType: TrackType,
 |};
 
 export type StateProps = {|
@@ -315,6 +326,7 @@ class TimelineMarkersImplementation extends React.PureComponent<Props, State> {
       if (time < start || time >= start + duration) {
         continue;
       }
+
       const markerStyle =
         name in markerStyles ? markerStyles[name] : markerStyles.default;
       if (y >= markerStyle.top && y < markerStyle.top + markerStyle.height) {
@@ -417,6 +429,7 @@ class TimelineMarkersImplementation extends React.PureComponent<Props, State> {
       threadIndex,
       testId,
       rightClickedMarker,
+      trackType,
     } = this.props;
 
     const { mouseDownItem, hoveredItem, mouseX, mouseY } = this.state;
@@ -447,6 +460,7 @@ class TimelineMarkersImplementation extends React.PureComponent<Props, State> {
             onMouseMove={this._onMouseMove}
             onMouseUp={this._onMouseUp}
             onMouseOut={this._onMouseOut}
+            trackType={trackType}
           />
         </ContextMenuTrigger>
         {shouldShowTooltip && hoveredItem ? (
