@@ -45,6 +45,7 @@ import {
 import {
   computeActiveTabHiddenGlobalTracks,
   computeActiveTabHiddenLocalTracksByPid,
+  computeActiveTabGlobalTracks,
 } from '../profile-logic/active-tab';
 import { getProfileOrNull, getProfile } from '../selectors/profile';
 import { getView } from '../selectors/app';
@@ -300,7 +301,11 @@ export function finalizeProfileViewForActiveTab(
   return (dispatch, getState) => {
     const hasUrlInfo = selectedThreadIndex !== null;
 
-    const globalTracks = computeGlobalTracks(profile);
+    const globalTrackCandidates = computeGlobalTracks(profile);
+    const globalTracks = computeActiveTabGlobalTracks(
+      globalTrackCandidates,
+      getState()
+    );
     const globalTrackOrder = initializeGlobalTrackOrder(
       globalTracks,
       hasUrlInfo ? getGlobalTrackOrder(getState()) : null,
