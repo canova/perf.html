@@ -263,6 +263,9 @@ type ReceiveProfileAction =
       +activeTabHiddenGlobalTracksGetter: () => Set<TrackIndex>,
       +activeTabHiddenLocalTracksByPidGetter: () => Map<Pid, Set<TrackIndex>>,
     |}
+  | {|
+      +type: 'DATA_RELOAD',
+    |}
   | {| +type: 'RECEIVE_ZIP_FILE', +zip: JSZip |}
   | {| +type: 'PROCESS_PROFILE_FROM_ZIP_FILE', +pathInZipFile: string |}
   | {| +type: 'FAILED_TO_PROCESS_PROFILE_FROM_ZIP_FILE', +error: any |}
