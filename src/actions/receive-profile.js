@@ -304,11 +304,14 @@ export function finalizeProfileViewForActiveTab(
       globalTrackCandidates,
       getState()
     );
+    // FIXME: Remove this
     const globalTrackOrder = initializeGlobalTrackOrder(
       globalTracks,
       null,
       getLegacyThreadOrder(getState())
     );
+    // FIXME: We can check if there is the main track and switch back to full view if there is not.
+    // FIXME: Remove this
     let hiddenGlobalTracks = initializeHiddenGlobalTracks(
       globalTracks,
       profile,
@@ -323,11 +326,13 @@ export function finalizeProfileViewForActiveTab(
         getState() // we need to access per thread selectors inside
       );
     const localTracksByPid = computeLocalTracksByPid(profile);
+    // FIXME: Remove this
     const localTrackOrderByPid = initializeLocalTrackOrderByPid(
       null,
       localTracksByPid,
       getLegacyThreadOrder(getState())
     );
+    // FIXME: Remove this
     let hiddenLocalTracksByPid = initializeHiddenLocalTracksByPid(
       null,
       localTracksByPid,
@@ -335,11 +340,13 @@ export function finalizeProfileViewForActiveTab(
       getLegacyHiddenThreads(getState())
     );
     // Pre-compute which local tracks are not available for the active tab.
+    // FIXME: Remove this
     const activeTabHiddenLocalTracksByPidGetter = () =>
       computeActiveTabHiddenLocalTracksByPid(
         localTracksByPid,
         getState() // we need to access per thread selectors inside
       );
+    // FIXME: Remove this
     let visibleThreadIndexes = getVisibleThreads(
       globalTracks,
       hiddenGlobalTracks,
