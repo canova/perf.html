@@ -29,7 +29,7 @@ import { assertSetContainsOnly } from '../fixtures/custom-assertions';
 
 import * as App from '../../actions/app';
 import * as ProfileView from '../../actions/profile-view';
-import { viewProfile } from '../../actions/receive-profile';
+import { viewProfile, changeShowTabOnly } from '../../actions/receive-profile';
 import * as ProfileViewSelectors from '../../selectors/profile';
 import * as UrlStateSelectors from '../../selectors/url-state';
 import { getRightClickedCallNodeInfo } from '../../selectors/right-clicked-call-node';
@@ -1658,7 +1658,7 @@ describe('snapshots of selectors/profile', function() {
   it('matches the last stored run of selectedThreadSelector.getTabFilteredThread', function() {
     const { getState, dispatch } = setupStore();
 
-    dispatch(ProfileView.changeShowTabOnly(browsingContextID));
+    dispatch(changeShowTabOnly(browsingContextID));
     expect(
       selectedThreadSelectors.getTabFilteredThread(getState())
     ).toMatchSnapshot();
@@ -2938,7 +2938,7 @@ describe('pages and active tab selectors', function() {
     profile.threads.push(getEmptyThread());
 
     const { dispatch, getState } = storeWithProfile(profile);
-    dispatch(ProfileView.changeShowTabOnly(activeBrowsingContextID));
+    dispatch(changeShowTabOnly(activeBrowsingContextID));
     return { profile, dispatch, getState };
   }
 

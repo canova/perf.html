@@ -62,6 +62,7 @@ import type {
   Profile,
   ThreadIndex,
   IndexIntoFuncTable,
+  BrowsingContextID,
 } from '../types/profile';
 import { assertExhaustiveCheck } from '../utils/flow';
 
@@ -398,6 +399,19 @@ export function finalizeProfileViewForActiveTab(
       activeTabHiddenGlobalTracksGetter,
       activeTabHiddenLocalTracksByPidGetter,
     });
+  };
+}
+
+export function changeShowTabOnly(
+  showTabOnly: BrowsingContextID | null
+): ThunkAction<void> {
+  return dispatch => {
+    dispatch({
+      type: 'CHANGE_SHOW_TAB_ONLY',
+      showTabOnly,
+    });
+
+    dispatch(recomputeProfileData());
   };
 }
 

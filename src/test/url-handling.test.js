@@ -11,7 +11,6 @@ import {
   changeMarkersSearchString,
   changeNetworkSearchString,
   changeProfileName,
-  changeShowTabOnly,
 } from '../actions/profile-view';
 import { changeSelectedTab, changeProfilesToCompare } from '../actions/app';
 import {
@@ -22,7 +21,7 @@ import {
   upgradeLocationToCurrentVersion,
 } from '../app-logic/url-handling';
 import { blankStore } from './fixtures/stores';
-import { viewProfile } from '../actions/receive-profile';
+import { viewProfile, changeShowTabOnly } from '../actions/receive-profile';
 import type { Profile } from '../types/profile';
 import getProfile from './fixtures/profiles/call-nodes';
 import queryString from 'query-string';

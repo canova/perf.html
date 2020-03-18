@@ -30,12 +30,10 @@ import {
   retrieveProfilesToCompare,
   _fetchProfile,
   getProfilesFromRawUrl,
+  changeShowTabOnly,
 } from '../../actions/receive-profile';
 import { SymbolsNotFoundError } from '../../profile-logic/errors';
-import {
-  changeShowTabOnly,
-  changeSelectedThread,
-} from '../../actions/profile-view';
+import { changeSelectedThread } from '../../actions/profile-view';
 import fakeIndexedDB from 'fake-indexeddb';
 
 import { createGeckoProfile } from '../fixtures/profiles/gecko-profile';

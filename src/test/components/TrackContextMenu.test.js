@@ -12,8 +12,8 @@ import { ensureExists } from '../../utils/flow';
 import {
   changeSelectedThread,
   changeRightClickedTrack,
-  changeShowTabOnly,
 } from '../../actions/profile-view';
+import { changeShowTabOnly } from '../../actions/receive-profile';
 import TrackContextMenu from '../../components/timeline/TrackContextMenu';
 import { getGlobalTracks, getLocalTracks } from '../../selectors/profile';
 import {

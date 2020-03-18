@@ -42,8 +42,8 @@ import {
   changeGlobalTrackOrder,
   changeTimelineType,
   changeRightClickedTrack,
-  changeShowTabOnly,
 } from '../../actions/profile-view';
+import { changeShowTabOnly } from '../../actions/receive-profile';
 
 import type { BrowsingContextID } from '../../types/profile';
 import type {
