@@ -299,8 +299,6 @@ export function finalizeProfileViewForActiveTab(
   selectedThreadIndex: ThreadIndex
 ): ThunkAction<void> {
   return (dispatch, getState) => {
-    const hasUrlInfo = selectedThreadIndex !== null;
-
     const globalTrackCandidates = computeGlobalTracks(profile);
     const globalTracks = computeActiveTabGlobalTracks(
       globalTrackCandidates,
@@ -308,14 +306,14 @@ export function finalizeProfileViewForActiveTab(
     );
     const globalTrackOrder = initializeGlobalTrackOrder(
       globalTracks,
-      hasUrlInfo ? getGlobalTrackOrder(getState()) : null,
+      null,
       getLegacyThreadOrder(getState())
     );
     let hiddenGlobalTracks = initializeHiddenGlobalTracks(
       globalTracks,
       profile,
       globalTrackOrder,
-      hasUrlInfo ? getHiddenGlobalTracks(getState()) : null,
+      null,
       getLegacyHiddenThreads(getState())
     );
     // Pre-compute which tracks are not available for the active tab.
@@ -326,12 +324,12 @@ export function finalizeProfileViewForActiveTab(
       );
     const localTracksByPid = computeLocalTracksByPid(profile);
     const localTrackOrderByPid = initializeLocalTrackOrderByPid(
-      hasUrlInfo ? getLocalTrackOrderByPid(getState()) : null,
+      null,
       localTracksByPid,
       getLegacyThreadOrder(getState())
     );
     let hiddenLocalTracksByPid = initializeHiddenLocalTracksByPid(
-      hasUrlInfo ? getHiddenLocalTracksByPid(getState()) : null,
+      null,
       localTracksByPid,
       profile,
       getLegacyHiddenThreads(getState())
