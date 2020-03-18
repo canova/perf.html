@@ -5,6 +5,7 @@
 
 import { getThreadSelectors } from '../selectors/per-thread';
 import { assertExhaustiveCheck } from '../utils/flow';
+import { isMainThread } from './tracks';
 
 import type { State } from '../types/state';
 import type { ThreadIndex, Pid } from '../types/profile';
@@ -13,6 +14,8 @@ import type {
   LocalTrack,
   TrackIndex,
 } from '../types/profile-derived';
+import type { Profile } from '../types/profile';
+import type { ScreenshotPayload } from '../types/markers';
 
 /**
  * In order for track indexes to be backwards compatible, the indexes need to be
@@ -179,58 +182,74 @@ function isTabFilteredThreadEmpty(
 /**
  * Take a profile and figure out what active tab GlobalTracks it contains.
  * The returned array should contain only one thread and screenshot tracks
+ * TODO: add a type for the return value
  */
 export function computeActiveTabGlobalTracks(
-  globalTracks: GlobalTrack[],
+  profile: Profile,
   state: State
-): GlobalTrack[] {
-  // const activeTabHiddenGlobalTracks = new Set();
-  const activeTabGlobalTracks = [];
+): {| globalTracks: GlobalTrack[], resourceTracks: Object |} {
+  const globalTracks: GlobalTrack[] = [];
+  const globalTrackCandidates = [];
+  const globalTrackSampleCountByIdx: Map<number, number> = new Map();
+  let globalTrackIdx = 0;
+  const resourceTracks = [];
 
-  const trackIdxToSampleCount: Map<TrackIndex, number> = new Map();
-  for (let trackIndex = 0; trackIndex < globalTracks.length; trackIndex++) {
-    const globalTrack: GlobalTrack = globalTracks[trackIndex];
-    const trackType = globalTrack.type;
+  for (
+    let threadIndex = 0;
+    threadIndex < profile.threads.length;
+    threadIndex++
+  ) {
+    const thread = profile.threads[threadIndex];
+    const { pid, markers, stringTable } = thread;
 
-    switch (trackType) {
-      case 'screenshots':
-        // Include the screenshots.
-        activeTabGlobalTracks.push(globalTrack);
-        break;
-      case 'visual-progress':
-      case 'perceptual-visual-progress':
-      case 'contentful-visual-progress':
-        // Do not include those tracks because we want to hide as much as
-        // possible from web developers for now.
-        break;
-      case 'process': {
-        // Check all the process types and find the thread with the most non-null samples.
-        // FIXME: This is quite expensive. We should figure this out eventually.
-        if (
-          globalTrack.mainThreadIndex !== undefined &&
-          globalTrack.mainThreadIndex !== null
-        ) {
-          const sampleCount = getThreadSampleCountOrNull(
-            globalTrack.mainThreadIndex,
-            state
-          );
-          if (sampleCount === null) {
-            // This thread is completly empty. Do not show it.
-            continue;
-          }
-          trackIdxToSampleCount.set(trackIndex, sampleCount);
-        }
-        break;
+    if (isMainThread(thread)) {
+      // This is a main thread, there is a possibility that it can be a global
+      // track, check if the thread contains active tab data and add it to candidates if it does.
+
+      const sampleCount = getThreadSampleCountOrNull(threadIndex, state);
+      if (sampleCount !== null) {
+        // This thread is not completly empty. Add it to the candidates.
+        globalTrackCandidates[globalTrackIdx] = {
+          type: 'process',
+          pid,
+          mainThreadIndex: threadIndex,
+        };
+        globalTrackSampleCountByIdx.set(globalTrackIdx, sampleCount);
+        globalTrackIdx++;
       }
-      default:
-        throw assertExhaustiveCheck(trackType, `Unhandled GlobalTrack type.`);
+    } else {
+      // This is not a main thread, it's not possible that this can be a global
+      // track. Find out if that thread contains the active tab data, and add it
+      // as a resource track if it does.
+      if (!isTabFilteredThreadEmpty(threadIndex, state)) {
+        resourceTracks.push({ type: 'thread', threadIndex });
+      }
+    }
+
+    // Check for screenshots.
+    const windowIDs: Set<string> = new Set();
+    if (stringTable.hasString('CompositorScreenshot')) {
+      const screenshotNameIndex = stringTable.indexForString(
+        'CompositorScreenshot'
+      );
+      for (let markerIndex = 0; markerIndex < markers.length; markerIndex++) {
+        if (markers.name[markerIndex] === screenshotNameIndex) {
+          // Coerce the payload to a screenshot one. Don't do a runtime check that
+          // this is correct.
+          const data: ScreenshotPayload = (markers.data[markerIndex]: any);
+          windowIDs.add(data.windowID);
+        }
+      }
+      for (const id of windowIDs) {
+        globalTracks.push({ type: 'screenshots', id, threadIndex });
+      }
     }
   }
 
-  // Now we now how crowded all threads are, find the most crowded one and add it.
+  // Now we know the global track candidates, find the most crowded one and add it.
   let heaviestTrackIndex = -1;
   let heaviestTrackSampleCount = -1;
-  for (const [trackIndex, sampleCount] of trackIdxToSampleCount) {
+  for (const [trackIndex, sampleCount] of globalTrackSampleCountByIdx) {
     if (sampleCount > heaviestTrackSampleCount) {
       heaviestTrackIndex = trackIndex;
       heaviestTrackSampleCount = sampleCount;
@@ -240,10 +259,16 @@ export function computeActiveTabGlobalTracks(
   if (heaviestTrackIndex === -1) {
     throw new Error('Main global track could not found');
   }
-  // Put the main global track to the first element since we want to show it first.
-  activeTabGlobalTracks.unshift(globalTracks[heaviestTrackIndex]);
 
-  return activeTabGlobalTracks;
+  // Put the main global track to the first element since we want to show it first.
+  globalTracks.unshift(globalTrackCandidates[heaviestTrackIndex]);
+  // Put the other candidates under the resources
+  globalTrackCandidates.splice(heaviestTrackIndex, 1);
+  resourceTracks.unshift(...globalTrackCandidates);
+
+  console.log('CANOVA GLOBAL RESOURCE: ', globalTracks, resourceTracks);
+
+  return { globalTracks, resourceTracks };
 }
 
 /**

@@ -299,115 +299,24 @@ export function finalizeProfileViewForActiveTab(
   selectedThreadIndex: ThreadIndex
 ): ThunkAction<void> {
   return (dispatch, getState) => {
-    const globalTrackCandidates = computeGlobalTracks(profile);
-    const globalTracks = computeActiveTabGlobalTracks(
-      globalTrackCandidates,
+    const { globalTracks, resourceTracks } = computeActiveTabGlobalTracks(
+      profile,
       getState()
     );
-    // FIXME: Remove this
-    const globalTrackOrder = initializeGlobalTrackOrder(
-      globalTracks,
-      null,
-      getLegacyThreadOrder(getState())
-    );
     // FIXME: We can check if there is the main track and switch back to full view if there is not.
-    // FIXME: Remove this
-    let hiddenGlobalTracks = initializeHiddenGlobalTracks(
-      globalTracks,
-      profile,
-      globalTrackOrder,
-      null,
-      getLegacyHiddenThreads(getState())
-    );
-    // Pre-compute which tracks are not available for the active tab.
-    const activeTabHiddenGlobalTracksGetter = () =>
-      computeActiveTabHiddenGlobalTracks(
-        globalTracks,
-        getState() // we need to access per thread selectors inside
-      );
-    const localTracksByPid = computeLocalTracksByPid(profile);
-    // FIXME: Remove this
-    const localTrackOrderByPid = initializeLocalTrackOrderByPid(
-      null,
-      localTracksByPid,
-      getLegacyThreadOrder(getState())
-    );
-    // FIXME: Remove this
-    let hiddenLocalTracksByPid = initializeHiddenLocalTracksByPid(
-      null,
-      localTracksByPid,
-      profile,
-      getLegacyHiddenThreads(getState())
-    );
-    // Pre-compute which local tracks are not available for the active tab.
-    // FIXME: Remove this
-    const activeTabHiddenLocalTracksByPidGetter = () =>
-      computeActiveTabHiddenLocalTracksByPid(
-        localTracksByPid,
-        getState() // we need to access per thread selectors inside
-      );
-    // FIXME: Remove this
-    let visibleThreadIndexes = getVisibleThreads(
-      globalTracks,
-      hiddenGlobalTracks,
-      localTracksByPid,
-      hiddenLocalTracksByPid
-    );
-
-    // This validity check can't be extracted into a separate function, as it needs
-    // to update a lot of the local variables in this function.
-    if (visibleThreadIndexes.length === 0) {
-      // All threads are hidden, since this can't happen normally, revert them all.
-      visibleThreadIndexes = profile.threads.map(
-        (_, threadIndex) => threadIndex
-      );
-      hiddenGlobalTracks = new Set();
-      const newHiddenTracksByPid = new Map();
-      for (const [pid] of hiddenLocalTracksByPid) {
-        newHiddenTracksByPid.set(pid, new Set());
-      }
-      hiddenLocalTracksByPid = newHiddenTracksByPid;
-    }
-
-    selectedThreadIndex = initializeSelectedThreadIndex(
-      selectedThreadIndex,
-      visibleThreadIndexes,
-      profile
-    );
-
-    // If all of the local tracks were hidden for a process, and the main thread was
-    // not recorded for that process, hide the (empty) process track as well.
-    for (const [pid, localTracks] of localTracksByPid) {
-      const hiddenLocalTracks = hiddenLocalTracksByPid.get(pid);
-      if (!hiddenLocalTracks) {
-        continue;
-      }
-      if (hiddenLocalTracks.size === localTracks.length) {
-        // All of the local tracks were hidden.
-        const globalTrackIndex = globalTracks.findIndex(
-          globalTrack =>
-            globalTrack.type === 'process' &&
-            globalTrack.pid === pid &&
-            globalTrack.mainThreadIndex === null
-        );
-        if (globalTrackIndex !== -1) {
-          // An empty global track was found, hide it.
-          hiddenGlobalTracks.add(globalTrackIndex);
-        }
-      }
-    }
 
     dispatch({
       type: 'VIEW_PROFILE',
-      selectedThreadIndex,
+      selectedThreadIndex, // todo: remove?
       globalTracks,
-      globalTrackOrder,
-      hiddenGlobalTracks,
-      localTracksByPid,
-      hiddenLocalTracksByPid,
-      localTrackOrderByPid,
-      activeTabHiddenGlobalTracksGetter,
-      activeTabHiddenLocalTracksByPidGetter,
+      localTracksByPid: new Map(),
+      // TODO: Remove these
+      globalTrackOrder: [],
+      hiddenGlobalTracks: new Set(),
+      hiddenLocalTracksByPid: new Map(),
+      localTrackOrderByPid: new Map(),
+      activeTabHiddenGlobalTracksGetter: () => new Set(),
+      activeTabHiddenLocalTracksByPidGetter: () => new Map(),
     });
   };
 }
