@@ -26,8 +26,8 @@ import {
   getLocalTrackNamesByPid,
   getGlobalTrackNames,
   getLocalTracksByPid,
-  getActiveTabHiddenGlobalTracksGetter,
-  getActiveTabHiddenLocalTracksByPidGetter,
+  getActiveTabHiddenGlobalTracks,
+  getActiveTabHiddenLocalTracksByPid,
 } from '../../selectors/profile';
 import {
   getGlobalTrackOrder,
@@ -67,8 +67,8 @@ type StateProps = {|
   +localTracksByPid: Map<Pid, LocalTrack[]>,
   +localTrackNamesByPid: Map<Pid, string[]>,
   +showTabOnly: BrowsingContextID | null,
-  +activeTabHiddenGlobalTracksGetter: () => Set<TrackIndex>,
-  +activeTabHiddenLocalTracksByPidGetter: () => Map<Pid, Set<TrackIndex>>,
+  +activeTabHiddenGlobalTracks: Set<TrackIndex>,
+  +activeTabHiddenLocalTracksByPid: Map<Pid, Set<TrackIndex>>,
 |};
 
 type DispatchProps = {|
@@ -209,7 +209,7 @@ class TimelineTrackContextMenu extends PureComponent<Props> {
   renderGlobalTrack(trackIndex: TrackIndex) {
     const {
       showTabOnly,
-      activeTabHiddenGlobalTracksGetter,
+      activeTabHiddenGlobalTracks,
       hiddenGlobalTracks,
       globalTrackNames,
       globalTracks,
@@ -217,10 +217,7 @@ class TimelineTrackContextMenu extends PureComponent<Props> {
     const isHidden = hiddenGlobalTracks.has(trackIndex);
     const track = globalTracks[trackIndex];
 
-    if (
-      showTabOnly !== null &&
-      activeTabHiddenGlobalTracksGetter().has(trackIndex)
-    ) {
+    if (showTabOnly !== null && activeTabHiddenGlobalTracks.has(trackIndex)) {
       // Hide the global track if it's hidden by active tab view.
       return null;
     }
@@ -258,7 +255,7 @@ class TimelineTrackContextMenu extends PureComponent<Props> {
       hiddenLocalTracksByPid,
       localTrackOrderByPid,
       localTrackNamesByPid,
-      activeTabHiddenLocalTracksByPidGetter,
+      activeTabHiddenLocalTracksByPid,
       hiddenGlobalTracks,
       localTracksByPid,
       showTabOnly,
@@ -289,7 +286,7 @@ class TimelineTrackContextMenu extends PureComponent<Props> {
       // showTabOnly is not null, do not include that track if it's not allowed.
       if (showTabOnly !== null) {
         // We need to defer the call of this as much as possible.
-        const activeTabHiddenLocalTracks = activeTabHiddenLocalTracksByPidGetter().get(
+        const activeTabHiddenLocalTracks = activeTabHiddenLocalTracksByPid.get(
           pid
         );
         if (
@@ -585,12 +582,8 @@ export default explicitConnect<{||}, StateProps, DispatchProps>({
     localTracksByPid: getLocalTracksByPid(state),
     localTrackNamesByPid: getLocalTrackNamesByPid(state),
     showTabOnly: getShowTabOnly(state),
-    activeTabHiddenGlobalTracksGetter: getActiveTabHiddenGlobalTracksGetter(
-      state
-    ),
-    activeTabHiddenLocalTracksByPidGetter: getActiveTabHiddenLocalTracksByPidGetter(
-      state
-    ),
+    activeTabHiddenGlobalTracks: getActiveTabHiddenGlobalTracks(state),
+    activeTabHiddenLocalTracksByPid: getActiveTabHiddenLocalTracksByPid(state),
   }),
   mapDispatchToProps: {
     hideGlobalTrack,

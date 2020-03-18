@@ -43,12 +43,12 @@ export function getHumanReadableTracks(state: State): string[] {
   const threads = profileViewSelectors.getThreads(state);
   const globalTracks = profileViewSelectors.getGlobalTracks(state);
   const hiddenGlobalTracks = urlStateSelectors.getHiddenGlobalTracks(state);
-  const activeTabHiddenGlobalTracks = profileViewSelectors.getActiveTabHiddenGlobalTracksGetter(
+  const activeTabHiddenGlobalTracks = profileViewSelectors.getActiveTabHiddenGlobalTracks(
     state
-  )();
-  const activeTabHiddenLocalTracksByPid = profileViewSelectors.getActiveTabHiddenLocalTracksByPidGetter(
+  );
+  const activeTabHiddenLocalTracksByPid = profileViewSelectors.getActiveTabHiddenLocalTracksByPid(
     state
-  )();
+  );
   const selectedThreadIndex = urlStateSelectors.getSelectedThreadIndex(state);
   const showTabOnly = urlStateSelectors.getShowTabOnly(state);
   const text: string[] = [];

@@ -90,6 +90,7 @@ const profile: Reducer<Profile | null> = (state = null, action) => {
 const globalTracks: Reducer<GlobalTrack[]> = (state = [], action) => {
   switch (action.type) {
     case 'VIEW_FULL_PROFILE':
+    case 'VIEW_ACTIVE_TAB_PROFILE':
       return action.globalTracks;
     default:
       return state;
@@ -106,6 +107,7 @@ const localTracksByPid: Reducer<Map<Pid, LocalTrack[]>> = (
 ) => {
   switch (action.type) {
     case 'VIEW_FULL_PROFILE':
+    case 'VIEW_ACTIVE_TAB_PROFILE':
       return action.localTracksByPid;
     default:
       return state;
@@ -117,13 +119,13 @@ const localTracksByPid: Reducer<Map<Pid, LocalTrack[]>> = (
  * function update would force it to be recomputed on every symbolication update
  * pass. It is valid for the lifetime of the profile.
  */
-const activeTabHiddenGlobalTracksGetter: Reducer<() => Set<TrackIndex>> = (
-  state = () => new Set(),
+const activeTabHiddenGlobalTracks: Reducer<Set<TrackIndex>> = (
+  state = new Set(),
   action
 ) => {
   switch (action.type) {
-    case 'VIEW_FULL_PROFILE':
-      return action.activeTabHiddenGlobalTracksGetter;
+    case 'VIEW_ACTIVE_TAB_PROFILE':
+      return action.activeTabHiddenGlobalTracks;
     default:
       return state;
   }
@@ -133,12 +135,13 @@ const activeTabHiddenGlobalTracksGetter: Reducer<() => Set<TrackIndex>> = (
  * This can be derived like the globalTracks information, but is stored in the state
  * for the same reason.
  */
-const activeTabHiddenLocalTracksByPidGetter: Reducer<
-  () => Map<Pid, Set<TrackIndex>>
-> = (state = () => new Map(), action) => {
+const activeTabHiddenLocalTracksByPid: Reducer<Map<Pid, Set<TrackIndex>>> = (
+  state = new Map(),
+  action
+) => {
   switch (action.type) {
-    case 'VIEW_FULL_PROFILE':
-      return action.activeTabHiddenLocalTracksByPidGetter;
+    case 'VIEW_ACTIVE_TAB_PROFILE':
+      return action.activeTabHiddenLocalTracksByPid;
     default:
       return state;
   }
@@ -585,9 +588,12 @@ const profileViewReducer: Reducer<ProfileViewState> = wrapReducerInResetter(
     }),
     globalTracks,
     localTracksByPid,
-    activeTabHiddenGlobalTracksGetter,
-    activeTabHiddenLocalTracksByPidGetter,
     profile,
+    fullProfile: combineReducers({}),
+    activeTabProfile: combineReducers({
+      hiddenGlobalTracks: activeTabHiddenGlobalTracks,
+      hiddenLocalTracksByPid: activeTabHiddenLocalTracksByPid,
+    }),
   })
 );
 

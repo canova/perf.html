@@ -54,11 +54,17 @@ import type {
   State,
   ProfileViewState,
   SymbolicationStatus,
+  FullProfileViewState,
+  ActiveTabProfileViewState,
 } from '../types/state';
 import type { $ReturnType } from '../types/utils';
 
 export const getProfileView: Selector<ProfileViewState> = state =>
   state.profileView;
+export const getFullProfileView: Selector<FullProfileViewState> = state =>
+  state.profileView.fullProfile;
+export const getActiveTabProfileView: Selector<ActiveTabProfileViewState> = state =>
+  state.profileView.activeTabProfile;
 
 /**
  * Profile View Options
@@ -235,9 +241,6 @@ export const getIPCMarkerCorrelations: Selector<IPCMarkerCorrelations> = createS
  */
 export const getGlobalTracks: Selector<GlobalTrack[]> = state =>
   getProfileView(state).globalTracks;
-export const getActiveTabHiddenGlobalTracksGetter: Selector<
-  () => Set<TrackIndex>
-> = state => getProfileView(state).activeTabHiddenGlobalTracksGetter;
 
 /**
  * This returns all TrackReferences for global tracks.
@@ -305,9 +308,6 @@ export const getGlobalTrackAndIndexByPid: DangerousSelectorWithArguments<
  */
 export const getLocalTracksByPid: Selector<Map<Pid, LocalTrack[]>> = state =>
   getProfileView(state).localTracksByPid;
-export const getActiveTabHiddenLocalTracksByPidGetter: Selector<
-  () => Map<Pid, Set<TrackIndex>>
-> = state => getProfileView(state).activeTabHiddenLocalTracksByPidGetter;
 
 /**
  * This selectors performs a simple look up in a Map, throws an error if it doesn't exist,
@@ -416,6 +416,28 @@ export const getLocalTrackName = (
   )[trackIndex];
 
 /**
+ * Active Tab Profile Selectors
+ *
+ * Always check `showTabOnly` state to see if it's non-null before using their
+ * values. You can use the selectors in the full view, since they are pretty
+ * cheap and will most likely be empty. But do not use their values.
+ */
+
+/**
+ * Returns a set of hidden global tracks for active tab view.
+ */
+export const getActiveTabHiddenGlobalTracks: Selector<
+  Set<TrackIndex>
+> = state => getActiveTabProfileView(state).hiddenGlobalTracks;
+
+/**
+ * Returns a map of hidden local tracks by Pid for active tab view.
+ */
+export const getActiveTabHiddenLocalTracksByPid: Selector<
+  Map<Pid, Set<TrackIndex>>
+> = state => getActiveTabProfileView(state).hiddenLocalTracksByPid;
+
+/**
  * It's a bit hard to deduce the total amount of hidden tracks, as there are both
  * global and local tracks, and they are stored by PID. If a global track is hidden,
  * then all its children are as well. Also we need to take into account the tracks
@@ -427,17 +449,17 @@ export const getHiddenTrackCount: Selector<HiddenTrackCount> = createSelector(
   getGlobalTracks,
   getLocalTracksByPid,
   UrlState.getHiddenLocalTracksByPid,
-  getActiveTabHiddenLocalTracksByPidGetter,
+  getActiveTabHiddenLocalTracksByPid,
   UrlState.getHiddenGlobalTracks,
-  getActiveTabHiddenGlobalTracksGetter,
+  getActiveTabHiddenGlobalTracks,
   UrlState.getShowTabOnly,
   (
     globalTracks,
     localTracksByPid,
     hiddenLocalTracksByPid,
-    activeTabHiddenLocalTracksByPidGetter,
+    activeTabHiddenLocalTracksByPid,
     hiddenGlobalTracks,
-    activeTabHiddenGlobalTracksGetter,
+    activeTabHiddenGlobalTracks,
     showTabOnly
   ) => {
     let hidden = 0;
@@ -450,7 +472,7 @@ export const getHiddenTrackCount: Selector<HiddenTrackCount> = createSelector(
       const activeTabHiddenLocalTracks =
         // Do not call the getter if we are not in the single tab view.
         showTabOnly !== null
-          ? activeTabHiddenLocalTracksByPidGetter().get(pid) || new Set()
+          ? activeTabHiddenLocalTracksByPid.get(pid) || new Set()
           : new Set();
       const globalTrackIndex = globalTracks.findIndex(
         track => track.type === 'process' && track.pid === pid
@@ -467,7 +489,7 @@ export const getHiddenTrackCount: Selector<HiddenTrackCount> = createSelector(
       if (hiddenGlobalTracks.has(globalTrackIndex)) {
         // The entire process group is hidden, count all of the tracks.
         if (showTabOnly !== null) {
-          if (!activeTabHiddenGlobalTracksGetter().has(globalTrackIndex)) {
+          if (!activeTabHiddenGlobalTracks.has(globalTrackIndex)) {
             // If we are in active tab view and the current hidden track is not
             // hidden by that, count its local tracks but also make sure that we
             // don't count its hidden local tracks that if they are hidden by active tab view.
@@ -495,8 +517,7 @@ export const getHiddenTrackCount: Selector<HiddenTrackCount> = createSelector(
     }
 
     // Count up the global tracks
-    if (showTabOnly) {
-      const activeTabHiddenGlobalTracks = activeTabHiddenGlobalTracksGetter();
+    if (showTabOnly !== null) {
       total += globalTracks.length - activeTabHiddenGlobalTracks.size;
       hidden += [...hiddenGlobalTracks].filter(
         t => !activeTabHiddenGlobalTracks.has(t)
@@ -649,18 +670,15 @@ export const getComputedHiddenGlobalTracks: Selector<
 > = createSelector(
   UrlState.getHiddenGlobalTracks,
   UrlState.getShowTabOnly,
-  getActiveTabHiddenGlobalTracksGetter,
-  (hiddenGlobalTracks, showTabOnly, activeTabHiddenGlobalTracksGetter) => {
+  getActiveTabHiddenGlobalTracks,
+  (hiddenGlobalTracks, showTabOnly, activeTabHiddenGlobalTracks) => {
     if (showTabOnly === null) {
       return hiddenGlobalTracks;
     }
 
     // We are in the showTabOnly mode and we need to hide the tracks that don't
     // belong to the active tab as well.
-    return new Set([
-      ...hiddenGlobalTracks,
-      ...activeTabHiddenGlobalTracksGetter(),
-    ]);
+    return new Set([...hiddenGlobalTracks, ...activeTabHiddenGlobalTracks]);
   }
 );
 
@@ -673,12 +691,8 @@ export const getComputedHiddenLocalTracksByPid: Selector<
 > = createSelector(
   UrlState.getHiddenLocalTracksByPid,
   UrlState.getShowTabOnly,
-  getActiveTabHiddenLocalTracksByPidGetter,
-  (
-    hiddenLocalTracksByPid,
-    showTabOnly,
-    activeTabHiddenLocalTracksByPidGetter
-  ) => {
+  getActiveTabHiddenLocalTracksByPid,
+  (hiddenLocalTracksByPid, showTabOnly, activeTabHiddenLocalTracksByPid) => {
     if (showTabOnly === null) {
       return hiddenLocalTracksByPid;
     }
@@ -692,7 +706,7 @@ export const getComputedHiddenLocalTracksByPid: Selector<
       mergedHiddenLocalTracksByPid.set(pid, new Set([...localTracks]));
     }
 
-    for (const [pid, localTracks] of activeTabHiddenLocalTracksByPidGetter()) {
+    for (const [pid, localTracks] of activeTabHiddenLocalTracksByPid) {
       const entry = mergedHiddenLocalTracksByPid.get(pid);
       if (entry) {
         mergedHiddenLocalTracksByPid.set(
