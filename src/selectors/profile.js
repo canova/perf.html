@@ -54,11 +54,17 @@ import type {
   State,
   ProfileViewState,
   SymbolicationStatus,
+  FullProfileViewState,
+  ActiveTabProfileViewState,
 } from '../types/state';
 import type { $ReturnType } from '../types/utils';
 
 export const getProfileView: Selector<ProfileViewState> = state =>
   state.profileView;
+export const getFullProfileView: Selector<FullProfileViewState> = state =>
+  state.profileView.fullProfile;
+export const getActiveTabProfileView: Selector<ActiveTabProfileViewState> = state =>
+  state.profileView.activeTabProfile;
 
 /**
  * Profile View Options
@@ -234,10 +240,10 @@ export const getIPCMarkerCorrelations: Selector<IPCMarkerCorrelations> = createS
  * They're uniquely referenced by a TrackReference.
  */
 export const getGlobalTracks: Selector<GlobalTrack[]> = state =>
-  getProfileView(state).globalTracks;
+  getFullProfileView(state).globalTracks;
 export const getActiveTabHiddenGlobalTracksGetter: Selector<
   () => Set<TrackIndex>
-> = state => getProfileView(state).activeTabHiddenGlobalTracksGetter;
+> = state => getFullProfileView(state).activeTabHiddenGlobalTracksGetter;
 
 /**
  * This returns all TrackReferences for global tracks.
@@ -304,10 +310,10 @@ export const getGlobalTrackAndIndexByPid: DangerousSelectorWithArguments<
  * This returns a map of local tracks from a pid.
  */
 export const getLocalTracksByPid: Selector<Map<Pid, LocalTrack[]>> = state =>
-  getProfileView(state).localTracksByPid;
+  getFullProfileView(state).localTracksByPid;
 export const getActiveTabHiddenLocalTracksByPidGetter: Selector<
   () => Map<Pid, Set<TrackIndex>>
-> = state => getProfileView(state).activeTabHiddenLocalTracksByPidGetter;
+> = state => getFullProfileView(state).activeTabHiddenLocalTracksByPidGetter;
 
 /**
  * This selectors performs a simple look up in a Map, throws an error if it doesn't exist,
@@ -319,7 +325,7 @@ export const getLocalTracks: DangerousSelectorWithArguments<
   Pid
 > = (state, pid) =>
   ensureExists(
-    getProfileView(state).localTracksByPid.get(pid),
+    getFullProfileView(state).localTracksByPid.get(pid),
     'Unable to get the tracks for the given pid.'
   );
 

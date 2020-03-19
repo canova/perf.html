@@ -187,7 +187,7 @@ function isTabFilteredThreadEmpty(
 export function computeActiveTabGlobalTracks(
   profile: Profile,
   state: State
-): {| globalTracks: GlobalTrack[], resourceTracks: Object |} {
+): {| globalTracks: GlobalTrack[], resourceTracks: LocalTrack[] |} {
   const globalTracks: GlobalTrack[] = [];
   const globalTrackCandidates = [];
   const globalTrackSampleCountByIdx: Map<number, number> = new Map();

@@ -110,6 +110,7 @@ const selectedThread: Reducer<ThreadIndex | null> = (state = null, action) => {
     case 'CHANGE_SELECTED_THREAD':
     case 'SELECT_TRACK':
     case 'VIEW_FULL_PROFILE':
+    case 'VIEW_ACTIVE_TAB_PROFILE':
     case 'ISOLATE_PROCESS':
     case 'ISOLATE_PROCESS_MAIN_THREAD':
     case 'HIDE_GLOBAL_TRACK':

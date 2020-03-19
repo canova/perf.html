@@ -264,6 +264,12 @@ type ReceiveProfileAction =
       +activeTabHiddenLocalTracksByPidGetter: () => Map<Pid, Set<TrackIndex>>,
     |}
   | {|
+      +type: 'VIEW_ACTIVE_TAB_PROFILE',
+      +selectedThreadIndex: ThreadIndex,
+      +globalTracks: GlobalTrack[],
+      +resourceTracks: LocalTrack[],
+    |}
+  | {|
       +type: 'DATA_RELOAD',
     |}
   | {| +type: 'RECEIVE_ZIP_FILE', +zip: JSZip |}

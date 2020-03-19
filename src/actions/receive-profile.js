@@ -306,17 +306,10 @@ export function finalizeProfileViewForActiveTab(
     // FIXME: We can check if there is the main track and switch back to full view if there is not.
 
     dispatch({
-      type: 'VIEW_FULL_PROFILE',
+      type: 'VIEW_ACTIVE_TAB_PROFILE',
       selectedThreadIndex, // todo: remove?
       globalTracks,
-      localTracksByPid: new Map(),
-      // TODO: Remove these
-      globalTrackOrder: [],
-      hiddenGlobalTracks: new Set(),
-      hiddenLocalTracksByPid: new Map(),
-      localTrackOrderByPid: new Map(),
-      activeTabHiddenGlobalTracksGetter: () => new Set(),
-      activeTabHiddenLocalTracksByPidGetter: () => new Map(),
+      resourceTracks,
     });
   };
 }

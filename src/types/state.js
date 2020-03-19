@@ -55,20 +55,18 @@ export type RightClickedMarker = {|
  * FIXME: split those for now. But probably will we can merge them
  */
 export type FullProfileViewState = {
-  +globalTracks: GlobalTrack[],
-  +localTracksByPid: Map<Pid, LocalTrack[]>,
-  +activeTabHiddenGlobalTracksGetter: () => Set<TrackIndex>,
-  +activeTabHiddenLocalTracksByPidGetter: () => Map<Pid, Set<TrackIndex>>,
+  globalTracks: GlobalTrack[],
+  localTracksByPid: Map<Pid, LocalTrack[]>,
+  activeTabHiddenGlobalTracksGetter: () => Set<TrackIndex>,
+  activeTabHiddenLocalTracksByPidGetter: () => Map<Pid, Set<TrackIndex>>,
 };
 
 /**
  *
  */
 export type ActiveTabProfileViewState = {
-  +globalTracks: GlobalTrack[],
-  +localTracksByPid: Map<Pid, LocalTrack[]>,
-  +activeTabHiddenGlobalTracksGetter: () => Set<TrackIndex>,
-  +activeTabHiddenLocalTracksByPidGetter: () => Map<Pid, Set<TrackIndex>>,
+  globalTracks: GlobalTrack[],
+  resourceTracks: LocalTrack[],
 };
 
 /**
@@ -88,7 +86,9 @@ export type ProfileViewState = {
     rightClickedMarker: RightClickedMarker | null,
   |},
   +profile: Profile | null,
-} & (FullProfileViewState | ActiveTabProfileViewState);
+  +fullProfile: FullProfileViewState,
+  +activeTabProfile: ActiveTabProfileViewState,
+};
 
 export type AppViewState =
   | {| +phase: 'ROUTE_NOT_FOUND' |}
