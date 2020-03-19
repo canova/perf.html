@@ -253,7 +253,7 @@ type ReceiveProfileAction =
       +transformStacks: ?TransformStacksPerThread,
     |}
   | {|
-      +type: 'VIEW_PROFILE',
+      +type: 'VIEW_FULL_PROFILE',
       +selectedThreadIndex: ThreadIndex,
       +globalTracks: GlobalTrack[],
       +globalTrackOrder: TrackIndex[],
