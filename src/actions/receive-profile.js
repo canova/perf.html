@@ -277,7 +277,7 @@ export function finalizeProfileViewForAdvanced(
     }
 
     dispatch({
-      type: 'VIEW_PROFILE',
+      type: 'VIEW_FULL_PROFILE',
       selectedThreadIndex,
       globalTracks,
       globalTrackOrder,
@@ -306,7 +306,7 @@ export function finalizeProfileViewForActiveTab(
     // FIXME: We can check if there is the main track and switch back to full view if there is not.
 
     dispatch({
-      type: 'VIEW_PROFILE',
+      type: 'VIEW_FULL_PROFILE',
       selectedThreadIndex, // todo: remove?
       globalTracks,
       localTracksByPid: new Map(),

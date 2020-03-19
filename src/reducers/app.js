@@ -45,7 +45,7 @@ const view: Reducer<AppViewState> = (
     case 'DATA_RELOAD':
       return { phase: 'DATA_RELOAD' };
     case 'RECEIVE_ZIP_FILE':
-    case 'VIEW_PROFILE':
+    case 'VIEW_FULL_PROFILE':
       return { phase: 'DATA_LOADED' };
     default:
       return state;
