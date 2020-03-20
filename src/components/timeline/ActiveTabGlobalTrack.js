@@ -29,7 +29,7 @@ import {
 import './Track.css';
 import TimelineTrackThread from './TrackThread';
 import TimelineTrackScreenshots from './TrackScreenshots';
-import ActiveTabResourceTrack from './ActiveTabResourceTrack';
+import ActiveTabResources from './ActiveTabResources';
 import { TrackVisualProgress } from './TrackVisualProgress';
 import Reorderable from '../shared/Reorderable';
 import { TRACK_PROCESS_BLANK_HEIGHT } from '../../app-logic/constants';
@@ -182,28 +182,12 @@ class GlobalTrackComponent extends PureComponent<Props> {
     // }
   };
 
-  renderResourceTracks() {
-    const { resourceTracks, localTrackOrder } = this.props;
-    return (
-      <Reorderable
-        tagName="ol"
-        className="timelineTrackLocalTracks"
-        order={localTrackOrder}
-        orient="vertical"
-        grippyClassName="timelineTrackLocalGrippy"
-        onChangeOrder={this._changeLocalTrackOrder}
-      >
-        {resourceTracks.map((localTrack, trackIndex) => (
-          <ActiveTabResourceTrack
-            key={trackIndex}
-            pid={0} // fixme: remove
-            localTrack={localTrack}
-            trackIndex={trackIndex}
-            setIsInitialSelectedPane={this.setIsInitialSelectedPane}
-          />
-        ))}
-      </Reorderable>
-    );
+  renderResourcesPanel() {
+    const { resourceTracks } = this.props;
+    if (resourceTracks.length === 0) {
+      return null;
+    }
+    return <ActiveTabResources resourceTracks={resourceTracks} />;
   }
 
   _takeContainerRef = (el: HTMLElement | null) => {
@@ -245,7 +229,7 @@ class GlobalTrackComponent extends PureComponent<Props> {
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
         {resourceTracks.length > 0 && pid !== null
-          ? this.renderResourceTracks()
+          ? this.renderResourcesPanel()
           : null}
       </li>
     );

@@ -96,14 +96,16 @@ class Timeline extends React.PureComponent<Props, State> {
             panelLayoutGeneration={panelLayoutGeneration}
             initialSelected={this.state.initialSelected}
           >
-            {globalTracks.map((globalTrack, trackIndex) => (
-              <ActiveTabGlobalTrack
-                key={trackIndex}
-                trackIndex={trackIndex}
-                trackReference={globalTrackReferences[trackIndex]}
-                setInitialSelected={this.setInitialSelected}
-              />
-            ))}
+            <ol className="timelineThreadList">
+              {globalTracks.map((globalTrack, trackIndex) => (
+                <ActiveTabGlobalTrack
+                  key={trackIndex}
+                  trackIndex={trackIndex}
+                  trackReference={globalTrackReferences[trackIndex]}
+                  setInitialSelected={this.setInitialSelected}
+                />
+              ))}
+            </ol>
           </OverflowEdgeIndicator>
         </TimelineSelection>
       </>

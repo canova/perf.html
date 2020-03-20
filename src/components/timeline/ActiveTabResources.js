@@ -5,25 +5,24 @@
 // @flow
 
 import * as React from 'react';
-import ActiveTabGlobalTrack from './ActiveTabGlobalTrack';
+import classNames from 'classnames';
 // import TimelineSelection from './Selection';
-import OverflowEdgeIndicator from './OverflowEdgeIndicator';
-import Reorderable from '../shared/Reorderable';
-import { withSize } from '../shared/WithSize';
 import explicitConnect from '../../utils/connect';
+import ActiveTabResourceTrack from './ActiveTabResourceTrack';
+import { withSize } from '../shared/WithSize';
 
 import './ActiveTabResources.css';
 
 import type { SizeProps } from '../shared/WithSize';
-
-import { changeGlobalTrackOrder } from '../../actions/profile-view';
 
 // import type {
 //   InitialSelectedTrackReference,
 // } from '../../types/profile-derived';
 import type { ConnectedProps } from '../../utils/connect';
 
-type OwnProps = {||};
+type OwnProps = {|
+  +resourceTracks: LocalTracks[],
+|};
 
 type StateProps = {||};
 
@@ -36,12 +35,14 @@ type Props = {|
 
 type State = {|
   // initialSelected: InitialSelectedTrackReference | null,
+  isOpen: Boolean,
 |};
 
 class Resources extends React.PureComponent<Props, State> {
-  // state = {
-  //   initialSelected: null,
-  // };
+  state = {
+    // initialSelected: null,
+    isOpen: false,
+  };
 
   /**
    * This method collects the initially selected track's HTMLElement. This allows the timeline
@@ -51,8 +52,38 @@ class Resources extends React.PureComponent<Props, State> {
   //   this.setState({ initialSelected: el });
   // };
 
+  _togglePanel = () => {
+    this.setState({ isOpen: !this.state.isOpen });
+  };
+
   render() {
-    return <></>;
+    const { resourceTracks } = this.props;
+    const { isOpen } = this.state;
+    return (
+      <div className="timelineResources">
+        <div
+          onClick={this._togglePanel}
+          className={classNames('timelineResourcesHeader', {
+            opened: isOpen,
+          })}
+        >
+          Resources ({resourceTracks.length})
+        </div>
+        {this.state.isOpen ? (
+          <ol className="timelineResourceTracks">
+            {resourceTracks.map((localTrack, trackIndex) => (
+              <ActiveTabResourceTrack
+                key={trackIndex}
+                pid={0} // fixme: remove
+                localTrack={localTrack}
+                trackIndex={trackIndex}
+                setIsInitialSelectedPane={this.setIsInitialSelectedPane}
+              />
+            ))}
+          </ol>
+        ) : null}
+      </div>
+    );
   }
 }
 

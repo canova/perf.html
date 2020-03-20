@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.timelineResourceTracks {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.timelineResources {
+  background-color: #fff;
+}
+
+.timelineResourcesHeader {
+  position: relative;
+  margin-left: 20px;
+  cursor: default;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.timelineResourcesHeader::before {
+  position: absolute;
+  top: 5px;
+  left: -11px;
+  width: 0;
+  height: 0;
+
+  /* Drawing the arrow */
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 5px solid #979797;
+  content: '';
+  transition: transform 0.2s;
+}
+
+.timelineResourcesHeader.opened::before {
+  transform: rotate(90deg);
+}
+
+.timelineTrackResourceRow {
+  position: relative;
+}
+
+.timelineTrackResourceRow .timelineTrackThreadMarkers {
+  position: absolute;
+  width: 100%;
+  /* top: 10px; */
+}
+
+.timelineTrackResourceLabel {
+  position: absolute;
+  z-index: 3;
+  line-height: 20px;
+  top: 0;
+  padding: 0 5px;
+  margin-left: 15px;
+  transition: opacity 0.1s;
+  visibility: visible;
+  opacity: 1;
+}
+
+.timelineTrackResourceRow:hover .timelineTrackResourceLabel {
+  /* background-color: white; */
+  visibility: hidden;
+  opacity: 0;
+}
+
+.timelineTrackResourceRow .threadActivityGraph {
+  /* margin-top: 15px; */
+}

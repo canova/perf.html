@@ -112,18 +112,17 @@ class LocalTrackComponent extends PureComponent<Props> {
     }
 
     return (
-      <li className="timelineTrack timelineTrackLocal" style={style}>
+      <li className="timelineTrack timelineTrackResource" style={style}>
         {/* This next div is used to mirror the structure of the TimelineGlobalTrack */}
         <div
-          className={classNames('timelineTrackRow timelineTrackLocalRow', {
+          className={classNames('timelineTrackRow timelineTrackResourceRow', {
             selected: isSelected,
           })}
           onClick={this._onLineClick}
         >
-          <button type="button" className="timelineTrackNameButton">
-            {trackName}
-          </button>
-
+          <span className="timelineTrackResourceLabel">
+            Frame: https://widgets.tree.com/widget/9375294320923487234
+          </span>
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
       </li>

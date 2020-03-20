@@ -149,38 +149,40 @@ class TimelineTrackThread extends PureComponent<Props> {
 
     return (
       <div className="timelineTrackThread">
-        {showMemoryMarkers ? (
-          <TimelineMarkersMemory
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            threadIndex={threadIndex}
-            onSelect={this._onMarkerSelect}
-          />
-        ) : null}
-        {hasFileIoMarkers ? (
-          <TimelineMarkersFileIo
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            threadIndex={threadIndex}
-            onSelect={this._onMarkerSelect}
-          />
-        ) : null}
-        {displayJank ? (
-          <TimelineMarkersJank
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            threadIndex={threadIndex}
-            onSelect={this._onMarkerSelect}
-          />
-        ) : null}
-        {displayMarkers ? (
-          <TimelineMarkersOverview
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            threadIndex={threadIndex}
-            onSelect={this._onMarkerSelect}
-          />
-        ) : null}
+        <div className="timelineTrackThreadMarkers">
+          {showMemoryMarkers ? (
+            <TimelineMarkersMemory
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              threadIndex={threadIndex}
+              onSelect={this._onMarkerSelect}
+            />
+          ) : null}
+          {hasFileIoMarkers ? (
+            <TimelineMarkersFileIo
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              threadIndex={threadIndex}
+              onSelect={this._onMarkerSelect}
+            />
+          ) : null}
+          {displayJank ? (
+            <TimelineMarkersJank
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              threadIndex={threadIndex}
+              onSelect={this._onMarkerSelect}
+            />
+          ) : null}
+          {displayMarkers ? (
+            <TimelineMarkersOverview
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              threadIndex={threadIndex}
+              onSelect={this._onMarkerSelect}
+            />
+          ) : null}
+        </div>
         {timelineType === 'category' && !filteredThread.isJsTracer ? (
           <ThreadActivityGraph
             className="threadActivityGraph"
