@@ -79,6 +79,8 @@ class LocalTrackComponent extends PureComponent<Props> {
   renderTrack() {
     const { localTrack } = this.props;
     switch (localTrack.type) {
+      case 'process':
+        return <TrackThread threadIndex={localTrack.mainThreadIndex} />;
       case 'thread':
         return <TrackThread threadIndex={localTrack.threadIndex} />;
       case 'network':
@@ -118,20 +120,10 @@ class LocalTrackComponent extends PureComponent<Props> {
           })}
           onClick={this._onLineClick}
         >
-          <ContextMenuTrigger
-            id="TimelineTrackContextMenu"
-            renderTag="div"
-            attributes={{
-              title: titleText,
-              className:
-                'timelineTrackLabel timelineTrackLocalLabel timelineTrackLocalGrippy',
-              onMouseDown: this._onLabelMouseDown,
-            }}
-          >
-            <button type="button" className="timelineTrackNameButton">
-              {trackName}
-            </button>
-          </ContextMenuTrigger>
+          <button type="button" className="timelineTrackNameButton">
+            {trackName}
+          </button>
+
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
       </li>
@@ -146,7 +138,20 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     let isSelected = false;
 
     // Run different selectors based on the track type.
+    console.log('canova local track: ', localTrack);
     switch (localTrack.type) {
+      case 'process': {
+        // Look up the thread information for the process if it exists.
+        const threadIndex = localTrack.mainThreadIndex;
+        const selectedThreadIndex = getSelectedThreadIndex(state);
+        const selectedTab = getSelectedTab(state);
+        const selectors = getThreadSelectors(threadIndex);
+        isSelected =
+          threadIndex === selectedThreadIndex &&
+          selectedTab !== 'network-chart';
+        titleText = selectors.getThreadProcessDetails(state);
+        break;
+      }
       case 'thread': {
         // Look up the thread information for the process if it exists.
         const threadIndex = localTrack.threadIndex;
@@ -187,10 +192,10 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     }
 
     return {
-      trackName: getLocalTrackName(state, pid, trackIndex),
+      trackName: '', //getLocalTrackName(state, pid, trackIndex),
       titleText,
       isSelected,
-      isHidden: getComputedHiddenLocalTracks(state, pid).has(trackIndex),
+      isHidden: false, //getComputedHiddenLocalTracks(state, pid).has(trackIndex),
     };
   },
   mapDispatchToProps: {

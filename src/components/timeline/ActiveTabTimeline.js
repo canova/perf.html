@@ -16,17 +16,13 @@ import { getPanelLayoutGeneration } from '../../selectors/app';
 import {
   getCommittedRange,
   getZeroAt,
-  getGlobalTracks,
-  getGlobalTrackReferences,
+  getActiveTabGlobalTracks,
+  getActiveTabGlobalTrackReferences,
 } from '../../selectors/profile';
-import { getGlobalTrackOrder } from '../../selectors/url-state';
 
 import './index.css';
 
 import type { SizeProps } from '../shared/WithSize';
-
-import { changeGlobalTrackOrder } from '../../actions/profile-view';
-
 import type { BrowsingContextID } from '../../types/profile';
 import type {
   TrackIndex,
@@ -44,19 +40,14 @@ type OwnProps = {|
 type StateProps = {|
   +committedRange: StartEndRange,
   +globalTracks: GlobalTrack[],
-  +globalTrackOrder: TrackIndex[],
   +globalTrackReferences: GlobalTrackReference[],
   +panelLayoutGeneration: number,
   +zeroAt: Milliseconds,
 |};
 
-type DispatchProps = {|
-  +changeGlobalTrackOrder: typeof changeGlobalTrackOrder,
-|};
-
 type Props = {|
   ...SizeProps,
-  ...ConnectedProps<OwnProps, StateProps, DispatchProps>,
+  ...ConnectedProps<OwnProps, StateProps, {||}>,
 |};
 
 type State = {|
@@ -79,8 +70,6 @@ class Timeline extends React.PureComponent<Props, State> {
   render() {
     const {
       globalTracks,
-      globalTrackOrder,
-      changeGlobalTrackOrder,
       committedRange,
       zeroAt,
       width,
@@ -107,23 +96,14 @@ class Timeline extends React.PureComponent<Props, State> {
             panelLayoutGeneration={panelLayoutGeneration}
             initialSelected={this.state.initialSelected}
           >
-            <Reorderable
-              tagName="ol"
-              className="timelineThreadList"
-              grippyClassName="timelineTrackGlobalGrippy"
-              order={globalTrackOrder}
-              orient="vertical"
-              onChangeOrder={changeGlobalTrackOrder}
-            >
-              {globalTracks.map((globalTrack, trackIndex) => (
-                <ActiveTabGlobalTrack
-                  key={trackIndex}
-                  trackIndex={trackIndex}
-                  trackReference={globalTrackReferences[trackIndex]}
-                  setInitialSelected={this.setInitialSelected}
-                />
-              ))}
-            </Reorderable>
+            {globalTracks.map((globalTrack, trackIndex) => (
+              <ActiveTabGlobalTrack
+                key={trackIndex}
+                trackIndex={trackIndex}
+                trackReference={globalTrackReferences[trackIndex]}
+                setInitialSelected={this.setInitialSelected}
+              />
+            ))}
           </OverflowEdgeIndicator>
         </TimelineSelection>
       </>
@@ -131,17 +111,13 @@ class Timeline extends React.PureComponent<Props, State> {
   }
 }
 
-export default explicitConnect<OwnProps, StateProps, DispatchProps>({
+export default explicitConnect<OwnProps, StateProps, {||}>({
   mapStateToProps: state => ({
-    globalTracks: getGlobalTracks(state),
-    globalTrackOrder: getGlobalTrackOrder(state),
-    globalTrackReferences: getGlobalTrackReferences(state),
+    globalTracks: getActiveTabGlobalTracks(state),
+    globalTrackReferences: getActiveTabGlobalTrackReferences(state),
     committedRange: getCommittedRange(state),
     zeroAt: getZeroAt(state),
     panelLayoutGeneration: getPanelLayoutGeneration(state),
   }),
-  mapDispatchToProps: {
-    changeGlobalTrackOrder,
-  },
   component: withSize<Props>(Timeline),
 });

@@ -8,13 +8,13 @@ import { assertExhaustiveCheck } from '../utils/flow';
 import { isMainThread } from './tracks';
 
 import type { State } from '../types/state';
-import type { ThreadIndex, Pid } from '../types/profile';
+import type { ThreadIndex, Pid, Profile } from '../types/profile';
 import type {
   GlobalTrack,
   LocalTrack,
   TrackIndex,
 } from '../types/profile-derived';
-import type { Profile } from '../types/profile';
+
 import type { ScreenshotPayload } from '../types/markers';
 
 /**

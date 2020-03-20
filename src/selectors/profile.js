@@ -517,6 +517,28 @@ export const getHiddenTrackCount: Selector<HiddenTrackCount> = createSelector(
 );
 
 /**
+ * Active Tab Tracks
+ *
+ * TODO: write
+ */
+export const getActiveTabGlobalTracks: Selector<GlobalTrack[]> = state =>
+  getActiveTabProfileView(state).globalTracks;
+export const getActiveTabResourceTracks: Selector<LocalTrack[]> = state =>
+  getActiveTabProfileView(state).resourceTracks;
+
+/**
+ * This returns all TrackReferences for global tracks.
+ */
+export const getActiveTabGlobalTrackReferences: Selector<
+  GlobalTrackReference[]
+> = createSelector(getActiveTabGlobalTracks, globalTracks =>
+  globalTracks.map((globalTrack, trackIndex) => ({
+    type: 'global',
+    trackIndex,
+  }))
+);
+
+/**
  * Get the pages array and construct a Map that we can use to easily get the
  * InnerWindowIDs that are under one tab. The constructed map is
  * `Map<BrowsingContextID,Set<InnerWindowID>>`. The BrowsingContextID we use in

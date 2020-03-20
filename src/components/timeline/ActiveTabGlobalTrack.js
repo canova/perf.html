@@ -8,7 +8,7 @@ import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import {
   changeRightClickedTrack,
-  changeLocalTrackOrder,
+  // changeLocalTrackOrder,
   selectTrack,
 } from '../../actions/profile-view';
 import {
@@ -18,8 +18,8 @@ import {
 } from '../../selectors/url-state';
 import explicitConnect from '../../utils/connect';
 import {
-  getGlobalTracks,
-  getLocalTracks,
+  getActiveTabGlobalTracks,
+  getActiveTabResourceTracks,
   getProcessesWithMemoryTrack,
   getVisualProgress,
   getPerceptualSpeedIndexProgress,
@@ -57,7 +57,7 @@ type StateProps = {|
   +isSelected: boolean,
   +isHidden: boolean,
   +localTrackOrder: TrackIndex[],
-  +localTracks: LocalTrack[],
+  +resourceTracks: LocalTrack[],
   +pid: Pid | null,
   +selectedTab: TabSlug,
   +processesWithMemoryTrack: Set<Pid>,
@@ -66,7 +66,7 @@ type StateProps = {|
 
 type DispatchProps = {|
   +changeRightClickedTrack: typeof changeRightClickedTrack,
-  +changeLocalTrackOrder: typeof changeLocalTrackOrder,
+  // +changeLocalTrackOrder: typeof changeLocalTrackOrder,
   +selectTrack: typeof selectTrack,
 |};
 
@@ -103,6 +103,12 @@ class GlobalTrackComponent extends PureComponent<Props> {
     switch (globalTrack.type) {
       case 'process': {
         const { mainThreadIndex } = globalTrack;
+        console.log(
+          'CANOVA render global track: ',
+          globalTrack.type,
+          mainThreadIndex,
+          processesWithMemoryTrack
+        );
         if (mainThreadIndex === null) {
           return (
             <div
@@ -169,15 +175,15 @@ class GlobalTrackComponent extends PureComponent<Props> {
   }
 
   _changeLocalTrackOrder = (trackOrder: TrackIndex[]) => {
-    const { globalTrack, changeLocalTrackOrder } = this.props;
-    if (globalTrack.type === 'process') {
-      // Only process tracks have local tracks.
-      changeLocalTrackOrder(globalTrack.pid, trackOrder);
-    }
+    // const { globalTrack, changeLocalTrackOrder } = this.props;
+    // if (globalTrack.type === 'process') {
+    //   // Only process tracks have local tracks.
+    //   changeLocalTrackOrder(globalTrack.pid, trackOrder);
+    // }
   };
 
-  renderLocalTracks(pid: Pid) {
-    const { localTracks, localTrackOrder } = this.props;
+  renderResourceTracks() {
+    const { resourceTracks, localTrackOrder } = this.props;
     return (
       <Reorderable
         tagName="ol"
@@ -187,10 +193,10 @@ class GlobalTrackComponent extends PureComponent<Props> {
         grippyClassName="timelineTrackLocalGrippy"
         onChangeOrder={this._changeLocalTrackOrder}
       >
-        {localTracks.map((localTrack, trackIndex) => (
+        {resourceTracks.map((localTrack, trackIndex) => (
           <ActiveTabResourceTrack
             key={trackIndex}
-            pid={pid}
+            pid={0} // fixme: remove
             localTrack={localTrack}
             trackIndex={trackIndex}
             setIsInitialSelectedPane={this.setIsInitialSelectedPane}
@@ -220,7 +226,7 @@ class GlobalTrackComponent extends PureComponent<Props> {
   }
 
   render() {
-    const { isSelected, isHidden, style, localTracks, pid } = this.props;
+    const { isSelected, isHidden, style, resourceTracks, pid } = this.props;
 
     if (isHidden) {
       // If this global track is hidden, render out a stub element so that the
@@ -238,8 +244,8 @@ class GlobalTrackComponent extends PureComponent<Props> {
         >
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
-        {localTracks.length > 0 && pid !== null
-          ? this.renderLocalTracks(pid)
+        {resourceTracks.length > 0 && pid !== null
+          ? this.renderResourceTracks()
           : null}
       </li>
     );
@@ -248,11 +254,11 @@ class GlobalTrackComponent extends PureComponent<Props> {
 
 // Provide some empty lists, so that strict equality checks work for component updates.
 const EMPTY_TRACK_ORDER = [];
-const EMPTY_LOCAL_TRACKS = [];
+const EMPTY_RESOURCE_TRACKS = [];
 
 export default explicitConnect<OwnProps, StateProps, DispatchProps>({
   mapStateToProps: (state, { trackIndex }) => {
-    const globalTracks = getGlobalTracks(state);
+    const globalTracks = getActiveTabGlobalTracks(state);
     const globalTrack = globalTracks[trackIndex];
     const selectedTab = getSelectedTab(state);
 
@@ -261,10 +267,11 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     let isSelected = false;
 
     let localTrackOrder = EMPTY_TRACK_ORDER;
-    let localTracks = EMPTY_LOCAL_TRACKS;
+    let resourceTracks = EMPTY_RESOURCE_TRACKS;
     let pid = null;
     let progressGraphData = null;
 
+    console.log('CANOVA: globla track', globalTrack);
     // Run different selectors based on the track type.
     switch (globalTrack.type) {
       case 'process': {
@@ -277,7 +284,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
         }
         pid = globalTrack.pid;
         localTrackOrder = getLocalTrackOrder(state, pid);
-        localTracks = getLocalTracks(state, pid);
+        resourceTracks = getActiveTabResourceTracks(state);
         break;
       }
       case 'screenshots':
@@ -299,9 +306,9 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
       globalTrack,
       isSelected,
       localTrackOrder,
-      localTracks,
+      resourceTracks,
       pid,
-      isHidden: getComputedHiddenGlobalTracks(state).has(trackIndex),
+      isHidden: false, //getComputedHiddenGlobalTracks(state).has(trackIndex),
       selectedTab,
       processesWithMemoryTrack: getProcessesWithMemoryTrack(state),
       progressGraphData,
@@ -309,7 +316,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
   },
   mapDispatchToProps: {
     changeRightClickedTrack,
-    changeLocalTrackOrder,
+    // changeLocalTrackOrder,
     selectTrack,
   },
   component: GlobalTrackComponent,

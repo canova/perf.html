@@ -11,6 +11,8 @@ import {
   getLocalTracksByPid,
   getComputedHiddenGlobalTracks,
   getComputedHiddenLocalTracksByPid,
+  getActiveTabGlobalTracks,
+  getActiveTabResourceTracks,
 } from './profile';
 import { getZipFileState } from './zipped-profiles.js';
 import { assertExhaustiveCheck, ensureExists } from '../utils/flow';
@@ -71,6 +73,8 @@ export const getIsDragAndDropOverlayRegistered: Selector<boolean> = state =>
 export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
   getGlobalTracks,
   getLocalTracksByPid,
+  getActiveTabGlobalTracks,
+  getActiveTabResourceTracks,
   getComputedHiddenGlobalTracks,
   getComputedHiddenLocalTracksByPid,
   getTrackThreadHeights,
@@ -78,18 +82,24 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
   (
     globalTracks,
     localTracksByPid,
+    activeTabGlobalTracks,
+    activeTabResourceTracks,
     hiddenGlobalTracks,
     hiddenLocalTracksByPid,
     trackThreadHeights,
     showTabOnly
   ) => {
     let height = TIMELINE_RULER_HEIGHT;
+    let effectiveGlobalTracks;
     if (showTabOnly === null) {
+      effectiveGlobalTracks = globalTracks;
       height += TIMELINE_SETTINGS_HEIGHT;
+    } else {
+      effectiveGlobalTracks = activeTabGlobalTracks;
     }
     const border = 1;
 
-    for (const [trackIndex, globalTrack] of globalTracks.entries()) {
+    for (const [trackIndex, globalTrack] of effectiveGlobalTracks.entries()) {
       if (!hiddenGlobalTracks.has(trackIndex)) {
         switch (globalTrack.type) {
           case 'screenshots':
@@ -132,53 +142,81 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
       }
     }
 
-    for (const [pid, localTracks] of localTracksByPid) {
-      if (hiddenPids.has(pid)) {
-        // This track is hidden already.
-        continue;
-      }
-      for (const [trackIndex, localTrack] of localTracks.entries()) {
-        const hiddenLocalTracks = ensureExists(
-          hiddenLocalTracksByPid.get(pid),
-          'Could not look up the hidden local tracks from the given PID'
-        );
-        if (!hiddenLocalTracks.has(trackIndex)) {
-          switch (localTrack.type) {
-            case 'thread':
-              {
-                // The thread tracks have enough complexity that it warrants measuring
-                // them rather than statically using a value like the other tracks.
-                const trackThreadHeight =
-                  trackThreadHeights[localTrack.threadIndex];
-                if (trackThreadHeight === undefined) {
-                  // The height isn't computed yet, return.
-                  return null;
+    if (showTabOnly === null) {
+      for (const [pid, localTracks] of localTracksByPid) {
+        if (hiddenPids.has(pid)) {
+          // This track is hidden already.
+          continue;
+        }
+        for (const [trackIndex, localTrack] of localTracks.entries()) {
+          const hiddenLocalTracks = ensureExists(
+            hiddenLocalTracksByPid.get(pid),
+            'Could not look up the hidden local tracks from the given PID'
+          );
+          if (!hiddenLocalTracks.has(trackIndex)) {
+            switch (localTrack.type) {
+              case 'thread':
+                {
+                  // The thread tracks have enough complexity that it warrants measuring
+                  // them rather than statically using a value like the other tracks.
+                  const trackThreadHeight =
+                    trackThreadHeights[localTrack.threadIndex];
+                  if (trackThreadHeight === undefined) {
+                    // The height isn't computed yet, return.
+                    return null;
+                  }
+                  height += trackThreadHeight + border;
                 }
-                height += trackThreadHeight + border;
-              }
 
-              break;
-            case 'network':
-              if (!showTabOnly) {
-                height += TRACK_NETWORK_HEIGHT + border;
-              }
-              break;
-            case 'memory':
-              if (!showTabOnly) {
-                height += TRACK_MEMORY_HEIGHT + border;
-              }
-              break;
-            case 'ipc':
-              if (!showTabOnly) {
-                height += TRACK_IPC_HEIGHT + border;
-              }
-              break;
-            default:
-              throw assertExhaustiveCheck(localTrack);
+                break;
+              case 'network':
+                if (!showTabOnly) {
+                  height += TRACK_NETWORK_HEIGHT + border;
+                }
+                break;
+              case 'memory':
+                if (!showTabOnly) {
+                  height += TRACK_MEMORY_HEIGHT + border;
+                }
+                break;
+              case 'ipc':
+                if (!showTabOnly) {
+                  height += TRACK_IPC_HEIGHT + border;
+                }
+                break;
+              default:
+                throw assertExhaustiveCheck(localTrack);
+            }
           }
         }
       }
+    } else {
+      for (const resourceTrack of activeTabResourceTracks) {
+        switch (resourceTrack.type) {
+          case 'thread':
+            {
+              // The thread tracks have enough complexity that it warrants measuring
+              // them rather than statically using a value like the other tracks.
+              const trackThreadHeight =
+                trackThreadHeights[resourceTrack.threadIndex];
+              if (trackThreadHeight === undefined) {
+                // The height isn't computed yet, return.
+                console.log('CANOVA: no height for thread');
+                return null;
+              }
+              height += trackThreadHeight + border;
+            }
+            break;
+          case 'network':
+          case 'memory':
+          case 'ipc':
+            break;
+          default:
+            throw assertExhaustiveCheck(resourceTrack);
+        }
+      }
     }
+
     return height;
   }
 );

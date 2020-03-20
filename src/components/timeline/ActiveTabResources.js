@@ -6,7 +6,7 @@
 
 import * as React from 'react';
 import ActiveTabGlobalTrack from './ActiveTabGlobalTrack';
-import TimelineSelection from './Selection';
+// import TimelineSelection from './Selection';
 import OverflowEdgeIndicator from './OverflowEdgeIndicator';
 import Reorderable from '../shared/Reorderable';
 import { withSize } from '../shared/WithSize';
