@@ -264,7 +264,12 @@ export function computeActiveTabGlobalTracks(
   globalTracks.unshift(globalTrackCandidates[heaviestTrackIndex]);
   // Put the other candidates under the resources
   globalTrackCandidates.splice(heaviestTrackIndex, 1);
-  resourceTracks.unshift(...globalTrackCandidates);
+  resourceTracks.unshift(
+    ...globalTrackCandidates.map(track => ({
+      type: 'thread',
+      threadIndex: track.mainThreadIndex,
+    }))
+  );
 
   console.log('CANOVA GLOBAL RESOURCE: ', globalTracks, resourceTracks);
 

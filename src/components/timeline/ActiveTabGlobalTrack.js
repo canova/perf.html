@@ -122,7 +122,7 @@ class GlobalTrackComponent extends PureComponent<Props> {
         return (
           <TimelineTrackThread
             threadIndex={mainThreadIndex}
-            showMemoryMarkers={!processesWithMemoryTrack.has(globalTrack.pid)}
+            showMemoryMarkers={false}
           />
         );
       }

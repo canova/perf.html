@@ -18,6 +18,7 @@ import { getZipFileState } from './zipped-profiles.js';
 import { assertExhaustiveCheck, ensureExists } from '../utils/flow';
 import {
   TRACK_SCREENSHOT_HEIGHT,
+  TRACK_ACTIVE_TAB_SCREENSHOT_HEIGHT,
   TRACK_NETWORK_HEIGHT,
   TRACK_MEMORY_HEIGHT,
   TRACK_IPC_HEIGHT,
@@ -103,7 +104,11 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
       if (!hiddenGlobalTracks.has(trackIndex)) {
         switch (globalTrack.type) {
           case 'screenshots':
-            height += TRACK_SCREENSHOT_HEIGHT + border;
+            if (showTabOnly === null) {
+              height += TRACK_SCREENSHOT_HEIGHT + border;
+            } else {
+              height += TRACK_ACTIVE_TAB_SCREENSHOT_HEIGHT + border;
+            }
             break;
           case 'visual-progress':
           case 'perceptual-visual-progress':
@@ -191,6 +196,10 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
         }
       }
     } else {
+      if (activeTabResourceTracks.length > 0) {
+        // FIXME: this is height of resources
+        height += 20;
+      }
       for (const resourceTrack of activeTabResourceTracks) {
         switch (resourceTrack.type) {
           case 'thread':
