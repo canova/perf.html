@@ -47,27 +47,55 @@
 .timelineTrackResourceRow .timelineTrackThreadMarkers {
   position: absolute;
   width: 100%;
-  /* top: 10px; */
 }
 
-.timelineTrackResourceLabel {
+.timelineTrackResourceLabel, .timelineTrackResourceLabel2 {
+  pointer-events: none;
   position: absolute;
   z-index: 3;
   line-height: 20px;
   top: 0;
   padding: 0 5px;
   margin-left: 15px;
-  transition: opacity 0.1s;
   visibility: visible;
   opacity: 1;
 }
 
 .timelineTrackResourceRow:hover .timelineTrackResourceLabel {
-  /* background-color: white; */
-  visibility: hidden;
+  /* TODO - needs visibility: hidden as well */
   opacity: 0;
 }
 
-.timelineTrackResourceRow .threadActivityGraph {
-  /* margin-top: 15px; */
+/* .timelineResourceTracks:hover .timelineTrackResourceRow {
+  opacity: 0.5;
+}
+
+.timelineResourceTracks:hover .timelineTrackResourceRow:hover {
+  opacity: 1;
+} */
+
+.timelineTrackResourceLabel2 {
+  visibility: hidden;
+}
+
+.timelineTrackResourceRow:hover .timelineTrackResourceLabel2 {
+  visibility: visible;
+  opacity: 1;
+  background-color: var(--grey-60);
+  top: -21px;
+  border-radius: 5px 5px 0 0;
+  box-shadow: 0 -2px 2px rgba(0,0,0,.2);
+  padding: 0 10px;
+  color: #fff;
+  left: 4px;
+}
+
+.timelineTrackResource .timelineTrackTrack:hover::before {
+  content: "";
+  width: 100%;
+  height: 2px;
+  position: absolute;
+  background-color: var(--grey-60);
+  z-index: 2;
+  top: -3px;
 }

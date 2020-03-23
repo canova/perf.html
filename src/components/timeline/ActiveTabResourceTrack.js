@@ -123,6 +123,9 @@ class LocalTrackComponent extends PureComponent<Props> {
           <span className="timelineTrackResourceLabel">
             Frame: https://widgets.tree.com/widget/9375294320923487234
           </span>
+          <span className="timelineTrackResourceLabel2">
+            Frame: https://widgets.tree.com/widget/9375294320923487234
+          </span>
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
       </li>
