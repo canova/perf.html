@@ -50,6 +50,7 @@
 }
 
 .timelineTrackResourceLabel, .timelineTrackResourceLabel2 {
+  max-width: calc(100% - 55px);
   pointer-events: none;
   position: absolute;
   z-index: 3;
@@ -59,6 +60,9 @@
   margin-left: 15px;
   visibility: visible;
   opacity: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .timelineTrackResourceRow:hover .timelineTrackResourceLabel {

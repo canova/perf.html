@@ -17,6 +17,7 @@ import {
 } from '../../selectors/url-state';
 import explicitConnect from '../../utils/connect';
 import { getThreadSelectors } from '../../selectors/per-thread';
+import { getActiveTabResourceTrackName } from '../../selectors/profile';
 import TrackThread from './TrackThread';
 import TrackNetwork from './TrackNetwork';
 import { TrackMemory } from './TrackMemory';
@@ -111,11 +112,9 @@ class LocalTrackComponent extends PureComponent<Props> {
           })}
           onClick={this._onLineClick}
         >
-          <span className="timelineTrackResourceLabel">
-            Frame: https://widgets.tree.com/widget/9375294320923487234
-          </span>
+          <span className="timelineTrackResourceLabel">Frame: {trackName}</span>
           <span className="timelineTrackResourceLabel2">
-            Frame: https://widgets.tree.com/widget/9375294320923487234
+            Frame: {trackName}
           </span>
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
@@ -155,7 +154,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     }
 
     return {
-      trackName: '', //getLocalTrackName(state, pid, trackIndex),
+      trackName: getActiveTabResourceTrackName(state, trackIndex),
       isSelected,
       isHidden: false, //getComputedHiddenLocalTracks(state, pid).has(trackIndex),
     };
