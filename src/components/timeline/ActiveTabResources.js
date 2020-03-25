@@ -10,6 +10,8 @@ import classNames from 'classnames';
 import explicitConnect from '../../utils/connect';
 import ActiveTabResourceTrack from './ActiveTabResourceTrack';
 import { withSize } from '../shared/WithSize';
+import { isActiveTabResourcesOpen } from '../../selectors/url-state';
+import { toggleResourcesPanel } from '../../actions/app';
 
 import './ActiveTabResources.css';
 
@@ -23,46 +25,38 @@ type OwnProps = {|
   +setIsInitialSelectedPane: (value: boolean) => void,
 |};
 
-type StateProps = {||};
+type StateProps = {|
+  isActiveTabResourcesOpen: boolean,
+|};
 
-type DispatchProps = {||};
+type DispatchProps = {|
+  +toggleResourcesPanel: typeof toggleResourcesPanel,
+|};
 
 type Props = {|
   ...SizeProps,
   ...ConnectedProps<OwnProps, StateProps, DispatchProps>,
 |};
 
-type State = {|
-  // initialSelected: InitialSelectedTrackReference | null,
-  isOpen: boolean,
-|};
-
-class Resources extends React.PureComponent<Props, State> {
-  state = {
-    // initialSelected: null,
-    isOpen: false,
-  };
-
-  _togglePanel = () => {
-    this.setState(prevState => {
-      return { isOpen: !prevState.isOpen };
-    });
-  };
-
+class Resources extends React.PureComponent<Props> {
   render() {
-    const { resourceTracks, setIsInitialSelectedPane } = this.props;
-    const { isOpen } = this.state;
+    const {
+      resourceTracks,
+      setIsInitialSelectedPane,
+      toggleResourcesPanel,
+      isActiveTabResourcesOpen,
+    } = this.props;
     return (
       <div className="timelineResources">
         <div
-          onClick={this._togglePanel}
+          onClick={toggleResourcesPanel}
           className={classNames('timelineResourcesHeader', {
-            opened: isOpen,
+            opened: isActiveTabResourcesOpen,
           })}
         >
           Resources ({resourceTracks.length})
         </div>
-        {this.state.isOpen ? (
+        {isActiveTabResourcesOpen ? (
           <ol className="timelineResourceTracks">
             {resourceTracks.map((localTrack, trackIndex) => (
               <ActiveTabResourceTrack
@@ -80,7 +74,9 @@ class Resources extends React.PureComponent<Props, State> {
 }
 
 export default explicitConnect<OwnProps, StateProps, DispatchProps>({
-  // mapStateToProps: state => ({}),
-  // mapDispatchToProps: {},
+  mapStateToProps: state => ({
+    isActiveTabResourcesOpen: isActiveTabResourcesOpen(state),
+  }),
+  mapDispatchToProps: { toggleResourcesPanel },
   component: withSize<Props>(Resources),
 });

@@ -379,7 +379,10 @@ type UrlStateAction =
   | {|
       +type: 'CHANGE_SHOW_TAB_ONLY',
       +showTabOnly: BrowsingContextID | null,
-    |};
+    |}
+  | {
+      +type: 'TOGGLE_RESOURCES_PANEL',
+    };
 
 type IconsAction =
   | {| +type: 'ICON_HAS_LOADED', +icon: string |}

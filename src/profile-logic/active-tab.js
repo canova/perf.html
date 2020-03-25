@@ -18,43 +18,6 @@ import type {
 import type { ScreenshotPayload } from '../types/markers';
 
 /**
- * In order for track indexes to be backwards compatible, the indexes need to be
- * stable across time. Therefore the tracks must be consistently sorted. When new
- * track types are added, they must be added to the END of the track list, so that
- * URL-encoded information remains stable.
- *
- * However, this sorting may not be the one we want to display to the end user, so provide
- * a secondary sorting order for how the tracks will actually be displayed.
- */
-const RESOURCE_TRACK_INDEX_ORDER = {
-  thread: 0,
-  network: 1,
-  memory: 2,
-  ipc: 3,
-};
-const RESOURCE_TRACK_DISPLAY_ORDER = {
-  network: 0,
-  memory: 1,
-  thread: 2,
-  ipc: 3,
-};
-
-const GLOBAL_TRACK_INDEX_ORDER = {
-  process: 0,
-  screenshots: 1,
-  'visual-progress': null,
-  'perceptual-visual-progress': null,
-  'contentful-visual-progress': null,
-};
-const GLOBAL_TRACK_DISPLAY_ORDER = {
-  process: 1,
-  screenshots: 0,
-  'visual-progress': null,
-  'perceptual-visual-progress': null,
-  'contentful-visual-progress': null,
-};
-
-/**
  * Take the global tracks and decide which one to hide during the active tab view.
  * Some global tracks are allowed, some tracks are not, and we have to do some
  * computations for some('process' type specifically).

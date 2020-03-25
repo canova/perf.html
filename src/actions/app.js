@@ -181,3 +181,10 @@ export function registerDragAndDropOverlay(): Action {
 export function unregisterDragAndDropOverlay(): Action {
   return { type: 'UNREGISTER_DRAG_AND_DROP_OVERLAY' };
 }
+
+/**
+ * TODO: write
+ */
+export function toggleResourcesPanel(): Action {
+  return { type: 'TOGGLE_RESOURCES_PANEL' };
+}
