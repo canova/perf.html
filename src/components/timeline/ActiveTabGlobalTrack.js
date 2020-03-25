@@ -8,12 +8,10 @@ import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import {
   changeRightClickedTrack,
-  // changeLocalTrackOrder,
   selectTrack,
 } from '../../actions/profile-view';
 import {
   getSelectedThreadIndex,
-  getLocalTrackOrder,
   getSelectedTab,
 } from '../../selectors/url-state';
 import explicitConnect from '../../utils/connect';
@@ -53,7 +51,6 @@ type OwnProps = {|
 type StateProps = {|
   +globalTrack: GlobalTrack,
   +isSelected: boolean,
-  +localTrackOrder: TrackIndex[],
   +resourceTracks: LocalTrack[],
   +pid: Pid | null,
   +selectedTab: TabSlug,
@@ -63,7 +60,6 @@ type StateProps = {|
 
 type DispatchProps = {|
   +changeRightClickedTrack: typeof changeRightClickedTrack,
-  // +changeLocalTrackOrder: typeof changeLocalTrackOrder,
   +selectTrack: typeof selectTrack,
 |};
 
@@ -225,7 +221,6 @@ class GlobalTrackComponent extends PureComponent<Props> {
 }
 
 // Provide some empty lists, so that strict equality checks work for component updates.
-const EMPTY_TRACK_ORDER = [];
 const EMPTY_RESOURCE_TRACKS = [];
 
 export default explicitConnect<OwnProps, StateProps, DispatchProps>({
@@ -238,7 +233,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     let threadIndex = null;
     let isSelected = false;
 
-    let localTrackOrder = EMPTY_TRACK_ORDER;
     let resourceTracks = EMPTY_RESOURCE_TRACKS;
     let pid = null;
     let progressGraphData = null;
@@ -255,7 +249,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
             selectedTab !== 'network-chart';
         }
         pid = globalTrack.pid;
-        localTrackOrder = getLocalTrackOrder(state, pid);
         resourceTracks = getActiveTabResourceTracks(state);
         break;
       }
@@ -277,7 +270,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     return {
       globalTrack,
       isSelected,
-      localTrackOrder,
       resourceTracks,
       pid,
       selectedTab,
@@ -287,7 +279,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
   },
   mapDispatchToProps: {
     changeRightClickedTrack,
-    // changeLocalTrackOrder,
     selectTrack,
   },
   component: GlobalTrackComponent,
