@@ -202,6 +202,13 @@ class TimelineTrackContextMenu extends PureComponent<Props> {
         'Attempting to isolate a local track with a global track is selected.'
       );
     }
+
+    if (rightClickedTrack.type === 'resource') {
+      throw new Error(
+        'Attempting to isolate a resource track with a global track is selected.'
+      );
+    }
+
     const { pid, trackIndex } = rightClickedTrack;
     isolateLocalTrack(pid, trackIndex);
   };
@@ -324,6 +331,9 @@ class TimelineTrackContextMenu extends PureComponent<Props> {
   getRightClickedTrackName(rightClickedTrack: TrackReference): string {
     const { globalTrackNames, localTrackNamesByPid } = this.props;
 
+    if (rightClickedTrack.type === 'resource') {
+      throw new Error('This feature is not supported for resource tracks');
+    }
     if (rightClickedTrack.type === 'global') {
       return globalTrackNames[rightClickedTrack.trackIndex];
     }
@@ -460,7 +470,10 @@ class TimelineTrackContextMenu extends PureComponent<Props> {
       return null;
     }
 
-    if (rightClickedTrack.type === 'global') {
+    if (
+      rightClickedTrack.type === 'global' ||
+      rightClickedTrack.type === 'resource'
+    ) {
       return null;
     }
 

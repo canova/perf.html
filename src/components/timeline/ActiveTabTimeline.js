@@ -9,7 +9,6 @@ import ActiveTabGlobalTrack from './ActiveTabGlobalTrack';
 import TimelineRuler from './Ruler';
 import TimelineSelection from './Selection';
 import OverflowEdgeIndicator from './OverflowEdgeIndicator';
-import Reorderable from '../shared/Reorderable';
 import { withSize } from '../shared/WithSize';
 import explicitConnect from '../../utils/connect';
 import { getPanelLayoutGeneration } from '../../selectors/app';
@@ -25,7 +24,6 @@ import './index.css';
 import type { SizeProps } from '../shared/WithSize';
 import type { BrowsingContextID } from '../../types/profile';
 import type {
-  TrackIndex,
   GlobalTrack,
   InitialSelectedTrackReference,
 } from '../../types/profile-derived';

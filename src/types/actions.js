@@ -76,7 +76,14 @@ export type LocalTrackReference = {|
   +trackIndex: TrackIndex,
   +pid: Pid,
 |};
-export type TrackReference = GlobalTrackReference | LocalTrackReference;
+export type ResourceTrackReference = {|
+  +type: 'resource',
+  +trackIndex: TrackIndex,
+|};
+export type TrackReference =
+  | GlobalTrackReference
+  | LocalTrackReference
+  | ResourceTrackReference;
 
 export type RequestedLib = {|
   +debugName: string,

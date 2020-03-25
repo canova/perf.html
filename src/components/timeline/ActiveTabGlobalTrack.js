@@ -24,14 +24,12 @@ import {
   getVisualProgress,
   getPerceptualSpeedIndexProgress,
   getContentfulSpeedIndexProgress,
-  getComputedHiddenGlobalTracks,
 } from '../../selectors/profile';
 import './Track.css';
 import TimelineTrackThread from './TrackThread';
 import TimelineTrackScreenshots from './TrackScreenshots';
 import ActiveTabResources from './ActiveTabResources';
 import { TrackVisualProgress } from './TrackVisualProgress';
-import Reorderable from '../shared/Reorderable';
 import { TRACK_PROCESS_BLANK_HEIGHT } from '../../app-logic/constants';
 
 import type { TabSlug } from '../../app-logic/tabs-handling';
@@ -55,7 +53,6 @@ type OwnProps = {|
 type StateProps = {|
   +globalTrack: GlobalTrack,
   +isSelected: boolean,
-  +isHidden: boolean,
   +localTrackOrder: TrackIndex[],
   +resourceTracks: LocalTrack[],
   +pid: Pid | null,
@@ -174,20 +171,17 @@ class GlobalTrackComponent extends PureComponent<Props> {
     }
   }
 
-  _changeLocalTrackOrder = (trackOrder: TrackIndex[]) => {
-    // const { globalTrack, changeLocalTrackOrder } = this.props;
-    // if (globalTrack.type === 'process') {
-    //   // Only process tracks have local tracks.
-    //   changeLocalTrackOrder(globalTrack.pid, trackOrder);
-    // }
-  };
-
   renderResourcesPanel() {
     const { resourceTracks } = this.props;
     if (resourceTracks.length === 0) {
       return null;
     }
-    return <ActiveTabResources resourceTracks={resourceTracks} />;
+    return (
+      <ActiveTabResources
+        resourceTracks={resourceTracks}
+        setIsInitialSelectedPane={this.setIsInitialSelectedPane}
+      />
+    );
   }
 
   _takeContainerRef = (el: HTMLElement | null) => {
@@ -210,13 +204,7 @@ class GlobalTrackComponent extends PureComponent<Props> {
   }
 
   render() {
-    const { isSelected, isHidden, style, resourceTracks, pid } = this.props;
-
-    if (isHidden) {
-      // If this global track is hidden, render out a stub element so that the
-      // Reorderable Component still works across all the tracks.
-      return <li className="timelineTrackHidden" />;
-    }
+    const { isSelected, style, resourceTracks, pid } = this.props;
 
     return (
       <li ref={this._takeContainerRef} className="timelineTrack" style={style}>
@@ -255,7 +243,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     let pid = null;
     let progressGraphData = null;
 
-    console.log('CANOVA: globla track', globalTrack);
+    console.log('CANOVA: global track', globalTrack);
     // Run different selectors based on the track type.
     switch (globalTrack.type) {
       case 'process': {
@@ -292,7 +280,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
       localTrackOrder,
       resourceTracks,
       pid,
-      isHidden: false, //getComputedHiddenGlobalTracks(state).has(trackIndex),
       selectedTab,
       processesWithMemoryTrack: getProcessesWithMemoryTrack(state),
       progressGraphData,

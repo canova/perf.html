@@ -48,6 +48,7 @@ import type {
   TrackReference,
   PreviewSelection,
   HiddenTrackCount,
+  ResourceTrackReference,
 } from '../types/actions';
 import type { Selector, DangerousSelectorWithArguments } from '../types/store';
 import type {
@@ -368,6 +369,9 @@ export const getRightClickedThreadIndex: Selector<null | ThreadIndex> = createSe
       const track = globalTracks[rightClickedTrack.trackIndex];
       return track.type === 'process' ? track.mainThreadIndex : null;
     }
+    if (rightClickedTrack.type === 'resource') {
+      throw new Error('This feature is not supported for resource tracks');
+    }
     const { pid, trackIndex } = rightClickedTrack;
     const localTracks = ensureExists(
       localTracksByPid.get(pid),
@@ -537,6 +541,16 @@ export const getActiveTabGlobalTrackReferences: Selector<
     trackIndex,
   }))
 );
+
+/**
+ * This selector does an inexpensive look-up for the local track from a reference.
+ * It does not need any memoization, and returns the same object every time.
+ */
+export const getActiveTabResourceTrackFromReference: DangerousSelectorWithArguments<
+  LocalTrack,
+  ResourceTrackReference
+> = (state, trackReference) =>
+  getActiveTabResourceTracks(state)[trackReference.trackIndex];
 
 /**
  * Get the pages array and construct a Map that we can use to easily get the

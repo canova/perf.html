@@ -15,13 +15,12 @@ import './ActiveTabResources.css';
 
 import type { SizeProps } from '../shared/WithSize';
 
-// import type {
-//   InitialSelectedTrackReference,
-// } from '../../types/profile-derived';
+import type { LocalTrack } from '../../types/profile-derived';
 import type { ConnectedProps } from '../../utils/connect';
 
 type OwnProps = {|
-  +resourceTracks: LocalTracks[],
+  +resourceTracks: LocalTrack[],
+  +setIsInitialSelectedPane: (value: boolean) => void,
 |};
 
 type StateProps = {||};
@@ -35,7 +34,7 @@ type Props = {|
 
 type State = {|
   // initialSelected: InitialSelectedTrackReference | null,
-  isOpen: Boolean,
+  isOpen: boolean,
 |};
 
 class Resources extends React.PureComponent<Props, State> {
@@ -44,20 +43,14 @@ class Resources extends React.PureComponent<Props, State> {
     isOpen: false,
   };
 
-  /**
-   * This method collects the initially selected track's HTMLElement. This allows the timeline
-   * to scroll the initially selected track into view once the page is loaded.
-   */
-  // setInitialSelected = (el: InitialSelectedTrackReference) => {
-  //   this.setState({ initialSelected: el });
-  // };
-
   _togglePanel = () => {
-    this.setState({ isOpen: !this.state.isOpen });
+    this.setState(prevState => {
+      return { isOpen: !prevState.isOpen };
+    });
   };
 
   render() {
-    const { resourceTracks } = this.props;
+    const { resourceTracks, setIsInitialSelectedPane } = this.props;
     const { isOpen } = this.state;
     return (
       <div className="timelineResources">
@@ -74,10 +67,9 @@ class Resources extends React.PureComponent<Props, State> {
             {resourceTracks.map((localTrack, trackIndex) => (
               <ActiveTabResourceTrack
                 key={trackIndex}
-                pid={0} // fixme: remove
                 localTrack={localTrack}
                 trackIndex={trackIndex}
-                setIsInitialSelectedPane={this.setIsInitialSelectedPane}
+                setIsInitialSelectedPane={setIsInitialSelectedPane}
               />
             ))}
           </ol>
