@@ -187,7 +187,8 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
       undefined,
     thread: selectedThread === null ? undefined : selectedThread.toString(),
     globalTrackOrder:
-      urlState.profileSpecific.globalTrackOrder.join('-') || undefined,
+      urlState.profileSpecific.fullProfile.globalTrackOrder.join('-') ||
+      undefined,
     file: urlState.pathInZipFile || undefined,
     profiles: urlState.profilesToCompare || undefined,
     v: CURRENT_URL_VERSION,
@@ -196,14 +197,15 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
   };
 
   // Add the parameter hiddenGlobalTracks only when needed.
-  if (urlState.profileSpecific.hiddenGlobalTracks.size > 0) {
+  if (urlState.profileSpecific.fullProfile.hiddenGlobalTracks.size > 0) {
     query.hiddenGlobalTracks = [
-      ...urlState.profileSpecific.hiddenGlobalTracks,
+      ...urlState.profileSpecific.fullProfile.hiddenGlobalTracks,
     ].join('-');
   }
 
   let hiddenLocalTracksByPid = '';
-  for (const [pid, tracks] of urlState.profileSpecific.hiddenLocalTracksByPid) {
+  for (const [pid, tracks] of urlState.profileSpecific.fullProfile
+    .hiddenLocalTracksByPid) {
     if (tracks.size > 0) {
       hiddenLocalTracksByPid += [pid, ...tracks].join('-') + '~';
     }
@@ -214,14 +216,14 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
     query.hiddenLocalTracksByPid = hiddenLocalTracksByPid.slice(0, -1);
   }
 
-  if (urlState.profileSpecific.timelineType === 'stack') {
+  if (urlState.profileSpecific.fullProfile.timelineType === 'stack') {
     // The default is the category view, so only add it to the URL if it's the
     // stack view.
     query.timelineType = 'stack';
   }
 
   let localTrackOrderByPid = '';
-  for (const [pid, trackOrder] of urlState.profileSpecific
+  for (const [pid, trackOrder] of urlState.profileSpecific.fullProfile
     .localTrackOrderByPid) {
     if (trackOrder.length > 0) {
       localTrackOrderByPid += `${String(pid)}-` + trackOrder.join('-') + '~';
@@ -253,10 +255,11 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
           ) || undefined;
       }
       query.ctSummary =
-        urlState.profileSpecific.lastSelectedCallTreeSummaryStrategy ===
-        'timing'
+        urlState.profileSpecific.fullProfile
+          .lastSelectedCallTreeSummaryStrategy === 'timing'
           ? undefined
-          : urlState.profileSpecific.lastSelectedCallTreeSummaryStrategy;
+          : urlState.profileSpecific.fullProfile
+              .lastSelectedCallTreeSummaryStrategy;
       break;
     }
     case 'marker-table':
@@ -270,7 +273,7 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
       break;
     case 'js-tracer':
       // `null` adds the parameter to the query, while `undefined` doesn't.
-      query.summary = urlState.profileSpecific.showJsTracerSummary
+      query.summary = urlState.profileSpecific.fullProfile.showJsTracerSummary
         ? null
         : undefined;
       break;
@@ -380,39 +383,42 @@ export function stateFromLocation(
     showTabOnly: showTabOnly,
     profileSpecific: {
       implementation,
-      lastSelectedCallTreeSummaryStrategy: toValidCallTreeSummaryStrategy(
-        query.ctSummary
-      ),
       invertCallstack: query.invertCallstack !== undefined,
       showUserTimings: query.showUserTimings !== undefined,
-      showJsTracerSummary: query.summary !== undefined,
       committedRanges: query.range ? parseCommittedRanges(query.range) : [],
       selectedThread: selectedThread,
       callTreeSearchString: query.search || '',
-      globalTrackOrder: query.globalTrackOrder
-        ? query.globalTrackOrder.split('-').map(index => Number(index))
-        : [],
-      hiddenGlobalTracks: query.hiddenGlobalTracks
-        ? new Set(
-            query.hiddenGlobalTracks.split('-').map(index => Number(index))
-          )
-        : new Set(),
-      hiddenLocalTracksByPid: query.hiddenLocalTracksByPid
-        ? parseHiddenTracks(query.hiddenLocalTracksByPid)
-        : new Map(),
-      localTrackOrderByPid: query.localTrackOrderByPid
-        ? parseLocalTrackOrder(query.localTrackOrderByPid)
-        : new Map(),
       markersSearchString: query.markerSearch || '',
       networkSearchString: query.networkSearch || '',
       transforms,
-      timelineType: query.timelineType === 'stack' ? 'stack' : 'category',
-      legacyThreadOrder: query.threadOrder
-        ? query.threadOrder.split('-').map(index => Number(index))
-        : null,
-      legacyHiddenThreads: query.hiddenThreads
-        ? query.hiddenThreads.split('-').map(index => Number(index))
-        : null,
+      fullProfile: {
+        lastSelectedCallTreeSummaryStrategy: toValidCallTreeSummaryStrategy(
+          query.ctSummary
+        ),
+        showJsTracerSummary: query.summary !== undefined,
+        globalTrackOrder: query.globalTrackOrder
+          ? query.globalTrackOrder.split('-').map(index => Number(index))
+          : [],
+        hiddenGlobalTracks: query.hiddenGlobalTracks
+          ? new Set(
+              query.hiddenGlobalTracks.split('-').map(index => Number(index))
+            )
+          : new Set(),
+        hiddenLocalTracksByPid: query.hiddenLocalTracksByPid
+          ? parseHiddenTracks(query.hiddenLocalTracksByPid)
+          : new Map(),
+        localTrackOrderByPid: query.localTrackOrderByPid
+          ? parseLocalTrackOrder(query.localTrackOrderByPid)
+          : new Map(),
+        timelineType: query.timelineType === 'stack' ? 'stack' : 'category',
+        legacyThreadOrder: query.threadOrder
+          ? query.threadOrder.split('-').map(index => Number(index))
+          : null,
+        legacyHiddenThreads: query.hiddenThreads
+          ? query.hiddenThreads.split('-').map(index => Number(index))
+          : null,
+      },
+      activeTabProfile: {},
     },
   };
 }

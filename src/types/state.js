@@ -198,25 +198,32 @@ export type ZippedProfilesState = {
   expandedZipFileIndexes: Array<IndexIntoZipFileTable | null>,
 };
 
-export type ProfileSpecificUrlState = {|
-  selectedThread: ThreadIndex | null,
+export type FullProfileUrlState = {|
   globalTrackOrder: TrackIndex[],
   hiddenGlobalTracks: Set<TrackIndex>,
   hiddenLocalTracksByPid: Map<Pid, Set<TrackIndex>>,
   localTrackOrderByPid: Map<Pid, TrackIndex[]>,
-  implementation: ImplementationFilter,
   lastSelectedCallTreeSummaryStrategy: CallTreeSummaryStrategy,
+  showJsTracerSummary: boolean,
+  timelineType: TimelineType,
+  legacyThreadOrder: ThreadIndex[] | null,
+  legacyHiddenThreads: ThreadIndex[] | null,
+|};
+
+export type ActiveTabProfileUrlState = {};
+
+export type ProfileSpecificUrlState = {|
+  selectedThread: ThreadIndex | null,
+  implementation: ImplementationFilter,
   invertCallstack: boolean,
   showUserTimings: boolean,
-  showJsTracerSummary: boolean,
   committedRanges: StartEndRange[],
   callTreeSearchString: string,
   markersSearchString: string,
   networkSearchString: string,
   transforms: TransformStacksPerThread,
-  timelineType: TimelineType,
-  legacyThreadOrder: ThreadIndex[] | null,
-  legacyHiddenThreads: ThreadIndex[] | null,
+  fullProfile: FullProfileUrlState,
+  activeTabProfile: ActiveTabProfileUrlState,
 |};
 
 export type UrlState = {|

@@ -420,22 +420,13 @@ const showTabOnly: Reducer<BrowsingContextID | null> = (
 /**
  * These values are specific to an individual profile.
  */
-const profileSpecific = combineReducers({
-  selectedThread,
+const fullProfileSpecific = combineReducers({
   globalTrackOrder,
   hiddenGlobalTracks,
   hiddenLocalTracksByPid,
   localTrackOrderByPid,
-  implementation,
   lastSelectedCallTreeSummaryStrategy,
-  invertCallstack,
-  showUserTimings,
   showJsTracerSummary,
-  committedRanges,
-  callTreeSearchString,
-  markersSearchString,
-  networkSearchString,
-  transforms,
   timelineType,
   // The timeline tracks used to be hidden and sorted by thread indexes, rather than
   // track indexes. The only way to migrate this information to tracks-based data is to
@@ -443,6 +434,22 @@ const profileSpecific = combineReducers({
   // process. These value are only set by the locationToState function.
   legacyThreadOrder: (state: ThreadIndex[] | null = null) => state,
   legacyHiddenThreads: (state: ThreadIndex[] | null = null) => state,
+});
+
+const activeTabProfileSpecific = combineReducers({});
+
+const profileSpecific = combineReducers({
+  selectedThread,
+  implementation,
+  invertCallstack,
+  showUserTimings,
+  committedRanges,
+  callTreeSearchString,
+  markersSearchString,
+  networkSearchString,
+  transforms,
+  fullProfile: fullProfileSpecific,
+  activeTabProfile: activeTabProfileSpecific,
 });
 
 /**
