@@ -101,6 +101,7 @@ type BaseQuery = {|
   profiles: string[],
   profileName: string,
   showTabOnly1: BrowsingContextID,
+  resourcesOpen: null | void,
 |};
 
 type CallTreeQuery = {|
@@ -186,9 +187,6 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
       stringifyCommittedRanges(urlState.profileSpecific.committedRanges) ||
       undefined,
     thread: selectedThread === null ? undefined : selectedThread.toString(),
-    globalTrackOrder:
-      urlState.profileSpecific.fullProfile.globalTrackOrder.join('-') ||
-      undefined,
     file: urlState.pathInZipFile || undefined,
     profiles: urlState.profilesToCompare || undefined,
     v: CURRENT_URL_VERSION,
@@ -196,40 +194,54 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
     showTabOnly1: urlState.showTabOnly || undefined,
   };
 
-  // Add the parameter hiddenGlobalTracks only when needed.
-  if (urlState.profileSpecific.fullProfile.hiddenGlobalTracks.size > 0) {
-    query.hiddenGlobalTracks = [
-      ...urlState.profileSpecific.fullProfile.hiddenGlobalTracks,
-    ].join('-');
-  }
+  // TODO: write a better comment
+  if (urlState.showTabOnly !== null) {
+    // Add the active tab profile only state here.
+    query.resourcesOpen = urlState.profileSpecific.activeTabProfile
+      .resourcesOpen
+      ? null
+      : undefined;
+  } else {
+    // Add the full profile only state here.
+    query.globalTrackOrder =
+      urlState.profileSpecific.fullProfile.globalTrackOrder.join('-') ||
+      undefined;
 
-  let hiddenLocalTracksByPid = '';
-  for (const [pid, tracks] of urlState.profileSpecific.fullProfile
-    .hiddenLocalTracksByPid) {
-    if (tracks.size > 0) {
-      hiddenLocalTracksByPid += [pid, ...tracks].join('-') + '~';
+    // Add the parameter hiddenGlobalTracks only when needed.
+    if (urlState.profileSpecific.fullProfile.hiddenGlobalTracks.size > 0) {
+      query.hiddenGlobalTracks = [
+        ...urlState.profileSpecific.fullProfile.hiddenGlobalTracks,
+      ].join('-');
     }
-  }
-  if (hiddenLocalTracksByPid.length > 0) {
-    // Only add to the query string if something was actually hidden.
-    // Also, slice off the last '~'.
-    query.hiddenLocalTracksByPid = hiddenLocalTracksByPid.slice(0, -1);
-  }
 
-  if (urlState.profileSpecific.fullProfile.timelineType === 'stack') {
-    // The default is the category view, so only add it to the URL if it's the
-    // stack view.
-    query.timelineType = 'stack';
-  }
-
-  let localTrackOrderByPid = '';
-  for (const [pid, trackOrder] of urlState.profileSpecific.fullProfile
-    .localTrackOrderByPid) {
-    if (trackOrder.length > 0) {
-      localTrackOrderByPid += `${String(pid)}-` + trackOrder.join('-') + '~';
+    let hiddenLocalTracksByPid = '';
+    for (const [pid, tracks] of urlState.profileSpecific.fullProfile
+      .hiddenLocalTracksByPid) {
+      if (tracks.size > 0) {
+        hiddenLocalTracksByPid += [pid, ...tracks].join('-') + '~';
+      }
     }
+    if (hiddenLocalTracksByPid.length > 0) {
+      // Only add to the query string if something was actually hidden.
+      // Also, slice off the last '~'.
+      query.hiddenLocalTracksByPid = hiddenLocalTracksByPid.slice(0, -1);
+    }
+
+    if (urlState.profileSpecific.fullProfile.timelineType === 'stack') {
+      // The default is the category view, so only add it to the URL if it's the
+      // stack view.
+      query.timelineType = 'stack';
+    }
+
+    let localTrackOrderByPid = '';
+    for (const [pid, trackOrder] of urlState.profileSpecific.fullProfile
+      .localTrackOrderByPid) {
+      if (trackOrder.length > 0) {
+        localTrackOrderByPid += `${String(pid)}-` + trackOrder.join('-') + '~';
+      }
+    }
+    query.localTrackOrderByPid = localTrackOrderByPid || undefined;
   }
-  query.localTrackOrderByPid = localTrackOrderByPid || undefined;
 
   // Depending on which tab is active, also show tab-specific query parameters.
   const selectedTab = urlState.selectedTab;
@@ -254,12 +266,15 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
             urlState.profileSpecific.transforms[selectedThread]
           ) || undefined;
       }
-      query.ctSummary =
-        urlState.profileSpecific.fullProfile
-          .lastSelectedCallTreeSummaryStrategy === 'timing'
-          ? undefined
-          : urlState.profileSpecific.fullProfile
-              .lastSelectedCallTreeSummaryStrategy;
+      if (urlState.showTabOnly === null) {
+        query.ctSummary =
+          urlState.profileSpecific.fullProfile
+            .lastSelectedCallTreeSummaryStrategy === 'timing'
+            ? undefined
+            : urlState.profileSpecific.fullProfile
+                .lastSelectedCallTreeSummaryStrategy;
+      }
+
       break;
     }
     case 'marker-table':
@@ -273,9 +288,11 @@ export function urlStateToUrlObject(urlState: UrlState): UrlObject {
       break;
     case 'js-tracer':
       // `null` adds the parameter to the query, while `undefined` doesn't.
-      query.summary = urlState.profileSpecific.fullProfile.showJsTracerSummary
-        ? null
-        : undefined;
+      if (urlState.showTabOnly === null) {
+        query.summary = urlState.profileSpecific.fullProfile.showJsTracerSummary
+          ? null
+          : undefined;
+      }
       break;
     default:
       assertExhaustiveCheck(selectedTab);
@@ -418,7 +435,9 @@ export function stateFromLocation(
           ? query.hiddenThreads.split('-').map(index => Number(index))
           : null,
       },
-      activeTabProfile: {},
+      activeTabProfile: {
+        resourcesOpen: query.resourcesOpen !== undefined,
+      },
     },
   };
 }

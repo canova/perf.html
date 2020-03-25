@@ -418,6 +418,18 @@ const showTabOnly: Reducer<BrowsingContextID | null> = (
 };
 
 /**
+ * Active tab specific profile url states
+ */
+const resourcesOpen: Reducer<boolean> = (state = false, action) => {
+  switch (action.type) {
+    case 'TOGGLE_RESOURCES_PANEL':
+      return !state;
+    default:
+      return state;
+  }
+};
+
+/**
  * These values are specific to an individual profile.
  */
 const fullProfileSpecific = combineReducers({
@@ -436,7 +448,9 @@ const fullProfileSpecific = combineReducers({
   legacyHiddenThreads: (state: ThreadIndex[] | null = null) => state,
 });
 
-const activeTabProfileSpecific = combineReducers({});
+const activeTabProfileSpecific = combineReducers({
+  resourcesOpen,
+});
 
 const profileSpecific = combineReducers({
   selectedThread,

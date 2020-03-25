@@ -210,7 +210,9 @@ export type FullProfileUrlState = {|
   legacyHiddenThreads: ThreadIndex[] | null,
 |};
 
-export type ActiveTabProfileUrlState = {};
+export type ActiveTabProfileUrlState = {
+  resourcesOpen: boolean,
+};
 
 export type ProfileSpecificUrlState = {|
   selectedThread: ThreadIndex | null,
