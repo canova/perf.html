@@ -155,6 +155,11 @@ class TimelineTrackContextMenu extends PureComponent<Props> {
         'Attempting to isolate a process track with a local track is selected.'
       );
     }
+    if (rightClickedTrack.type === 'resource') {
+      throw new Error(
+        'Attempting to isolate a process track with a resource track is selected.'
+      );
+    }
     isolateProcess(rightClickedTrack.trackIndex);
   };
 
@@ -184,6 +189,11 @@ class TimelineTrackContextMenu extends PureComponent<Props> {
     if (rightClickedTrack.type === 'local') {
       throw new Error(
         'Attempting to isolate a process track with a local track is selected.'
+      );
+    }
+    if (rightClickedTrack.type === 'resource') {
+      throw new Error(
+        'Attempting to isolate a process track with a resource track is selected.'
       );
     }
     isolateProcessMainThread(rightClickedTrack.trackIndex);

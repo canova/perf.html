@@ -4,13 +4,24 @@
 // @flow
 
 import type { ScreenshotPayload } from '../types/markers';
-import type { Profile, Thread, ThreadIndex, Pid } from '../types/profile';
+import type {
+  Profile,
+  Thread,
+  ThreadIndex,
+  Pid,
+  InnerWindowID,
+  Page,
+} from '../types/profile';
 import type {
   GlobalTrack,
   LocalTrack,
   TrackIndex,
 } from '../types/profile-derived';
-import { defaultThreadOrder, getFriendlyThreadName } from './profile-data';
+import {
+  defaultThreadOrder,
+  getFriendlyThreadName,
+  getActiveTabFriendlyThreadName,
+} from './profile-data';
 import { ensureExists, assertExhaustiveCheck } from '../utils/flow';
 
 /**
@@ -743,4 +754,27 @@ function _indexesAreValid(listLength: number, indexes: number[]) {
       .sort()
       .every((value, arrayIndex) => value === arrayIndex)
   );
+}
+
+export function getActiveTabResourceTrackName(
+  resourceTrack: LocalTrack,
+  threads: Thread[],
+  innerWindowIDToPageMap: Map<InnerWindowID, Page>
+): string {
+  switch (resourceTrack.type) {
+    case 'thread': {
+      return getActiveTabFriendlyThreadName(
+        threads[resourceTrack.threadIndex],
+        innerWindowIDToPageMap
+      );
+    }
+    case 'network':
+    case 'memory':
+    case 'ipc':
+      throw new Error(
+        `Local track type ${resourceTrack.type} is not implemented for the active tab`
+      );
+    default:
+      throw assertExhaustiveCheck(resourceTrack, 'Unhandled LocalTrack type.');
+  }
 }

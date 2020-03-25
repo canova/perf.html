@@ -34,6 +34,7 @@ import type {
   BalancedNativeAllocationsTable,
   IndexIntoFrameTable,
   PageList,
+  Page,
 } from '../types/profile';
 import type {
   CallNodeInfo,
@@ -44,7 +45,7 @@ import type {
   SelectedState,
   ProfileFilterPageData,
 } from '../types/profile-derived';
-import { assertExhaustiveCheck } from '../utils/flow';
+import { assertExhaustiveCheck, ensureExists } from '../utils/flow';
 
 import type { Milliseconds, StartEndRange } from '../types/units';
 import { timeCode } from '../utils/time-code';
@@ -1773,6 +1774,43 @@ export function getFriendlyThreadName(
     label = thread.name;
   }
   return label;
+}
+
+/**
+ * TODO: write
+ * FIXME: should we move this to active-tab.js?
+ */
+export function getActiveTabFriendlyThreadName(
+  thread: Thread,
+  innerWindowIDToPageMap: Map<InnerWindowID, Page>
+): string {
+  switch (thread.name) {
+    case 'GeckoMain': {
+      // Get the first innerWindowID inside the thread
+      let firstInnerWindowID = ensureExists(
+        thread.frameTable.innerWindowID
+      ).find(innerWindowID => innerWindowID && innerWindowID !== 0);
+
+      if (firstInnerWindowID === undefined || firstInnerWindowID === null) {
+        const markerData = thread.markers.data.find(
+          data => data && data.innerWindowID && data.innerWindowID !== 0
+        );
+        if (markerData && markerData.innerWindowID) {
+          firstInnerWindowID = markerData.innerWindowID;
+        }
+      }
+
+      if (firstInnerWindowID === undefined || firstInnerWindowID === null) {
+        throw new Error('There must be an innerWindowID in the thread');
+      }
+
+      const page = ensureExists(innerWindowIDToPageMap.get(firstInnerWindowID));
+      return page.url;
+    }
+    default:
+      // If that's not a main thread, simply get its name.
+      return thread.name;
+  }
 }
 
 export function getThreadProcessDetails(thread: Thread): string {

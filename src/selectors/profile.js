@@ -33,6 +33,7 @@ import type {
   ProfilerConfiguration,
   InnerWindowID,
   BrowsingContextID,
+  Page,
 } from '../types/profile';
 import type {
   LocalTrack,
@@ -553,6 +554,46 @@ export const getActiveTabResourceTrackFromReference: DangerousSelectorWithArgume
   getActiveTabResourceTracks(state)[trackReference.trackIndex];
 
 /**
+ * TODO: write
+ * FIXME: use this function inside getPagesMap as well.
+ */
+export const getInnerWindowIDToPageMap: Selector<
+  Map<InnerWindowID, Page>
+> = createSelector(getPageList, pageList => {
+  if (pageList === null) {
+    // FIXME: should we throw here really?
+    throw new Error('Expected a page array');
+  }
+
+  const innerWindowIDToPageMap = new Map();
+  for (const page of pageList) {
+    innerWindowIDToPageMap.set(page.innerWindowID, page);
+  }
+  return innerWindowIDToPageMap;
+});
+
+export const getActiveTabResourceTrackNames: Selector<
+  string[]
+> = createSelector(
+  getActiveTabResourceTracks,
+  getThreads,
+  getInnerWindowIDToPageMap,
+  (resourceTracks, threads, innerWindowIDToPageMap) =>
+    resourceTracks.map(resourceTrack => {
+      return Tracks.getActiveTabResourceTrackName(
+        resourceTrack,
+        threads,
+        innerWindowIDToPageMap
+      );
+    })
+);
+
+export const getActiveTabResourceTrackName: DangerousSelectorWithArguments<
+  string,
+  TrackIndex
+> = (state, trackIndex) => getActiveTabResourceTrackNames(state)[trackIndex];
+
+/**
  * Get the pages array and construct a Map that we can use to easily get the
  * InnerWindowIDs that are under one tab. The constructed map is
  * `Map<BrowsingContextID,Set<InnerWindowID>>`. The BrowsingContextID we use in
@@ -633,7 +674,7 @@ export const getPagesMap: Selector<Map<
  * Get the page map and the active tab ID, then return the InnerWindowIDs that
  * are related to this active tab. This is a fairly simple map element access.
  * The `BrowsingContextID -> Set<InnerWindowID>` construction happens inside
- * the getPageMap selector.
+ * the getPagesMap selector.
  * This function returns the Set all the time even though we are not in the active
  * tab view at the moment. Idaelly you should use the wrapper getRelevantPagesForCurrentTab
  * function if you want to do something inside the active tab view. This is needed
