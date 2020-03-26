@@ -16,7 +16,6 @@ import {
   getSelectedTab,
 } from '../../selectors/url-state';
 import explicitConnect from '../../utils/connect';
-import { getThreadSelectors } from '../../selectors/per-thread';
 import { getActiveTabResourceTrackName } from '../../selectors/profile';
 import TrackThread from './TrackThread';
 import TrackNetwork from './TrackNetwork';
@@ -36,7 +35,6 @@ type OwnProps = {|
 type StateProps = {|
   +trackName: string,
   +isSelected: boolean,
-  +isHidden: boolean,
 |};
 
 type DispatchProps = {|
@@ -95,13 +93,7 @@ class LocalTrackComponent extends PureComponent<Props> {
   }
 
   render() {
-    const { isSelected, isHidden, trackName, style } = this.props;
-
-    if (isHidden) {
-      // If this global track is hidden, render out a stub element so that the
-      // Reorderable Component still works across all the tracks.
-      return <li className="timelineTrackHidden" />;
-    }
+    const { isSelected, trackName, style } = this.props;
 
     return (
       <li className="timelineTrack timelineTrackResource" style={style}>
@@ -136,7 +128,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
         const threadIndex = localTrack.threadIndex;
         const selectedThreadIndex = getSelectedThreadIndex(state);
         const selectedTab = getSelectedTab(state);
-        const selectors = getThreadSelectors(threadIndex);
         isSelected =
           threadIndex === selectedThreadIndex &&
           selectedTab !== 'network-chart';
@@ -156,7 +147,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     return {
       trackName: getActiveTabResourceTrackName(state, trackIndex),
       isSelected,
-      isHidden: false, //getComputedHiddenLocalTracks(state, pid).has(trackIndex),
     };
   },
   mapDispatchToProps: {
