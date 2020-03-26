@@ -64,7 +64,7 @@ export const getShowJsTracerSummary: Selector<boolean> = state =>
  */
 export const getActiveTabProfileSpecificState: Selector<*> = state =>
   getProfileSpecificState(state).activeTabProfile;
-export const isActiveTabResourcesOpen: Selector<boolean> = state =>
+export const getIsActiveTabResourcesOpen: Selector<boolean> = state =>
   getActiveTabProfileSpecificState(state).resourcesOpen;
 
 /**

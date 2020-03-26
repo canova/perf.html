@@ -5,7 +5,12 @@
 // @flow
 import { createSelector } from 'reselect';
 
-import { getDataSource, getSelectedTab, getShowTabOnly } from './url-state';
+import {
+  getDataSource,
+  getSelectedTab,
+  getShowTabOnly,
+  getIsActiveTabResourcesOpen,
+} from './url-state';
 import {
   getGlobalTracks,
   getLocalTracksByPid,
@@ -80,6 +85,7 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
   getComputedHiddenLocalTracksByPid,
   getTrackThreadHeights,
   getShowTabOnly,
+  getIsActiveTabResourcesOpen,
   (
     globalTracks,
     localTracksByPid,
@@ -88,7 +94,8 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
     hiddenGlobalTracks,
     hiddenLocalTracksByPid,
     trackThreadHeights,
-    showTabOnly
+    showTabOnly,
+    isActiveTabResourcesOpen
   ) => {
     let height = TIMELINE_RULER_HEIGHT;
     let effectiveGlobalTracks;
@@ -172,22 +179,15 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
                   }
                   height += trackThreadHeight + border;
                 }
-
                 break;
               case 'network':
-                if (!showTabOnly) {
-                  height += TRACK_NETWORK_HEIGHT + border;
-                }
+                height += TRACK_NETWORK_HEIGHT + border;
                 break;
               case 'memory':
-                if (!showTabOnly) {
-                  height += TRACK_MEMORY_HEIGHT + border;
-                }
+                height += TRACK_MEMORY_HEIGHT + border;
                 break;
               case 'ipc':
-                if (!showTabOnly) {
-                  height += TRACK_IPC_HEIGHT + border;
-                }
+                height += TRACK_IPC_HEIGHT + border;
                 break;
               default:
                 throw assertExhaustiveCheck(localTrack);
@@ -200,28 +200,31 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
         // FIXME: this is height of resources
         height += 20;
       }
-      for (const resourceTrack of activeTabResourceTracks) {
-        switch (resourceTrack.type) {
-          case 'thread':
-            {
-              // The thread tracks have enough complexity that it warrants measuring
-              // them rather than statically using a value like the other tracks.
-              const trackThreadHeight =
-                trackThreadHeights[resourceTrack.threadIndex];
-              if (trackThreadHeight === undefined) {
-                // The height isn't computed yet, return.
-                console.log('CANOVA: no height for thread');
-                return null;
+      if (isActiveTabResourcesOpen) {
+        for (const resourceTrack of activeTabResourceTracks) {
+          switch (resourceTrack.type) {
+            case 'thread':
+              {
+                // The thread tracks have enough complexity that it warrants measuring
+                // them rather than statically using a value like the other tracks.
+                const trackThreadHeight =
+                  trackThreadHeights[resourceTrack.threadIndex];
+                if (trackThreadHeight === undefined) {
+                  // The height isn't computed yet, return.
+                  return null;
+                }
+                height += trackThreadHeight + border;
               }
-              height += trackThreadHeight + border;
-            }
-            break;
-          case 'network':
-          case 'memory':
-          case 'ipc':
-            break;
-          default:
-            throw assertExhaustiveCheck(resourceTrack);
+              break;
+            case 'network':
+            case 'memory':
+            case 'ipc':
+              throw new Error(
+                `Local track ${resourceTrack.type} is not implemented for resource tracks`
+              );
+            default:
+              throw assertExhaustiveCheck(resourceTrack);
+          }
         }
       }
     }

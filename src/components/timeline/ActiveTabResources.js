@@ -10,7 +10,7 @@ import classNames from 'classnames';
 import explicitConnect from '../../utils/connect';
 import ActiveTabResourceTrack from './ActiveTabResourceTrack';
 import { withSize } from '../shared/WithSize';
-import { isActiveTabResourcesOpen } from '../../selectors/url-state';
+import { getIsActiveTabResourcesOpen } from '../../selectors/url-state';
 import { toggleResourcesPanel } from '../../actions/app';
 
 import './ActiveTabResources.css';
@@ -75,7 +75,7 @@ class Resources extends React.PureComponent<Props> {
 
 export default explicitConnect<OwnProps, StateProps, DispatchProps>({
   mapStateToProps: state => ({
-    isActiveTabResourcesOpen: isActiveTabResourcesOpen(state),
+    isActiveTabResourcesOpen: getIsActiveTabResourcesOpen(state),
   }),
   mapDispatchToProps: { toggleResourcesPanel },
   component: withSize<Props>(Resources),
