@@ -65,6 +65,7 @@ function setupWithMarkers({ rangeStart, rangeEnd }, ...markersPerThread) {
           rangeEnd={rangeEnd}
           threadIndex={0}
           onSelect={() => {}}
+          trackType="local"
         />
         <MarkerContextMenu />
       </>

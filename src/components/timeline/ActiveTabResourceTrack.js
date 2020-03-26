@@ -18,9 +18,6 @@ import {
 import explicitConnect from '../../utils/connect';
 import { getActiveTabResourceTrackName } from '../../selectors/profile';
 import TrackThread from './TrackThread';
-import TrackNetwork from './TrackNetwork';
-import { TrackMemory } from './TrackMemory';
-import { TrackIPC } from './TrackIPC';
 import type { TrackReference } from '../../types/actions';
 import type { TrackIndex, LocalTrack } from '../../types/profile-derived';
 import type { ConnectedProps } from '../../utils/connect';
@@ -70,7 +67,12 @@ class LocalTrackComponent extends PureComponent<Props> {
     const { localTrack } = this.props;
     switch (localTrack.type) {
       case 'thread':
-        return <TrackThread threadIndex={localTrack.threadIndex} />;
+        return (
+          <TrackThread
+            threadIndex={localTrack.threadIndex}
+            trackType="resource"
+          />
+        );
       case 'network':
       case 'memory':
       case 'ipc':

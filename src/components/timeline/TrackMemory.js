@@ -74,6 +74,7 @@ export class TrackMemoryImpl extends React.PureComponent<Props, State> {
           rangeEnd={rangeEnd}
           threadIndex={threadIndex}
           onSelect={this._onMarkerSelect}
+          trackType="local"
         />
         <TrackMemoryGraph
           counterIndex={counterIndex}

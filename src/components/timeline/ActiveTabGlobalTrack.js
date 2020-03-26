@@ -116,6 +116,7 @@ class GlobalTrackComponent extends PureComponent<Props> {
           <TimelineTrackThread
             threadIndex={mainThreadIndex}
             showMemoryMarkers={false}
+            trackType="global"
           />
         );
       }

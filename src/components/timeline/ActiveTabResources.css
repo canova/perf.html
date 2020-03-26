@@ -45,8 +45,16 @@
 }
 
 .timelineTrackResourceRow .timelineTrackThreadMarkers {
-  position: absolute;
+  /* position: absolute; */
   width: 100%;
+}
+
+.timelineTrackResourceRow .timelineMarkers {
+  height: 3px;
+}
+
+.timelineTrackResourceRow .timelineMarkersGeckoMain {
+  height: 9px;
 }
 
 .timelineTrackResourceLabel, .timelineTrackResourceLabel2 {
@@ -58,25 +66,14 @@
   top: 0;
   padding: 0 5px;
   margin-left: 15px;
-  visibility: visible;
-  opacity: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .timelineTrackResourceRow:hover .timelineTrackResourceLabel {
-  /* TODO - needs visibility: hidden as well */
-  opacity: 0;
+  visibility: hidden;
 }
-
-/* .timelineResourceTracks:hover .timelineTrackResourceRow {
-  opacity: 0.5;
-}
-
-.timelineResourceTracks:hover .timelineTrackResourceRow:hover {
-  opacity: 1;
-} */
 
 .timelineTrackResourceLabel2 {
   visibility: hidden;

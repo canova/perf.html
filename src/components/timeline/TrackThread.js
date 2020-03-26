@@ -55,6 +55,7 @@ import type { ConnectedProps } from '../../utils/connect';
 
 type OwnProps = {|
   +threadIndex: ThreadIndex,
+  +trackType: 'global' | 'local' | 'resource',
   +showMemoryMarkers?: boolean,
 |};
 
@@ -137,6 +138,7 @@ class TimelineTrackThread extends PureComponent<Props> {
       hasFileIoMarkers,
       showMemoryMarkers,
       samplesSelectedStates,
+      trackType,
     } = this.props;
 
     const processType = filteredThread.processType;
@@ -156,6 +158,7 @@ class TimelineTrackThread extends PureComponent<Props> {
               rangeEnd={rangeEnd}
               threadIndex={threadIndex}
               onSelect={this._onMarkerSelect}
+              trackType={trackType}
             />
           ) : null}
           {hasFileIoMarkers ? (
@@ -164,6 +167,7 @@ class TimelineTrackThread extends PureComponent<Props> {
               rangeEnd={rangeEnd}
               threadIndex={threadIndex}
               onSelect={this._onMarkerSelect}
+              trackType={trackType}
             />
           ) : null}
           {displayJank ? (
@@ -172,6 +176,7 @@ class TimelineTrackThread extends PureComponent<Props> {
               rangeEnd={rangeEnd}
               threadIndex={threadIndex}
               onSelect={this._onMarkerSelect}
+              trackType={trackType}
             />
           ) : null}
           {displayMarkers ? (
@@ -180,6 +185,7 @@ class TimelineTrackThread extends PureComponent<Props> {
               rangeEnd={rangeEnd}
               threadIndex={threadIndex}
               onSelect={this._onMarkerSelect}
+              trackType={trackType}
             />
           ) : null}
         </div>
@@ -193,6 +199,7 @@ class TimelineTrackThread extends PureComponent<Props> {
             onSampleClick={this._onSampleClick}
             categories={categories}
             samplesSelectedStates={samplesSelectedStates}
+            trackType={trackType}
           />
         ) : (
           <ThreadStackGraph
