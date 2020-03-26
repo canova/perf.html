@@ -38,6 +38,7 @@ export type Props = {|
     IndexIntoSamplesTable,
     IndexIntoSamplesTable
   ) => number,
+  +trackType: 'global' | 'local' | 'resource',
 |};
 
 type State = {
