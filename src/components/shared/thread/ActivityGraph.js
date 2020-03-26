@@ -133,6 +133,7 @@ class ThreadActivityGraph extends React.PureComponent<Props, State> {
       samplesSelectedStates,
       treeOrderSampleComparator,
       categories,
+      trackType,
     } = this.props;
 
     const rect = canvas.getBoundingClientRect();
@@ -140,7 +141,11 @@ class ThreadActivityGraph extends React.PureComponent<Props, State> {
     const canvasPixelWidth = Math.round(rect.width * window.devicePixelRatio);
     const canvasPixelHeight = Math.round(rect.height * window.devicePixelRatio);
     canvas.width = canvasPixelWidth;
-    canvas.height = canvasPixelHeight;
+    if (trackType === 'resource') {
+      canvas.height = canvasPixelHeight;
+    } else {
+      canvas.height = canvasPixelHeight;
+    }
 
     const { fills, fillsQuerier } = computeActivityGraphFills({
       canvasPixelWidth,

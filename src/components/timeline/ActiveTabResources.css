@@ -57,6 +57,10 @@
   height: 9px;
 }
 
+.timelineTrackResourceRow .threadActivityGraph {
+  height: 15px;
+}
+
 .timelineTrackResourceLabel, .timelineTrackResourceLabel2 {
   max-width: calc(100% - 55px);
   pointer-events: none;
