@@ -69,16 +69,14 @@ class LocalTrackComponent extends PureComponent<Props> {
   renderTrack() {
     const { localTrack } = this.props;
     switch (localTrack.type) {
-      case 'process':
-        return <TrackThread threadIndex={localTrack.mainThreadIndex} />;
       case 'thread':
         return <TrackThread threadIndex={localTrack.threadIndex} />;
       case 'network':
-        return <TrackNetwork threadIndex={localTrack.threadIndex} />;
       case 'memory':
-        return <TrackMemory counterIndex={localTrack.counterIndex} />;
       case 'ipc':
-        return <TrackIPC threadIndex={localTrack.threadIndex} />;
+        throw new Error(
+          'Local track type is not implemented for resource tracks'
+        );
       default:
         console.error('Unhandled localTrack type', (localTrack: empty));
         return null;
@@ -121,7 +119,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
     let isSelected = false;
 
     // Run different selectors based on the track type.
-    console.log('canova local track: ', localTrack);
     switch (localTrack.type) {
       case 'thread': {
         // Look up the thread information for the process if it exists.
