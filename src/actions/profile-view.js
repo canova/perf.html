@@ -17,6 +17,7 @@ import {
   getComputedHiddenLocalTracks,
   getActiveTabHiddenGlobalTracksGetter,
   getActiveTabResourceTrackFromReference,
+  getActiveTabGlobalTrackFromReference,
 } from '../selectors/profile';
 import {
   getThreadSelectors,
@@ -29,6 +30,7 @@ import {
   getGlobalTrackOrder,
   getLocalTrackOrder,
   getSelectedTab,
+  getShowTabOnly,
 } from '../selectors/url-state';
 import {
   getCallNodePathFromIndex,
@@ -234,10 +236,11 @@ export function selectTrack(trackReference: TrackReference): ThunkAction<void> {
     switch (trackReference.type) {
       case 'global': {
         // Handle the case of global tracks.
-        const globalTrack = getGlobalTrackFromReference(
-          getState(),
-          trackReference
-        );
+        // TODO: add comment about active tab
+        const globalTrack =
+          getShowTabOnly(getState()) === null
+            ? getGlobalTrackFromReference(getState(), trackReference)
+            : getActiveTabGlobalTrackFromReference(getState(), trackReference);
 
         // Go through each type, and determine the selected slug and thread index.
         switch (globalTrack.type) {
