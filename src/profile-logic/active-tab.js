@@ -223,8 +223,8 @@ export function computeActiveTabGlobalTracks(
     throw new Error('Main global track could not found');
   }
 
-  // Put the main global track to the first element since we want to show it first.
-  globalTracks.unshift(globalTrackCandidates[heaviestTrackIndex]);
+  // Put the main global track to the last element since we want to display the screenshots first.
+  globalTracks.push(globalTrackCandidates[heaviestTrackIndex]);
   // Put the other candidates under the resources
   globalTrackCandidates.splice(heaviestTrackIndex, 1);
   resourceTracks.unshift(
