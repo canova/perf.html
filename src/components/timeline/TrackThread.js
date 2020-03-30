@@ -151,6 +151,32 @@ class TimelineTrackThread extends PureComponent<Props> {
 
     return (
       <div className="timelineTrackThread">
+        {timelineType === 'category' && !filteredThread.isJsTracer ? (
+          <ThreadActivityGraph
+            className="threadActivityGraph"
+            interval={interval}
+            fullThread={fullThread}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            onSampleClick={this._onSampleClick}
+            categories={categories}
+            samplesSelectedStates={samplesSelectedStates}
+            trackType={trackType}
+          />
+        ) : (
+          <ThreadStackGraph
+            className="threadStackGraph"
+            interval={interval}
+            thread={filteredThread}
+            tabFilteredThread={tabFilteredThread}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            callNodeInfo={callNodeInfo}
+            selectedCallNodeIndex={selectedCallNodeIndex}
+            categories={categories}
+            onSampleClick={this._onSampleClick}
+          />
+        )}
         <div className="timelineTrackThreadMarkers">
           {showMemoryMarkers ? (
             <TimelineMarkersMemory
@@ -189,32 +215,6 @@ class TimelineTrackThread extends PureComponent<Props> {
             />
           ) : null}
         </div>
-        {timelineType === 'category' && !filteredThread.isJsTracer ? (
-          <ThreadActivityGraph
-            className="threadActivityGraph"
-            interval={interval}
-            fullThread={fullThread}
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            onSampleClick={this._onSampleClick}
-            categories={categories}
-            samplesSelectedStates={samplesSelectedStates}
-            trackType={trackType}
-          />
-        ) : (
-          <ThreadStackGraph
-            className="threadStackGraph"
-            interval={interval}
-            thread={filteredThread}
-            tabFilteredThread={tabFilteredThread}
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            callNodeInfo={callNodeInfo}
-            selectedCallNodeIndex={selectedCallNodeIndex}
-            categories={categories}
-            onSampleClick={this._onSampleClick}
-          />
-        )}
         <EmptyThreadIndicator
           thread={filteredThread}
           interval={interval}

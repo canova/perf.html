@@ -64,13 +64,13 @@ class LocalTrackComponent extends PureComponent<Props> {
   };
 
   renderTrack() {
-    const { localTrack } = this.props;
+    const { localTrack, isSelected } = this.props;
     switch (localTrack.type) {
       case 'thread':
         return (
           <TrackThread
             threadIndex={localTrack.threadIndex}
-            trackType="resource"
+            trackType={isSelected ? 'local' : 'resource'}
           />
         );
       case 'network':
@@ -104,10 +104,9 @@ class LocalTrackComponent extends PureComponent<Props> {
           })}
           onClick={this._onLineClick}
         >
-          <span className="timelineTrackResourceLabel">Frame: {trackName}</span>
-          <span className="timelineTrackResourceLabel2">
-            Frame: {trackName}
-          </span>
+          <div className="timelineTrackResourceLabel">
+            <span>Frame:</span> {trackName}
+          </div>
           <div className="timelineTrackTrack">{this.renderTrack()}</div>
         </div>
       </li>
