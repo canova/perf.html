@@ -131,6 +131,7 @@ export const getTimelineHeight: Selector<null | CssPixels> = createSelector(
                 height += TRACK_PROCESS_BLANK_HEIGHT + border;
               } else {
                 const trackThreadHeight = trackThreadHeights[mainThreadIndex];
+                console.log('canova trackThreadHeight', trackThreadHeight);
                 if (trackThreadHeight === undefined) {
                   // The height isn't computed yet, return.
                   return null;
