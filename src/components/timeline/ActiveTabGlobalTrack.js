@@ -206,9 +206,12 @@ class GlobalTrackComponent extends PureComponent<Props> {
     return (
       <li ref={this._takeContainerRef} className="timelineTrack" style={style}>
         <div
-          className={classNames('timelineTrackRow timelineTrackGlobalRow', {
-            selected: isSelected,
-          })}
+          className={classNames(
+            'timelineTrackRow timelineTrackGlobalRow activeTab',
+            {
+              selected: isSelected,
+            }
+          )}
           onClick={this._selectCurrentTrack}
         >
           <div className="timelineTrackTrack">{this.renderTrack()}</div>

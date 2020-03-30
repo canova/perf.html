@@ -178,7 +178,7 @@ class TimelineTrackThread extends PureComponent<Props> {
           />
         )}
         <div className="timelineTrackThreadMarkers">
-          {showMemoryMarkers ? (
+          {trackType !== 'resource' && showMemoryMarkers ? (
             <TimelineMarkersMemory
               rangeStart={rangeStart}
               rangeEnd={rangeEnd}
@@ -187,7 +187,7 @@ class TimelineTrackThread extends PureComponent<Props> {
               trackType={trackType}
             />
           ) : null}
-          {hasFileIoMarkers ? (
+          {trackType !== 'resource' && hasFileIoMarkers ? (
             <TimelineMarkersFileIo
               rangeStart={rangeStart}
               rangeEnd={rangeEnd}
@@ -205,7 +205,7 @@ class TimelineTrackThread extends PureComponent<Props> {
               trackType={trackType}
             />
           ) : null}
-          {displayMarkers ? (
+          {trackType !== 'resource' && displayMarkers ? (
             <TimelineMarkersOverview
               rangeStart={rangeStart}
               rangeEnd={rangeEnd}
