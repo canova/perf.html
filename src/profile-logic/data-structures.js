@@ -60,6 +60,10 @@ export function getEmptySamplesTableWithEventDelay(): SamplesTable {
     eventDelay: [],
     stack: [],
     time: [],
+    // New values related to cpu usage.
+    threadCPUUsage: [],
+    // ThreadKernelTime: [],
+    // ThreadUserTime: [],
     length: 0,
   };
 }
