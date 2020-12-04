@@ -11,6 +11,7 @@ import {
   filterCounterToRange,
   accumulateCounterSamples,
   extractProfileFilterPageData,
+  computeMaxThreadCPU,
 } from '../profile-logic/profile-data';
 import {
   IPCMarkerCorrelations,
@@ -791,3 +792,8 @@ export const getThreadIdToNameMap: Selector<
   }
   return threadIdToNameMap;
 });
+
+export const getMaxThreadCPU: Selector<number> = createSelector(
+  getThreads,
+  computeMaxThreadCPU
+);

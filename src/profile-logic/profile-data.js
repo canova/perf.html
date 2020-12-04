@@ -2702,3 +2702,25 @@ export function hasThreadKeys(
   }
   return true;
 }
+
+/**
+ * TODO: write
+ */
+export function computeMaxThreadCPU(threads: Thread[]): number {
+  let maxThreadCPU = 0;
+
+  for (const thread of threads) {
+    const threadCPUArray = thread.samples.threadCPUUsage;
+    if (!threadCPUArray) {
+      // Don't have any ThreadCPU values.
+      continue;
+    }
+
+    for (const threadCPU of threadCPUArray) {
+      maxThreadCPU = Math.max(maxThreadCPU, threadCPU || 0);
+    }
+  }
+
+  console.log('canova max thread cpu:', maxThreadCPU);
+  return maxThreadCPU;
+}

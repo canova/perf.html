@@ -5,6 +5,7 @@
 
 import * as React from 'react';
 import { ActivityGraphCanvas } from './ActivityGraphCanvas';
+import { ActivityGraphCanvas2 } from './ActivityGraphCanvas2';
 import classNames from 'classnames';
 import {
   Tooltip,
@@ -42,6 +43,7 @@ export type Props = {|
     IndexIntoSamplesTable,
     IndexIntoSamplesTable
   ) => number,
+  +maxThreadCPU: number,
 |};
 
 type State = {
@@ -148,41 +150,78 @@ export class ThreadActivityGraph extends React.PureComponent<Props, State> {
       rangeEnd,
       samplesSelectedStates,
       treeOrderSampleComparator,
+      maxThreadCPU,
     } = this.props;
     const { hoveredSample, mouseX, mouseY } = this.state;
     return (
-      <div
-        className={this.props.className}
-        onMouseMove={this._onMouseMove}
-        onMouseLeave={this._onMouseLeave}
-        ref={this._takeContainerRef}
-      >
-        <ActivityGraphCanvas
-          className={classNames(
-            `${this.props.className}Canvas`,
-            'threadActivityGraphCanvas'
+      <>
+        <div
+          className={this.props.className}
+          onMouseMove={this._onMouseMove}
+          onMouseLeave={this._onMouseLeave}
+          ref={this._takeContainerRef}
+        >
+          <ActivityGraphCanvas
+            className={classNames(
+              `${this.props.className}Canvas`,
+              'threadActivityGraphCanvas'
+            )}
+            trackName={trackName}
+            fullThread={fullThread}
+            interval={interval}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            samplesSelectedStates={samplesSelectedStates}
+            treeOrderSampleComparator={treeOrderSampleComparator}
+            categories={categories}
+            passFillsQuerier={this._setFillsQuerier}
+            onMouseUp={this._onMouseUp}
+          />
+          {hoveredSample === null ? null : (
+            <Tooltip mouseX={mouseX} mouseY={mouseY}>
+              <SampleTooltipContents
+                sampleIndex={hoveredSample}
+                fullThread={fullThread}
+                categories={categories}
+              />
+            </Tooltip>
           )}
-          trackName={trackName}
-          fullThread={fullThread}
-          interval={interval}
-          rangeStart={rangeStart}
-          rangeEnd={rangeEnd}
-          samplesSelectedStates={samplesSelectedStates}
-          treeOrderSampleComparator={treeOrderSampleComparator}
-          categories={categories}
-          passFillsQuerier={this._setFillsQuerier}
-          onMouseUp={this._onMouseUp}
-        />
-        {hoveredSample === null ? null : (
-          <Tooltip mouseX={mouseX} mouseY={mouseY}>
-            <SampleTooltipContents
-              sampleIndex={hoveredSample}
-              fullThread={fullThread}
-              categories={categories}
-            />
-          </Tooltip>
-        )}
-      </div>
+        </div>
+        <div
+          className={this.props.className}
+          onMouseMove={this._onMouseMove}
+          onMouseLeave={this._onMouseLeave}
+          ref={this._takeContainerRef}
+          style={{ marginTop: '10px' }}
+        >
+          <ActivityGraphCanvas2
+            className={classNames(
+              `${this.props.className}Canvas`,
+              'threadActivityGraphCanvas'
+            )}
+            trackName={trackName}
+            fullThread={fullThread}
+            interval={interval}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            samplesSelectedStates={samplesSelectedStates}
+            treeOrderSampleComparator={treeOrderSampleComparator}
+            categories={categories}
+            passFillsQuerier={this._setFillsQuerier}
+            onMouseUp={this._onMouseUp}
+            maxThreadCPU={maxThreadCPU}
+          />
+          {hoveredSample === null ? null : (
+            <Tooltip mouseX={mouseX} mouseY={mouseY}>
+              <SampleTooltipContents
+                sampleIndex={hoveredSample}
+                fullThread={fullThread}
+                categories={categories}
+              />
+            </Tooltip>
+          )}
+        </div>
+      </>
     );
   }
 }
