@@ -279,6 +279,8 @@ class TimelineTrackThread extends PureComponent<Props> {
             selectedCallNodeIndex={selectedCallNodeIndex}
             categories={categories}
             onSampleClick={this._onSampleClick}
+            maxThreadCPU={maxThreadCPU}
+            threadCPUDelta={threadCPUDelta}
           />
         )}
         {timelineTrackOrganization.type === 'active-tab' ? (

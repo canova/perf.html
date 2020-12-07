@@ -42,6 +42,7 @@ type Props = {|
   // Decide which way the stacks grow up from the floor, or down from the ceiling.
   +stacksGrowFromCeiling?: boolean,
   +trackName: string,
+  +maxThreadCPU: number,
 |};
 
 export class ThreadStackGraph extends PureComponent<Props> {
@@ -80,6 +81,7 @@ export class ThreadStackGraph extends PureComponent<Props> {
       selectedCallNodeIndex,
       categories,
       stacksGrowFromCeiling,
+      maxThreadCPU,
     } = this.props;
 
     const devicePixelRatio = canvas.ownerDocument
@@ -117,6 +119,7 @@ export class ThreadStackGraph extends PureComponent<Props> {
     const rangeLength = range[1] - range[0];
     const xPixelsPerMs = canvas.width / rangeLength;
     const yPixelsPerDepth = canvas.height / maxDepth;
+    const yPixelsPerDepthCPU = canvas.height / maxThreadCPU;
     const trueIntervalPixelWidth = interval * xPixelsPerMs;
     const multiplier = trueIntervalPixelWidth < 2.0 ? 1.2 : 1.0;
     const drawnIntervalWidth = Math.max(
@@ -163,7 +166,13 @@ export class ThreadStackGraph extends PureComponent<Props> {
       if (callNodeIndex === null) {
         continue;
       }
-      const height = callNodeTable.depth[callNodeIndex] * yPixelsPerDepth;
+      let height;
+      if (thread.samples.threadCPUUsage) {
+        const sampleCPU = thread.samples.threadCPUUsage[i] || 0;
+        height = sampleCPU * yPixelsPerDepthCPU;
+      } else {
+        height = callNodeTable.depth[callNodeIndex] * yPixelsPerDepth;
+      }
       const xPos = (sampleTime - range[0]) * xPixelsPerMs;
       let samplesBucket;
       if (
