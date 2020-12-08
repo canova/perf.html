@@ -151,6 +151,7 @@ export class ActivityGraphCanvas2 extends React.PureComponent<CanvasProps> {
           break;
         }
         let currentNonZeroRangeEnd = canvasPixelWidth;
+        // bottom and left
         ctx.beginPath();
         ctx.moveTo(
           currentNonZeroRangeStart,
@@ -159,6 +160,7 @@ export class ActivityGraphCanvas2 extends React.PureComponent<CanvasProps> {
         for (let i = currentNonZeroRangeStart + 1; i < canvasPixelWidth; i++) {
           const lastVal = previousUpperEdge[i];
           const thisVal = accumulatedUpperEdge[i];
+          // bottom and right edge
           ctx.lineTo(i, (1 - lastVal) * canvasPixelHeight);
           if (lastVal === thisVal) {
             currentNonZeroRangeEnd = i;
@@ -170,6 +172,7 @@ export class ActivityGraphCanvas2 extends React.PureComponent<CanvasProps> {
           i >= currentNonZeroRangeStart;
           i--
         ) {
+          // left and top edge
           ctx.lineTo(i, (1 - accumulatedUpperEdge[i]) * canvasPixelHeight);
         }
         ctx.closePath();

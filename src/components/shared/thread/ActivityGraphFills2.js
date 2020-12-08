@@ -62,6 +62,7 @@ type CategoryFill = {|
   +fillStyle: string | CanvasPattern,
   // The Float32Arrays are mutated in place during the computation step.
   +perPixelContribution: Float32Array,
+  +perPixelWeight: Float32Array,
   +accumulatedUpperEdge: Float32Array,
 |};
 
@@ -81,6 +82,7 @@ type SelectedPercentageAtPixelBuffers = {|
   +afterSelectedPercentageAtPixel: Float32Array,
   +filteredOutByTransformPercentageAtPixel: Float32Array,
   +filteredOutByTabPercentageAtPixel: Float32Array,
+  +perPixelWeight: Float32Array,
 |};
 
 const BOX_BLUR_RADII = [3, 2, 2];
@@ -96,6 +98,9 @@ export function computeActivityGraphFills(
   const mutablePercentageBuffers = _createSelectedPercentageAtPixelBuffers(
     renderedComponentSettings
   );
+  const mutableTotalWeightBuffer = new Float32Array(
+    renderedComponentSettings.canvasPixelWidth
+  );
   const mutableFills = _getCategoryFills(
     renderedComponentSettings.categoryDrawStyles,
     mutablePercentageBuffers
@@ -103,10 +108,12 @@ export function computeActivityGraphFills(
   const activityGraphFills = new ActivityGraphFillComputer(
     renderedComponentSettings,
     mutablePercentageBuffers,
-    mutableFills
+    mutableFills,
+    mutableTotalWeightBuffer
   );
 
   activityGraphFills.run();
+
   // We're done mutating the fills' Float32Array buffers.
   const fills = mutableFills;
 
@@ -128,15 +135,18 @@ export class ActivityGraphFillComputer {
   // The fills and percentages are mutated in place.
   +mutablePercentageBuffers: SelectedPercentageAtPixelBuffers[];
   +mutableFills: CategoryFill[];
+  +mutableTotalWeightBuffer: Float32Array;
 
   constructor(
     renderedComponentSettings: RenderedComponentSettings,
     mutablePercentageBuffers: SelectedPercentageAtPixelBuffers[],
-    mutableFills: CategoryFill[]
+    mutableFills: CategoryFill[],
+    mutableTotalWeightBuffer: Float32Array
   ) {
     this.renderedComponentSettings = renderedComponentSettings;
     this.mutablePercentageBuffers = mutablePercentageBuffers;
     this.mutableFills = mutableFills;
+    this.mutableTotalWeightBuffer = mutableTotalWeightBuffer;
   }
 
   /**
@@ -147,6 +157,22 @@ export class ActivityGraphFillComputer {
     // First go through each sample, and set the buffers that contain the percentage
     // that a category contributes to a given place in the X axis of the chart.
     this._accumulateSampleCategories();
+
+    // Find out the global total value.
+    let globalTotal = 0;
+    for (const localTotal of this.mutableTotalWeightBuffer) {
+      globalTotal = Math.max(globalTotal, localTotal);
+    }
+
+    // Now compute the real height of the fills with the CPU usage information.
+    for (const fill of this.mutableFills) {
+      for (let idx = 0; idx < fill.perPixelContribution.length; idx++) {
+        const cpuContribution =
+          globalTotal > 0 ? fill.perPixelWeight[idx] / globalTotal : 1;
+        fill.perPixelContribution[idx] =
+          fill.perPixelContribution[idx] * cpuContribution;
+      }
+    }
 
     // Smooth the graphs by applying a 1D gaussian blur to the per-pixel
     // contribution of each fill.
@@ -210,6 +236,9 @@ export class ActivityGraphFillComputer {
     // Go through the samples and accumulate the category into the percentageBuffers.
     for (let i = 0; i < samples.length - 1; i++) {
       const nextSampleTime = samples.time[i + 1];
+      const sampleCPU = samples.threadCPUUsage
+        ? samples.threadCPUUsage[i] || 1
+        : 1;
       const stackIndex = samples.stack[i];
       const category =
         stackIndex === null
@@ -222,7 +251,8 @@ export class ActivityGraphFillComputer {
         i,
         prevSampleTime,
         sampleTime,
-        nextSampleTime
+        nextSampleTime,
+        sampleCPU
       );
 
       prevSampleTime = sampleTime;
@@ -235,13 +265,17 @@ export class ActivityGraphFillComputer {
       lastSampleStack !== null
         ? stackTable.category[lastSampleStack]
         : greyCategoryIndex;
+    const sampleCPU = samples.threadCPUUsage
+      ? samples.threadCPUUsage[samples.length - 1] || 1
+      : 1;
 
     this._accumulateInCategory(
       lastSampleCategory,
       samples.length - 1,
       prevSampleTime,
       sampleTime,
-      sampleTime + interval
+      sampleTime + interval,
+      sampleCPU
     );
   }
 
@@ -254,7 +288,8 @@ export class ActivityGraphFillComputer {
     sampleIndex: IndexIntoSamplesTable,
     prevSampleTime: Milliseconds,
     sampleTime: Milliseconds,
-    nextSampleTime: Milliseconds
+    nextSampleTime: Milliseconds,
+    sampleCPU: number
   ) {
     const {
       rangeEnd,
@@ -311,6 +346,8 @@ export class ActivityGraphFillComputer {
     );
     for (let i = intPixelStart; i <= intPixelEnd; i++) {
       percentageBuffer[i] += 1;
+      percentageBuffers.perPixelWeight[i] += sampleCPU;
+      this.mutableTotalWeightBuffer[i] += sampleCPU;
     }
     percentageBuffer[intPixelStart] -= pixelStart - intPixelStart;
     percentageBuffer[intPixelEnd] -= 1 - (pixelEnd - intPixelEnd);
@@ -658,6 +695,7 @@ function _createSelectedPercentageAtPixelBuffers({
     // Unlike other fields, we do not mutate that array and we keep that zero
     // array to indicate that we don't want to draw anything for this case.
     filteredOutByTabPercentageAtPixel: new Float32Array(canvasPixelWidth),
+    perPixelWeight: new Float32Array(canvasPixelWidth),
   }));
 }
 
@@ -691,6 +729,7 @@ function _getCategoryFills(
           category: categoryDrawStyle.category,
           fillStyle: categoryDrawStyle.unselectedFillStyle,
           perPixelContribution: buffer.beforeSelectedPercentageAtPixel,
+          perPixelWeight: buffer.perPixelWeight,
           accumulatedUpperEdge: new Float32Array(
             buffer.beforeSelectedPercentageAtPixel.length
           ),
@@ -699,6 +738,7 @@ function _getCategoryFills(
           category: categoryDrawStyle.category,
           fillStyle: categoryDrawStyle.selectedFillStyle,
           perPixelContribution: buffer.selectedPercentageAtPixel,
+          perPixelWeight: buffer.perPixelWeight,
           accumulatedUpperEdge: new Float32Array(
             buffer.beforeSelectedPercentageAtPixel.length
           ),
@@ -707,6 +747,7 @@ function _getCategoryFills(
           category: categoryDrawStyle.category,
           fillStyle: categoryDrawStyle.unselectedFillStyle,
           perPixelContribution: buffer.afterSelectedPercentageAtPixel,
+          perPixelWeight: buffer.perPixelWeight,
           accumulatedUpperEdge: new Float32Array(
             buffer.beforeSelectedPercentageAtPixel.length
           ),
@@ -715,6 +756,7 @@ function _getCategoryFills(
           category: categoryDrawStyle.category,
           fillStyle: categoryDrawStyle.filteredOutByTransformFillStyle,
           perPixelContribution: buffer.filteredOutByTransformPercentageAtPixel,
+          perPixelWeight: buffer.perPixelWeight,
           accumulatedUpperEdge: new Float32Array(
             buffer.beforeSelectedPercentageAtPixel.length
           ),

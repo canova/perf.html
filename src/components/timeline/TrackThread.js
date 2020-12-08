@@ -253,19 +253,35 @@ class TimelineTrackThread extends PureComponent<Props> {
           </>
         ) : null}
         {timelineType === 'category' && !filteredThread.isJsTracer ? (
-          <ThreadActivityGraph
-            className="threadActivityGraph"
-            trackName={trackName}
-            interval={interval}
-            fullThread={fullThread}
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-            onSampleClick={this._onSampleClick}
-            categories={categories}
-            samplesSelectedStates={samplesSelectedStates}
-            treeOrderSampleComparator={treeOrderSampleComparator}
-            maxThreadCPU={maxThreadCPU}
-          />
+          <>
+            <ThreadActivityGraph
+              className="threadActivityGraph"
+              trackName={trackName}
+              interval={interval}
+              fullThread={fullThread}
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              onSampleClick={this._onSampleClick}
+              categories={categories}
+              samplesSelectedStates={samplesSelectedStates}
+              treeOrderSampleComparator={treeOrderSampleComparator}
+              maxThreadCPU={maxThreadCPU}
+            />
+            <ThreadStackGraph
+              className="threadStackGraph"
+              trackName={trackName}
+              interval={interval}
+              thread={filteredThread}
+              tabFilteredThread={tabFilteredThread}
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              callNodeInfo={callNodeInfo}
+              selectedCallNodeIndex={selectedCallNodeIndex}
+              categories={categories}
+              onSampleClick={this._onSampleClick}
+              maxThreadCPU={maxThreadCPU}
+            />
+          </>
         ) : (
           <ThreadStackGraph
             className="threadStackGraph"
