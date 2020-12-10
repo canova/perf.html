@@ -236,9 +236,10 @@ export class ActivityGraphFillComputer {
     // Go through the samples and accumulate the category into the percentageBuffers.
     for (let i = 0; i < samples.length - 1; i++) {
       const nextSampleTime = samples.time[i + 1];
-      const sampleCPU = samples.threadCPUUsage
-        ? samples.threadCPUUsage[i] || 1
-        : 1;
+      const sampleCPU =
+        !samples.threadCPUUsage || !samples.threadCPUUsage[i]
+          ? 1
+          : samples.threadCPUUsage[i] / (sampleTime - prevSampleTime);
       const stackIndex = samples.stack[i];
       const category =
         stackIndex === null
@@ -260,14 +261,16 @@ export class ActivityGraphFillComputer {
     }
 
     // Handle the last sample, which was not covered by the for loop above.
-    const lastSampleStack = samples.stack[samples.length - 1];
+    const lastIdx = samples.length - 1;
+    const lastSampleStack = samples.stack[lastIdx];
     const lastSampleCategory =
       lastSampleStack !== null
         ? stackTable.category[lastSampleStack]
         : greyCategoryIndex;
-    const sampleCPU = samples.threadCPUUsage
-      ? samples.threadCPUUsage[samples.length - 1] || 1
-      : 1;
+    const sampleCPU =
+      !samples.threadCPUUsage || !samples.threadCPUUsage[lastIdx]
+        ? 1
+        : samples.threadCPUUsage[lastIdx] / (sampleTime - prevSampleTime);
 
     this._accumulateInCategory(
       lastSampleCategory,
