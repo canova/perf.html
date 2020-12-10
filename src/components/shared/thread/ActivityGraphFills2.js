@@ -354,6 +354,16 @@ export class ActivityGraphFillComputer {
     }
     percentageBuffer[intPixelStart] -= pixelStart - intPixelStart;
     percentageBuffer[intPixelEnd] -= 1 - (pixelEnd - intPixelEnd);
+
+    percentageBuffers.perPixelWeight[intPixelStart] -=
+      sampleCPU * (pixelStart - intPixelStart);
+    this.mutableTotalWeightBuffer[intPixelStart] -=
+      sampleCPU * pixelStart - intPixelStart;
+
+    percentageBuffers.perPixelWeight[intPixelEnd] -=
+      sampleCPU * (1 - (pixelEnd - intPixelEnd));
+    this.mutableTotalWeightBuffer[intPixelEnd] -=
+      sampleCPU * 1 - (pixelEnd - intPixelEnd);
   }
 
   /**
