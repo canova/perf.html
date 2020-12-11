@@ -62,7 +62,6 @@ type CategoryFill = {|
   +fillStyle: string | CanvasPattern,
   // The Float32Arrays are mutated in place during the computation step.
   +perPixelContribution: Float32Array,
-  +perPixelWeight: Float32Array,
   +accumulatedUpperEdge: Float32Array,
 |};
 
@@ -82,7 +81,6 @@ type SelectedPercentageAtPixelBuffers = {|
   +afterSelectedPercentageAtPixel: Float32Array,
   +filteredOutByTransformPercentageAtPixel: Float32Array,
   +filteredOutByTabPercentageAtPixel: Float32Array,
-  +perPixelWeight: Float32Array,
 |};
 
 const BOX_BLUR_RADII = [3, 2, 2];
@@ -167,10 +165,9 @@ export class ActivityGraphFillComputer {
     // Now compute the real height of the fills with the CPU usage information.
     for (const fill of this.mutableFills) {
       for (let idx = 0; idx < fill.perPixelContribution.length; idx++) {
-        const cpuContribution =
-          globalTotal > 0 ? fill.perPixelWeight[idx] / globalTotal : 1;
+        const cpuDivision = globalTotal > 0 ? globalTotal : 1;
         fill.perPixelContribution[idx] =
-          fill.perPixelContribution[idx] * cpuContribution;
+          fill.perPixelContribution[idx] / cpuDivision;
       }
     }
 
@@ -348,20 +345,14 @@ export class ActivityGraphFillComputer {
       sampleIndex
     );
     for (let i = intPixelStart; i <= intPixelEnd; i++) {
-      percentageBuffer[i] += 1;
-      percentageBuffers.perPixelWeight[i] += sampleCPU;
+      percentageBuffer[i] += sampleCPU;
       this.mutableTotalWeightBuffer[i] += sampleCPU;
     }
-    percentageBuffer[intPixelStart] -= pixelStart - intPixelStart;
-    percentageBuffer[intPixelEnd] -= 1 - (pixelEnd - intPixelEnd);
+    percentageBuffer[intPixelStart] -= sampleCPU * (pixelStart - intPixelStart);
+    percentageBuffer[intPixelEnd] -= sampleCPU * (1 - (pixelEnd - intPixelEnd));
 
-    percentageBuffers.perPixelWeight[intPixelStart] -=
-      sampleCPU * (pixelStart - intPixelStart);
     this.mutableTotalWeightBuffer[intPixelStart] -=
       sampleCPU * pixelStart - intPixelStart;
-
-    percentageBuffers.perPixelWeight[intPixelEnd] -=
-      sampleCPU * (1 - (pixelEnd - intPixelEnd));
     this.mutableTotalWeightBuffer[intPixelEnd] -=
       sampleCPU * 1 - (pixelEnd - intPixelEnd);
   }
@@ -708,7 +699,6 @@ function _createSelectedPercentageAtPixelBuffers({
     // Unlike other fields, we do not mutate that array and we keep that zero
     // array to indicate that we don't want to draw anything for this case.
     filteredOutByTabPercentageAtPixel: new Float32Array(canvasPixelWidth),
-    perPixelWeight: new Float32Array(canvasPixelWidth),
   }));
 }
 
@@ -742,7 +732,6 @@ function _getCategoryFills(
           category: categoryDrawStyle.category,
           fillStyle: categoryDrawStyle.unselectedFillStyle,
           perPixelContribution: buffer.beforeSelectedPercentageAtPixel,
-          perPixelWeight: buffer.perPixelWeight,
           accumulatedUpperEdge: new Float32Array(
             buffer.beforeSelectedPercentageAtPixel.length
           ),
@@ -751,7 +740,6 @@ function _getCategoryFills(
           category: categoryDrawStyle.category,
           fillStyle: categoryDrawStyle.selectedFillStyle,
           perPixelContribution: buffer.selectedPercentageAtPixel,
-          perPixelWeight: buffer.perPixelWeight,
           accumulatedUpperEdge: new Float32Array(
             buffer.beforeSelectedPercentageAtPixel.length
           ),
@@ -760,7 +748,6 @@ function _getCategoryFills(
           category: categoryDrawStyle.category,
           fillStyle: categoryDrawStyle.unselectedFillStyle,
           perPixelContribution: buffer.afterSelectedPercentageAtPixel,
-          perPixelWeight: buffer.perPixelWeight,
           accumulatedUpperEdge: new Float32Array(
             buffer.beforeSelectedPercentageAtPixel.length
           ),
@@ -769,7 +756,6 @@ function _getCategoryFills(
           category: categoryDrawStyle.category,
           fillStyle: categoryDrawStyle.filteredOutByTransformFillStyle,
           perPixelContribution: buffer.filteredOutByTransformPercentageAtPixel,
-          perPixelWeight: buffer.perPixelWeight,
           accumulatedUpperEdge: new Float32Array(
             buffer.beforeSelectedPercentageAtPixel.length
           ),
