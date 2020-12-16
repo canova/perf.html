@@ -39,10 +39,7 @@ type Props = {|
     event: SyntheticMouseEvent<>,
     sampleIndex: IndexIntoSamplesTable
   ) => void,
-  // Decide which way the stacks grow up from the floor, or down from the ceiling.
-  +stacksGrowFromCeiling?: boolean,
   +trackName: string,
-  +maxThreadCPU: number,
 |};
 
 export class ThreadSampleGraph extends PureComponent<Props> {
@@ -80,8 +77,6 @@ export class ThreadSampleGraph extends PureComponent<Props> {
       callNodeInfo,
       selectedCallNodeIndex,
       categories,
-      stacksGrowFromCeiling,
-      maxThreadCPU,
     } = this.props;
 
     const devicePixelRatio = canvas.ownerDocument
@@ -118,8 +113,6 @@ export class ThreadSampleGraph extends PureComponent<Props> {
     const range = [rangeStart, rangeEnd];
     const rangeLength = range[1] - range[0];
     const xPixelsPerMs = canvas.width / rangeLength;
-    const yPixelsPerDepth = canvas.height / maxDepth;
-    const yPixelsPerDepthCPU = canvas.height / maxThreadCPU;
     const trueIntervalPixelWidth = interval * xPixelsPerMs;
     const multiplier = trueIntervalPixelWidth < 2.0 ? 1.2 : 1.0;
     const drawnIntervalWidth = Math.max(
@@ -141,18 +134,9 @@ export class ThreadSampleGraph extends PureComponent<Props> {
     );
 
     // Do one pass over the samples array to gather the samples we want to draw.
-    const regularSamples = {
-      height: [],
-      xPos: [],
-    };
-    const idleSamples = {
-      height: [],
-      xPos: [],
-    };
-    const highlightedSamples = {
-      height: [],
-      xPos: [],
-    };
+    const regularSamples = [];
+    const idleSamples = [];
+    const highlightedSamples = [];
     // Enforce a minimum distance so that we don't draw more than 4 samples per
     // pixel.
     const minGapMs = 0.25 / xPixelsPerMs;
@@ -166,14 +150,7 @@ export class ThreadSampleGraph extends PureComponent<Props> {
       if (callNodeIndex === null) {
         continue;
       }
-      let height;
-      if (thread.samples.threadCPUUsage) {
-        const sampleCPU = thread.samples.threadCPUUsage[i] || 0;
-        height = sampleCPU * yPixelsPerDepthCPU;
-      } else {
-        height = callNodeTable.depth[callNodeIndex] * yPixelsPerDepth;
-      }
-      const xPos = (sampleTime - range[0]) * xPixelsPerMs;
+      const xPos = (sampleTime - range[0] - interval / 2) * xPixelsPerMs;
       let samplesBucket;
       if (
         samplesSelectedStates !== null &&
@@ -193,22 +170,16 @@ export class ThreadSampleGraph extends PureComponent<Props> {
           samplesBucket = regularSamples;
         }
       }
-      samplesBucket.height.push(height);
-      samplesBucket.xPos.push(xPos);
+      samplesBucket.push(xPos);
       nextMinTime = sampleTime + minGapMs;
     }
 
-    type SamplesBucket = {
-      height: number[],
-      xPos: number[],
-    };
-    function drawSamples(samplesBucket: SamplesBucket, color: string) {
-      ctx.fillStyle = color;
-      for (let i = 0; i < samplesBucket.height.length; i++) {
-        const height = samplesBucket.height[i];
-        const startY = stacksGrowFromCeiling ? 0 : canvas.height - height;
-        const xPos = samplesBucket.xPos[i];
-        ctx.fillRect(xPos, startY, drawnIntervalWidth, height);
+    function drawSamples(samplePositions: number[], color: string) {
+      for (let i = 0; i < samplePositions.length; i++) {
+        ctx.fillStyle = color;
+        const startY = 0;
+        const xPos = samplePositions[i];
+        ctx.fillRect(xPos, startY, drawnIntervalWidth, canvas.height);
       }
     }
 
@@ -256,6 +227,9 @@ export class ThreadSampleGraph extends PureComponent<Props> {
             `${this.props.className}Canvas`,
             'threadSampleGraphCanvas'
           )}
+          style={{
+            height: '5px',
+          }}
           ref={this._takeCanvasRef}
           onMouseUp={this._onMouseUp}
         >

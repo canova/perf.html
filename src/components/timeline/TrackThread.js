@@ -13,6 +13,7 @@ import {
   type SizeProps,
 } from 'firefox-profiler/components/shared/WithSize';
 import { ThreadStackGraph } from 'firefox-profiler/components/shared/thread/StackGraph';
+import { ThreadSampleGraph } from 'firefox-profiler/components/shared/thread/SampleGraph';
 import { ThreadActivityGraph } from 'firefox-profiler/components/shared/thread/ActivityGraph';
 
 import {
@@ -266,6 +267,19 @@ class TimelineTrackThread extends PureComponent<Props> {
               samplesSelectedStates={samplesSelectedStates}
               treeOrderSampleComparator={treeOrderSampleComparator}
               maxThreadCPU={maxThreadCPU}
+            />
+            <ThreadSampleGraph
+              className="threadStackGraph"
+              trackName={trackName}
+              interval={interval}
+              thread={filteredThread}
+              tabFilteredThread={tabFilteredThread}
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              callNodeInfo={callNodeInfo}
+              selectedCallNodeIndex={selectedCallNodeIndex}
+              categories={categories}
+              onSampleClick={this._onSampleClick}
             />
             <ThreadStackGraph
               className="threadStackGraph"
