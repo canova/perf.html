@@ -61,7 +61,7 @@ export function getEmptySamplesTableWithEventDelay(): SamplesTable {
     stack: [],
     time: [],
     // New values related to cpu usage.
-    threadCPUUsage: [],
+    threadCPUDelta: [],
     // ThreadKernelTime: [],
     // ThreadUserTime: [],
     length: 0,

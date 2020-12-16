@@ -234,9 +234,9 @@ export class ActivityGraphFillComputer {
     for (let i = 0; i < samples.length - 1; i++) {
       const nextSampleTime = samples.time[i + 1];
       const sampleCPU =
-        !samples.threadCPUUsage || !samples.threadCPUUsage[i]
+        !samples.threadCPUDelta || !samples.threadCPUDelta[i]
           ? 1
-          : samples.threadCPUUsage[i] / (sampleTime - prevSampleTime);
+          : samples.threadCPUDelta[i] / (sampleTime - prevSampleTime);
       const stackIndex = samples.stack[i];
       const category =
         stackIndex === null
@@ -265,9 +265,9 @@ export class ActivityGraphFillComputer {
         ? stackTable.category[lastSampleStack]
         : greyCategoryIndex;
     const sampleCPU =
-      !samples.threadCPUUsage || !samples.threadCPUUsage[lastIdx]
+      !samples.threadCPUDelta || !samples.threadCPUDelta[lastIdx]
         ? 1
-        : samples.threadCPUUsage[lastIdx] / (sampleTime - prevSampleTime);
+        : samples.threadCPUDelta[lastIdx] / (sampleTime - prevSampleTime);
 
     this._accumulateInCategory(
       lastSampleCategory,

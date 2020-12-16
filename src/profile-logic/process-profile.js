@@ -830,7 +830,7 @@ function _processSamples(geckoSamples: GeckoSampleStruct): SamplesTable {
     weightType: 'samples',
     weight: null,
     // CPU usage related stuff
-    threadCPUUsage: geckoSamples.threadCPUUsage,
+    threadCPUDelta: geckoSamples.threadCPUDelta,
     // ThreadKernelTime: geckoSamples.ThreadKernelTime,
     // ThreadUserTime: geckoSamples.ThreadUserTime,
     length: geckoSamples.length,

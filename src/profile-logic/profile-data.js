@@ -2710,7 +2710,7 @@ export function computeMaxThreadCPU(threads: Thread[]): number {
   let maxThreadCPU = 0;
 
   for (const thread of threads) {
-    const threadCPUArray = thread.samples.threadCPUUsage;
+    const threadCPUArray = thread.samples.threadCPUDelta;
     if (!threadCPUArray) {
       // Don't have any ThreadCPU values.
       continue;
