@@ -168,8 +168,11 @@ export class ThreadStackGraph extends PureComponent<Props> {
       }
       let height;
       if (thread.samples.threadCPUDelta) {
-        const sampleCPU = thread.samples.threadCPUDelta[i] || 0;
-        height = sampleCPU * yPixelsPerDepthCPU;
+        const cpuDelta = thread.samples.threadCPUDelta[i] || 0;
+        const realInterval =
+          (thread.samples.time[i] - thread.samples.time[i - 1]) / interval;
+        const currentCPUPerInterval = cpuDelta / realInterval;
+        height = currentCPUPerInterval * yPixelsPerDepthCPU;
       } else {
         height = callNodeTable.depth[callNodeIndex] * yPixelsPerDepth;
       }

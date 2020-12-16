@@ -96,9 +96,6 @@ export function computeActivityGraphFills(
   const mutablePercentageBuffers = _createSelectedPercentageAtPixelBuffers(
     renderedComponentSettings
   );
-  const mutableTotalWeightBuffer = new Float32Array(
-    renderedComponentSettings.canvasPixelWidth
-  );
   const mutableFills = _getCategoryFills(
     renderedComponentSettings.categoryDrawStyles,
     mutablePercentageBuffers
@@ -106,8 +103,7 @@ export function computeActivityGraphFills(
   const activityGraphFills = new ActivityGraphFillComputer(
     renderedComponentSettings,
     mutablePercentageBuffers,
-    mutableFills,
-    mutableTotalWeightBuffer
+    mutableFills
   );
 
   activityGraphFills.run();
@@ -133,18 +129,15 @@ export class ActivityGraphFillComputer {
   // The fills and percentages are mutated in place.
   +mutablePercentageBuffers: SelectedPercentageAtPixelBuffers[];
   +mutableFills: CategoryFill[];
-  +mutableTotalWeightBuffer: Float32Array;
 
   constructor(
     renderedComponentSettings: RenderedComponentSettings,
     mutablePercentageBuffers: SelectedPercentageAtPixelBuffers[],
-    mutableFills: CategoryFill[],
-    mutableTotalWeightBuffer: Float32Array
+    mutableFills: CategoryFill[]
   ) {
     this.renderedComponentSettings = renderedComponentSettings;
     this.mutablePercentageBuffers = mutablePercentageBuffers;
     this.mutableFills = mutableFills;
-    this.mutableTotalWeightBuffer = mutableTotalWeightBuffer;
   }
 
   /**
@@ -155,21 +148,6 @@ export class ActivityGraphFillComputer {
     // First go through each sample, and set the buffers that contain the percentage
     // that a category contributes to a given place in the X axis of the chart.
     this._accumulateSampleCategories();
-
-    // Find out the global total value.
-    let globalTotal = 0;
-    for (const localTotal of this.mutableTotalWeightBuffer) {
-      globalTotal = Math.max(globalTotal, localTotal);
-    }
-
-    // Now compute the real height of the fills with the CPU usage information.
-    for (const fill of this.mutableFills) {
-      for (let idx = 0; idx < fill.perPixelContribution.length; idx++) {
-        const cpuDivision = globalTotal > 0 ? globalTotal : 1;
-        fill.perPixelContribution[idx] =
-          fill.perPixelContribution[idx] / cpuDivision;
-      }
-    }
 
     // Smooth the graphs by applying a 1D gaussian blur to the per-pixel
     // contribution of each fill.
@@ -233,10 +211,14 @@ export class ActivityGraphFillComputer {
     // Go through the samples and accumulate the category into the percentageBuffers.
     for (let i = 0; i < samples.length - 1; i++) {
       const nextSampleTime = samples.time[i + 1];
-      const sampleCPU =
-        !samples.threadCPUDelta || !samples.threadCPUDelta[i]
-          ? 1
-          : samples.threadCPUDelta[i] / (sampleTime - prevSampleTime);
+      let sampleCPU;
+      if (!samples.threadCPUDelta || !samples.threadCPUDelta[i]) {
+        sampleCPU = 1;
+      } else {
+        const cpuDelta = samples.threadCPUDelta[i] || 0;
+        const realInterval = (samples.time[i] - samples.time[i - 1]) / interval;
+        sampleCPU = cpuDelta / realInterval;
+      }
       const stackIndex = samples.stack[i];
       const category =
         stackIndex === null
@@ -264,10 +246,15 @@ export class ActivityGraphFillComputer {
       lastSampleStack !== null
         ? stackTable.category[lastSampleStack]
         : greyCategoryIndex;
-    const sampleCPU =
-      !samples.threadCPUDelta || !samples.threadCPUDelta[lastIdx]
-        ? 1
-        : samples.threadCPUDelta[lastIdx] / (sampleTime - prevSampleTime);
+    let sampleCPU;
+    if (!samples.threadCPUDelta || !samples.threadCPUDelta[lastIdx]) {
+      sampleCPU = 1;
+    } else {
+      const cpuDelta = samples.threadCPUDelta[lastIdx] || 0;
+      const realInterval =
+        (samples.time[lastIdx] - samples.time[lastIdx - 1]) / interval;
+      sampleCPU = cpuDelta / realInterval;
+    }
 
     this._accumulateInCategory(
       lastSampleCategory,
@@ -297,6 +284,7 @@ export class ActivityGraphFillComputer {
       categoryDrawStyles,
       xPixelsPerMs,
       canvasPixelWidth,
+      maxThreadCPU,
     } = this.renderedComponentSettings;
     if (sampleTime < rangeStart || sampleTime >= rangeEnd) {
       return;
@@ -344,17 +332,14 @@ export class ActivityGraphFillComputer {
       percentageBuffers,
       sampleIndex
     );
+    const samplePercentage = sampleCPU / maxThreadCPU;
     for (let i = intPixelStart; i <= intPixelEnd; i++) {
-      percentageBuffer[i] += sampleCPU;
-      this.mutableTotalWeightBuffer[i] += sampleCPU;
+      percentageBuffer[i] += samplePercentage;
     }
-    percentageBuffer[intPixelStart] -= sampleCPU * (pixelStart - intPixelStart);
-    percentageBuffer[intPixelEnd] -= sampleCPU * (1 - (pixelEnd - intPixelEnd));
-
-    this.mutableTotalWeightBuffer[intPixelStart] -=
-      sampleCPU * pixelStart - intPixelStart;
-    this.mutableTotalWeightBuffer[intPixelEnd] -=
-      sampleCPU * 1 - (pixelEnd - intPixelEnd);
+    percentageBuffer[intPixelStart] -=
+      samplePercentage * (pixelStart - intPixelStart);
+    percentageBuffer[intPixelEnd] -=
+      samplePercentage * (1 - (pixelEnd - intPixelEnd));
   }
 
   /**

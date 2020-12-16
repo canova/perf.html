@@ -795,5 +795,6 @@ export const getThreadIdToNameMap: Selector<
 
 export const getMaxThreadCPU: Selector<number> = createSelector(
   getThreads,
+  getProfileInterval,
   computeMaxThreadCPU
 );

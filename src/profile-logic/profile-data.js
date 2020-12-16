@@ -2706,18 +2706,26 @@ export function hasThreadKeys(
 /**
  * TODO: write
  */
-export function computeMaxThreadCPU(threads: Thread[]): number {
+export function computeMaxThreadCPU(
+  threads: Thread[],
+  interval: Milliseconds
+): number {
   let maxThreadCPU = 0;
 
   for (const thread of threads) {
-    const threadCPUArray = thread.samples.threadCPUDelta;
-    if (!threadCPUArray) {
+    const { threadCPUDelta, time } = thread.samples;
+    if (!threadCPUDelta) {
       // Don't have any ThreadCPU values.
       continue;
     }
 
-    for (const threadCPU of threadCPUArray) {
-      maxThreadCPU = Math.max(maxThreadCPU, threadCPU || 0);
+    // First element of CPU delta is always null because back-end doesn't know
+    // the delta since there is no previous sample.
+    for (let i = 1; i < threadCPUDelta.length; i++) {
+      const cpuDelta = threadCPUDelta[i] || 0;
+      const realInterval = (time[i] - time[i - 1]) / interval;
+      const currentCPUPerInterval = cpuDelta / realInterval;
+      maxThreadCPU = Math.max(maxThreadCPU, currentCPUPerInterval);
     }
   }
 
