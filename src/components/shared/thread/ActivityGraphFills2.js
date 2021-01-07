@@ -215,10 +215,17 @@ export class ActivityGraphFillComputer {
       if (!samples.threadCPUDelta || !samples.threadCPUDelta[i]) {
         sampleCPU = 1;
       } else {
-        const cpuDelta = samples.threadCPUDelta[i] || 0;
-        const realInterval = (samples.time[i] - samples.time[i - 1]) / interval;
+        // We don't know the CPU usage of the first sample because platform
+        // doesn't know the previous CPU usage to get the first derivative.
+        // Use the second sample to get an estimation.
+        const sampleIndex = i === 0 ? 1 : i;
+        const cpuDelta = samples.threadCPUDelta[sampleIndex] || 0;
+        const realInterval =
+          (samples.time[sampleIndex] - samples.time[sampleIndex - 1]) /
+          interval;
         sampleCPU = cpuDelta / realInterval;
       }
+
       const stackIndex = samples.stack[i];
       const category =
         stackIndex === null
