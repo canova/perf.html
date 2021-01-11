@@ -10,7 +10,7 @@ import { timeCode } from 'firefox-profiler/utils/time-code';
 import {
   getSampleIndexToCallNodeIndex,
   getSamplesSelectedStates,
-  getSampleIndexClosestToTime,
+  getSampleIndexClosestToAdjustedTime,
 } from 'firefox-profiler/profile-logic/profile-data';
 import { bisectionRight } from 'firefox-profiler/utils/bisect';
 import { BLUE_70, BLUE_40 } from 'photon-colors';
@@ -194,16 +194,15 @@ export class ThreadSampleGraph extends PureComponent<Props> {
   _onMouseUp = (event: SyntheticMouseEvent<>) => {
     const canvas = this._canvas;
     if (canvas) {
-      const { rangeStart, rangeEnd, thread, interval } = this.props;
+      const { rangeStart, rangeEnd, thread } = this.props;
       const r = canvas.getBoundingClientRect();
 
       const x = event.pageX - r.left;
       const time = rangeStart + (x / r.width) * (rangeEnd - rangeStart);
 
-      const sampleIndex = getSampleIndexClosestToTime(
+      const sampleIndex = getSampleIndexClosestToAdjustedTime(
         thread.samples,
-        time,
-        interval
+        time
       );
 
       if (thread.samples.stack[sampleIndex] === null) {

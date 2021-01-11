@@ -1963,6 +1963,33 @@ export function getSampleIndexClosestToTime(
   return distanceToThis < distanceToLast ? index : index - 1;
 }
 
+/*
+ * TODO:
+ */
+export function getSampleIndexClosestToAdjustedTime(
+  samples: SamplesTable,
+  time: number
+): IndexIntoSamplesTable {
+  // Bisect to find the index of the first sample after the provided time.
+  const index = bisectionRight(samples.time, time);
+
+  if (index === 0) {
+    return 0;
+  }
+
+  if (index === samples.length) {
+    return samples.length - 1;
+  }
+
+  // Check the distance between the provided time and the center of the bisected sample
+  // and its predecessor.
+  const previousIndex = index - 1;
+
+  const distanceToThis = samples.time[index] - time;
+  const distanceToLast = time - samples.time[previousIndex];
+  return distanceToThis < distanceToLast ? index : index - 1;
+}
+
 export function getFriendlyThreadName(
   threads: Thread[],
   thread: Thread
