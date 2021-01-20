@@ -2783,58 +2783,21 @@ export function processThreadCPUDelta(
     return [...threadCPUDelta];
   }
 
-  // Find the max CPU usage spike.
-  let maxUsageSpikePc = 0;
-  let previousTimeStampUs = 0;
+  const newThreadCPUDelta: Array<number | null> = new Array(
+    samples.length
+  ).fill(1);
   for (let i = 1; i < samples.length; i++) {
-    const time = samples.time[i];
-    const threadCPUDeltaVal = threadCPUDelta[i];
-    const timeStampUs = time * 1000;
+    const threadCPUDeltaVal = threadCPUDelta[i] || 0;
 
-    if (previousTimeStampUs !== 0) {
-      if (threadCPUDeltaVal !== 0) {
-        const intervalUs = timeStampUs - previousTimeStampUs;
-        if (threadCPUDeltaVal && threadCPUDeltaVal > intervalUs) {
-          const usageSpikePc = (threadCPUDeltaVal - intervalUs) / intervalUs;
-          maxUsageSpikePc = Math.max(maxUsageSpikePc, usageSpikePc);
-        }
-      }
-    }
-    previousTimeStampUs = timeStampUs;
-  }
-
-  const spikeThresholdPc = 0.2;
-  if (maxUsageSpikePc <= spikeThresholdPc) {
-    // All values are in range, output samples as-is.
-    return [...threadCPUDelta];
-  }
-
-  // Some values are too high, restrict them to 20% excess max.
-  const newThreadCPUDelta: Array<number | null> = new Array(samples.length);
-  console.log('canova some values are too high! ', (1 + maxUsageSpikePc) * 100);
-  previousTimeStampUs = 0;
-  for (let i = 1; i < samples.length; i++) {
-    const time = samples.time[i];
-    const threadCPUDeltaVal = threadCPUDelta[i];
-    const timeStampUs = time * 1000;
-
-    if (previousTimeStampUs !== 0) {
-      if (threadCPUDeltaVal && threadCPUDeltaVal !== 0) {
-        const intervalUs = timeStampUs - previousTimeStampUs;
-        const usagePc = threadCPUDeltaVal / intervalUs;
-        if (usagePc > 1.0) {
-          // Anything above 100% is scaled down to the
-          // 100%..1+`spikeThresholdPc` range.
-          const shrunkUsagePc =
-            ((usagePc - 1.0) / maxUsageSpikePc) * spikeThresholdPc + 1.0;
-          newThreadCPUDelta[i] = shrunkUsagePc * intervalUs + 0.5;
-          continue;
-        }
+    if (threadCPUDeltaVal && threadCPUDeltaVal !== 0) {
+      const intervalUs = (samples.time[i] - samples.time[i - 1]) * 1000;
+      if (threadCPUDeltaVal > intervalUs) {
+        newThreadCPUDelta[i] = intervalUs;
+        continue;
       }
     }
 
     newThreadCPUDelta[i] = threadCPUDeltaVal;
-    previousTimeStampUs = timeStampUs;
   }
 
   return newThreadCPUDelta;
