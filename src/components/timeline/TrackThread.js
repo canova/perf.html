@@ -95,6 +95,7 @@ type StateProps = {|
   +timelineTrackOrganization: TimelineTrackOrganization,
   +selectedThreadIndexes: Set<ThreadIndex>,
   +maxThreadCPU: number,
+  +threadCPUDelta: Array<number | null> | null,
 |};
 
 type DispatchProps = {|
@@ -202,6 +203,7 @@ class TimelineTrackThread extends PureComponent<Props> {
       timelineTrackOrganization,
       trackName,
       maxThreadCPU,
+      threadCPUDelta,
     } = this.props;
 
     const processType = filteredThread.processType;
@@ -267,6 +269,7 @@ class TimelineTrackThread extends PureComponent<Props> {
               samplesSelectedStates={samplesSelectedStates}
               treeOrderSampleComparator={treeOrderSampleComparator}
               maxThreadCPU={maxThreadCPU}
+              threadCPUDelta={threadCPUDelta}
             />
             <ThreadSampleGraph
               className="threadStackGraph"
@@ -294,6 +297,7 @@ class TimelineTrackThread extends PureComponent<Props> {
               categories={categories}
               onSampleClick={this._onSampleClick}
               maxThreadCPU={maxThreadCPU}
+              threadCPUDelta={threadCPUDelta}
             />
           </>
         ) : (
@@ -405,6 +409,7 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
       timelineTrackOrganization: getTimelineTrackOrganization(state),
       selectedThreadIndexes,
       maxThreadCPU: getMaxThreadCPU(state),
+      threadCPUDelta: selectors.getProcessedThreadCPUDeltaOrNull(state),
     };
   },
   mapDispatchToProps: {

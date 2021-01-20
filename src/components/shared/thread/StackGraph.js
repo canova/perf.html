@@ -43,6 +43,7 @@ type Props = {|
   +stacksGrowFromCeiling?: boolean,
   +trackName: string,
   +maxThreadCPU: number,
+  +threadCPUDelta: Array<number | null> | null,
 |};
 
 export class ThreadStackGraph extends PureComponent<Props> {
@@ -82,6 +83,7 @@ export class ThreadStackGraph extends PureComponent<Props> {
       categories,
       stacksGrowFromCeiling,
       maxThreadCPU,
+      threadCPUDelta,
     } = this.props;
 
     const devicePixelRatio = canvas.ownerDocument
@@ -167,8 +169,8 @@ export class ThreadStackGraph extends PureComponent<Props> {
         continue;
       }
       let height;
-      if (thread.samples.threadCPUDelta) {
-        const cpuDelta = thread.samples.threadCPUDelta[i] || 0;
+      if (threadCPUDelta) {
+        const cpuDelta = threadCPUDelta[i] || 0;
         const realInterval =
           (thread.samples.time[i] - thread.samples.time[i - 1]) / interval;
         const currentCPUPerInterval = cpuDelta / realInterval;

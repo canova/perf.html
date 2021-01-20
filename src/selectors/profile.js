@@ -12,6 +12,7 @@ import {
   accumulateCounterSamples,
   extractProfileFilterPageData,
   computeMaxThreadCPU,
+  processThreadCPUDelta,
 } from '../profile-logic/profile-data';
 import {
   IPCMarkerCorrelations,
@@ -67,6 +68,7 @@ import type {
   $ReturnType,
   MarkerSchema,
   MarkerSchemaByName,
+  SampleUnits,
 } from 'firefox-profiler/types';
 
 export const getProfileView: Selector<ProfileViewState> = state =>
@@ -182,6 +184,9 @@ export const getProfilerConfiguration: Selector<?ProfilerConfiguration> = state 
 // Get the marker schema that comes from the Gecko profile.
 const getMarkerSchemaGecko: Selector<MarkerSchema[]> = state =>
   getMeta(state).markerSchema;
+//
+export const getSampleUnits: Selector<?SampleUnits> = state =>
+  getMeta(state).sampleUnits;
 
 // Combine the marker schema from Gecko and the front-end. This allows the front-end
 // to generate markers such as the Jank markers, and display them.
@@ -793,8 +798,35 @@ export const getThreadIdToNameMap: Selector<
   return threadIdToNameMap;
 });
 
+// FIXME: This is a very dirty hack. But we also have a similar logic in the codebase.
+// See getDerivedMarkerInfoForAllThreads.
+let _threads = null;
+let _processedCPUDeltas = null;
+function getProcessedThreadCPUDeltasForAllThreads(
+  state: State
+): Array<?Array<number | null>> {
+  const threads = getThreads(state);
+  const sampleUnits = getSampleUnits(state);
+
+  if (sampleUnits === undefined || sampleUnits === null) {
+    _processedCPUDeltas = [];
+    return [];
+  }
+
+  if (_threads !== threads || _processedCPUDeltas === null) {
+    _threads = threads;
+    _processedCPUDeltas = getThreads(state).map(thread =>
+      thread.samples === null || thread.samples.threadCPUDelta === undefined
+        ? null
+        : processThreadCPUDelta(thread.samples, sampleUnits)
+    );
+  }
+  return _processedCPUDeltas;
+}
+
 export const getMaxThreadCPU: Selector<number> = createSelector(
   getThreads,
   getProfileInterval,
+  getProcessedThreadCPUDeltasForAllThreads,
   computeMaxThreadCPU
 );

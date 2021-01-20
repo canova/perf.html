@@ -350,6 +350,25 @@ export function getThreadSelectorsPerThread(
       'Could not get the processed event delays'
     );
 
+  const getProcessedThreadCPUDeltaOrNull: Selector<Array<
+    number | null
+  > | null> = createSelector(
+    getFilteredThread,
+    ProfileSelectors.getSampleUnits,
+    (thread, sampleUnits) =>
+      thread.samples === null ||
+      thread.samples.threadCPUDelta === undefined ||
+      !sampleUnits
+        ? null
+        : ProfileData.processThreadCPUDelta(thread.samples, sampleUnits)
+  );
+
+  const getProcessedThreadCPUDelta: Selector<Array<number | null>> = state =>
+    ensureExists(
+      getProcessedThreadCPUDeltaOrNull(state),
+      'Could not get the processed thread CPU delta array'
+    );
+
   return {
     getThread,
     getStringTable,
@@ -377,5 +396,7 @@ export function getThreadSelectorsPerThread(
     getTabFilteredThread,
     getActiveTabFilteredThread,
     getProcessedEventDelays,
+    getProcessedThreadCPUDeltaOrNull,
+    getProcessedThreadCPUDelta,
   };
 }

@@ -50,6 +50,7 @@ import type {
   CallTreeSummaryStrategy,
   EventDelayInfo,
   ThreadsKey,
+  SampleUnits,
 } from 'firefox-profiler/types';
 
 import { bisectionRight, bisectionLeft } from 'firefox-profiler/utils/bisect';
@@ -2735,12 +2736,15 @@ export function hasThreadKeys(
  */
 export function computeMaxThreadCPU(
   threads: Thread[],
-  interval: Milliseconds
+  interval: Milliseconds,
+  processedThreadCPUDeltas: Array<?Array<number | null>>
 ): number {
   let maxThreadCPU = 0;
 
-  for (const thread of threads) {
-    const { threadCPUDelta, time } = thread.samples;
+  for (let threadIndex = 0; threadIndex < threads.length; threadIndex++) {
+    const threadCPUDelta = processedThreadCPUDeltas[threadIndex];
+    const time = threads[threadIndex].samples.time;
+
     if (!threadCPUDelta) {
       // Don't have any ThreadCPU values.
       continue;
@@ -2758,4 +2762,80 @@ export function computeMaxThreadCPU(
 
   console.log('canova max thread cpu:', maxThreadCPU);
   return maxThreadCPU;
+}
+
+/**
+ * TODO: write
+ */
+export function processThreadCPUDelta(
+  samples: SamplesTable,
+  sampleUnits: SampleUnits
+): Array<number | null> {
+  const { threadCPUDelta } = samples;
+  if (!threadCPUDelta) {
+    throw new Error(
+      "processThreadCPUDelta should not be called for the profiles that dosn't include threadCPUDelta."
+    );
+  }
+
+  if (sampleUnits.threadCPUDelta !== 'µs') {
+    // Don't do anything for non timing CPU delta values.
+    return [...threadCPUDelta];
+  }
+
+  // Find the max CPU usage spike.
+  let maxUsageSpikePc = 0;
+  let previousTimeStampUs = 0;
+  for (let i = 1; i < samples.length; i++) {
+    const time = samples.time[i];
+    const threadCPUDeltaVal = threadCPUDelta[i];
+    const timeStampUs = time * 1000;
+
+    if (previousTimeStampUs !== 0) {
+      if (threadCPUDeltaVal !== 0) {
+        const intervalUs = timeStampUs - previousTimeStampUs;
+        if (threadCPUDeltaVal && threadCPUDeltaVal > intervalUs) {
+          const usageSpikePc = (threadCPUDeltaVal - intervalUs) / intervalUs;
+          maxUsageSpikePc = Math.max(maxUsageSpikePc, usageSpikePc);
+        }
+      }
+    }
+    previousTimeStampUs = timeStampUs;
+  }
+
+  const spikeThresholdPc = 0.2;
+  if (maxUsageSpikePc <= spikeThresholdPc) {
+    // All values are in range, output samples as-is.
+    return [...threadCPUDelta];
+  }
+
+  // Some values are too high, restrict them to 20% excess max.
+  const newThreadCPUDelta: Array<number | null> = new Array(samples.length);
+  console.log('canova some values are too high! ', (1 + maxUsageSpikePc) * 100);
+  previousTimeStampUs = 0;
+  for (let i = 1; i < samples.length; i++) {
+    const time = samples.time[i];
+    const threadCPUDeltaVal = threadCPUDelta[i];
+    const timeStampUs = time * 1000;
+
+    if (previousTimeStampUs !== 0) {
+      if (threadCPUDeltaVal && threadCPUDeltaVal !== 0) {
+        const intervalUs = timeStampUs - previousTimeStampUs;
+        const usagePc = threadCPUDeltaVal / intervalUs;
+        if (usagePc > 1.0) {
+          // Anything above 100% is scaled down to the
+          // 100%..1+`spikeThresholdPc` range.
+          const shrunkUsagePc =
+            ((usagePc - 1.0) / maxUsageSpikePc) * spikeThresholdPc + 1.0;
+          newThreadCPUDelta[i] = shrunkUsagePc * intervalUs + 0.5;
+          continue;
+        }
+      }
+    }
+
+    newThreadCPUDelta[i] = threadCPUDeltaVal;
+    previousTimeStampUs = timeStampUs;
+  }
+
+  return newThreadCPUDelta;
 }

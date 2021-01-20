@@ -45,6 +45,7 @@ type RenderedComponentSettings = {|
   +greyCategoryIndex: IndexIntoCategoryList,
   +samplesSelectedStates: null | Array<SelectedState>,
   +categoryDrawStyles: CategoryDrawStyles,
+  +threadCPUDelta: Array<number | null> | null,
 |};
 
 type SampleContributionToPixel = {|
@@ -198,6 +199,7 @@ export class ActivityGraphFillComputer {
       fullThread: { samples, stackTable },
       interval,
       greyCategoryIndex,
+      threadCPUDelta,
     } = this.renderedComponentSettings;
 
     if (samples.length === 0) {
@@ -212,14 +214,14 @@ export class ActivityGraphFillComputer {
     for (let i = 0; i < samples.length - 1; i++) {
       const nextSampleTime = samples.time[i + 1];
       let sampleCPU;
-      if (!samples.threadCPUDelta || !samples.threadCPUDelta[i]) {
+      if (!threadCPUDelta || !threadCPUDelta[i]) {
         sampleCPU = 1;
       } else {
         // We don't know the CPU usage of the first sample because platform
         // doesn't know the previous CPU usage to get the first derivative.
         // Use the second sample to get an estimation.
         const sampleIndex = i === 0 ? 1 : i;
-        const cpuDelta = samples.threadCPUDelta[sampleIndex] || 0;
+        const cpuDelta = threadCPUDelta[sampleIndex] || 0;
         const realInterval =
           (samples.time[sampleIndex] - samples.time[sampleIndex - 1]) /
           interval;
@@ -254,10 +256,10 @@ export class ActivityGraphFillComputer {
         ? stackTable.category[lastSampleStack]
         : greyCategoryIndex;
     let sampleCPU;
-    if (!samples.threadCPUDelta || !samples.threadCPUDelta[lastIdx]) {
+    if (!threadCPUDelta || !threadCPUDelta[lastIdx]) {
       sampleCPU = 1;
     } else {
-      const cpuDelta = samples.threadCPUDelta[lastIdx] || 0;
+      const cpuDelta = threadCPUDelta[lastIdx] || 0;
       const realInterval =
         (samples.time[lastIdx] - samples.time[lastIdx - 1]) / interval;
       sampleCPU = cpuDelta / realInterval;
