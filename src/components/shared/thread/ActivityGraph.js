@@ -22,6 +22,7 @@ import type {
   SelectedState,
   Milliseconds,
   CssPixels,
+  SampleUnits,
 } from 'firefox-profiler/types';
 
 import type { ActivityFillGraphQuerier } from './ActivityGraphFills';
@@ -45,6 +46,7 @@ export type Props = {|
   ) => number,
   +maxThreadCPU: number,
   +threadCPUDelta: Array<number | null> | null,
+  +sampleUnits: ?SampleUnits,
 |};
 
 type State = {
@@ -153,6 +155,7 @@ export class ThreadActivityGraph extends React.PureComponent<Props, State> {
       treeOrderSampleComparator,
       maxThreadCPU,
       threadCPUDelta,
+      sampleUnits,
     } = this.props;
     const { hoveredSample, mouseX, mouseY } = this.state;
     return (
@@ -185,6 +188,9 @@ export class ThreadActivityGraph extends React.PureComponent<Props, State> {
                 sampleIndex={hoveredSample}
                 fullThread={fullThread}
                 categories={categories}
+                sampleUnits={sampleUnits}
+                maxThreadCPU={maxThreadCPU}
+                interval={interval}
               />
             </Tooltip>
           )}
@@ -220,6 +226,9 @@ export class ThreadActivityGraph extends React.PureComponent<Props, State> {
                 sampleIndex={hoveredSample}
                 fullThread={fullThread}
                 categories={categories}
+                sampleUnits={sampleUnits}
+                maxThreadCPU={maxThreadCPU}
+                interval={interval}
               />
             </Tooltip>
           )}
