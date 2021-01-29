@@ -115,9 +115,9 @@ export class ThreadSampleGraph extends PureComponent<Props> {
     const xPixelsPerMs = canvas.width / rangeLength;
     const trueIntervalPixelWidth = interval * xPixelsPerMs;
     const multiplier = trueIntervalPixelWidth < 2.0 ? 1.2 : 1.0;
-    const drawnIntervalWidth = Math.max(
-      0.8,
-      trueIntervalPixelWidth * multiplier
+    const drawnIntervalWidth = Math.min(
+      Math.max(0.8, trueIntervalPixelWidth * multiplier),
+      10
     );
 
     const firstDrawnSampleTime = range[0] - drawnIntervalWidth / xPixelsPerMs;
@@ -150,7 +150,8 @@ export class ThreadSampleGraph extends PureComponent<Props> {
       if (callNodeIndex === null) {
         continue;
       }
-      const xPos = (sampleTime - range[0] - interval / 2) * xPixelsPerMs;
+      const xPos =
+        (sampleTime - range[0] - drawnIntervalWidth / 2) * xPixelsPerMs;
       let samplesBucket;
       if (
         samplesSelectedStates !== null &&
