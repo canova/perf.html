@@ -97,7 +97,6 @@ type StateProps = {|
   +timelineTrackOrganization: TimelineTrackOrganization,
   +selectedThreadIndexes: Set<ThreadIndex>,
   +maxThreadCPU: number,
-  +threadCPUDelta: Array<number | null> | null,
   +sampleUnits: ?SampleUnits,
 |};
 
@@ -206,7 +205,6 @@ class TimelineTrackThread extends PureComponent<Props> {
       timelineTrackOrganization,
       trackName,
       maxThreadCPU,
-      threadCPUDelta,
       sampleUnits,
     } = this.props;
 
@@ -273,7 +271,6 @@ class TimelineTrackThread extends PureComponent<Props> {
               samplesSelectedStates={samplesSelectedStates}
               treeOrderSampleComparator={treeOrderSampleComparator}
               maxThreadCPU={maxThreadCPU}
-              threadCPUDelta={threadCPUDelta}
               sampleUnits={sampleUnits}
             />
             <ThreadSampleGraph
@@ -302,7 +299,6 @@ class TimelineTrackThread extends PureComponent<Props> {
               categories={categories}
               onSampleClick={this._onSampleClick}
               maxThreadCPU={maxThreadCPU}
-              threadCPUDelta={threadCPUDelta}
             />
           </>
         ) : (
@@ -319,7 +315,6 @@ class TimelineTrackThread extends PureComponent<Props> {
             categories={categories}
             onSampleClick={this._onSampleClick}
             maxThreadCPU={maxThreadCPU}
-            threadCPUDelta={threadCPUDelta}
           />
         )}
         {timelineTrackOrganization.type === 'active-tab' ? (
@@ -414,7 +409,6 @@ export default explicitConnect<OwnProps, StateProps, DispatchProps>({
       timelineTrackOrganization: getTimelineTrackOrganization(state),
       selectedThreadIndexes,
       maxThreadCPU: getMaxThreadCPU(state),
-      threadCPUDelta: selectors.getProcessedThreadCPUDeltaOrNull(state),
       sampleUnits: getSampleUnits(state),
     };
   },

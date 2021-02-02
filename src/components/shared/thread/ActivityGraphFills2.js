@@ -45,7 +45,6 @@ type RenderedComponentSettings = {|
   +greyCategoryIndex: IndexIntoCategoryList,
   +samplesSelectedStates: null | Array<SelectedState>,
   +categoryDrawStyles: CategoryDrawStyles,
-  +threadCPUDelta: Array<number | null> | null,
 |};
 
 type SampleContributionToPixel = {|
@@ -199,7 +198,6 @@ export class ActivityGraphFillComputer {
       fullThread: { samples, stackTable },
       interval,
       greyCategoryIndex,
-      threadCPUDelta,
     } = this.renderedComponentSettings;
 
     if (samples.length === 0) {
@@ -211,6 +209,7 @@ export class ActivityGraphFillComputer {
     let sampleTime = samples.time[0];
 
     // Go through the samples and accumulate the category into the percentageBuffers.
+    const { threadCPUDelta } = samples;
     for (let i = 0; i < samples.length - 1; i++) {
       const nextSampleTime = samples.time[i + 1];
       let sampleCPU;

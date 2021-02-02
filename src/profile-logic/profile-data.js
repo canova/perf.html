@@ -2768,10 +2768,12 @@ export function computeMaxThreadCPU(
  * TODO: write
  */
 export function processThreadCPUDelta(
-  samples: SamplesTable,
+  thread: Thread,
   sampleUnits: SampleUnits
-): Array<number | null> {
+): Thread {
+  const { samples } = thread;
   const { threadCPUDelta } = samples;
+
   if (!threadCPUDelta) {
     throw new Error(
       "processThreadCPUDelta should not be called for the profiles that dosn't include threadCPUDelta."
@@ -2780,7 +2782,7 @@ export function processThreadCPUDelta(
 
   if (sampleUnits.threadCPUDelta !== 'µs') {
     // Don't do anything for non timing CPU delta values.
-    return [...threadCPUDelta];
+    return thread;
   }
 
   const newThreadCPUDelta: Array<number | null> = new Array(
@@ -2800,5 +2802,15 @@ export function processThreadCPUDelta(
     newThreadCPUDelta[i] = threadCPUDeltaVal;
   }
 
-  return newThreadCPUDelta;
+  const newSamples = {
+    ...samples,
+    threadCPUDelta: newThreadCPUDelta,
+  };
+
+  const newThread = {
+    ...thread,
+    samples: newSamples,
+  };
+
+  return newThread;
 }

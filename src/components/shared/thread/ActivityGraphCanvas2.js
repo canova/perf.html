@@ -38,7 +38,6 @@ type CanvasProps = {|
   +passFillsQuerier: ActivityFillGraphQuerier => void,
   +onMouseUp: (SyntheticMouseEvent<HTMLCanvasElement>) => void,
   +maxThreadCPU: number,
-  +threadCPUDelta: Array<number | null> | null,
 |};
 
 export class ActivityGraphCanvas2 extends React.PureComponent<CanvasProps> {
@@ -97,7 +96,6 @@ export class ActivityGraphCanvas2 extends React.PureComponent<CanvasProps> {
       treeOrderSampleComparator,
       categories,
       maxThreadCPU,
-      threadCPUDelta,
     } = this.props;
 
     const rect = canvas.getBoundingClientRect();
@@ -111,7 +109,6 @@ export class ActivityGraphCanvas2 extends React.PureComponent<CanvasProps> {
       canvasPixelWidth,
       canvasPixelHeight,
       fullThread,
-      threadCPUDelta,
       interval,
       rangeStart,
       rangeEnd,

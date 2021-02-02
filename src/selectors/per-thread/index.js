@@ -25,7 +25,12 @@ import {
 import * as ProfileSelectors from '../profile';
 import { ensureExists, getFirstItemFromSet } from '../../utils/flow';
 
-import type { ThreadIndex, Selector, ThreadsKey } from 'firefox-profiler/types';
+import type {
+  ThreadIndex,
+  Selector,
+  ThreadsKey,
+  State,
+} from 'firefox-profiler/types';
 
 import type { TimingsForPath } from '../../profile-logic/profile-data';
 
@@ -245,3 +250,39 @@ export const selectedNodeSelectors: NodeSelectors = (() => {
     getTimingsForSidebar,
   };
 })();
+
+// FIXME: This is a very dirty hack. But we also have a similar logic in the codebase.
+// See getDerivedMarkerInfoForAllThreads.
+let _threads = null;
+let _processedCPUDeltas = null;
+function getProcessedThreadCPUDeltasForAllThreads(
+  state: State
+): Array<?Array<number | null>> {
+  const threads = ProfileSelectors.getThreads(state);
+  const sampleUnits = ProfileSelectors.getSampleUnits(state);
+
+  if (sampleUnits === undefined || sampleUnits === null) {
+    _processedCPUDeltas = [];
+    return [];
+  }
+
+  if (_threads !== threads || _processedCPUDeltas === null) {
+    _threads = threads;
+    _processedCPUDeltas = ProfileSelectors.getThreads(
+      state
+    ).map((thread, threadIndex) =>
+      thread.samples === null || thread.samples.threadCPUDelta === undefined
+        ? null
+        : getThreadSelectors(threadIndex).getCPUProcessedThread(state).samples
+            .threadCPUDelta
+    );
+  }
+  return _processedCPUDeltas;
+}
+
+export const getMaxThreadCPU: Selector<number> = createSelector(
+  ProfileSelectors.getThreads,
+  ProfileSelectors.getProfileInterval,
+  getProcessedThreadCPUDeltasForAllThreads,
+  ProfileData.computeMaxThreadCPU
+);

@@ -45,7 +45,6 @@ export type Props = {|
     IndexIntoSamplesTable
   ) => number,
   +maxThreadCPU: number,
-  +threadCPUDelta: Array<number | null> | null,
   +sampleUnits: ?SampleUnits,
 |};
 
@@ -154,7 +153,6 @@ export class ThreadActivityGraph extends React.PureComponent<Props, State> {
       samplesSelectedStates,
       treeOrderSampleComparator,
       maxThreadCPU,
-      threadCPUDelta,
       sampleUnits,
     } = this.props;
     const { hoveredSample, mouseX, mouseY } = this.state;
@@ -218,7 +216,6 @@ export class ThreadActivityGraph extends React.PureComponent<Props, State> {
             passFillsQuerier={this._setFillsQuerier}
             onMouseUp={this._onMouseUp}
             maxThreadCPU={maxThreadCPU}
-            threadCPUDelta={threadCPUDelta}
           />
           {hoveredSample === null ? null : (
             <Tooltip mouseX={mouseX} mouseY={mouseY}>
