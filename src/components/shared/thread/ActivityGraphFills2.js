@@ -212,10 +212,8 @@ export class ActivityGraphFillComputer {
     const { threadCPUDelta } = samples;
     for (let i = 0; i < samples.length - 1; i++) {
       const nextSampleTime = samples.time[i + 1];
-      let sampleCPU;
-      if (!threadCPUDelta || !threadCPUDelta[i]) {
-        sampleCPU = 1;
-      } else {
+      let sampleCPU = null;
+      if (threadCPUDelta && threadCPUDelta[i] !== null) {
         // We don't know the CPU usage of the first sample because platform
         // doesn't know the previous CPU usage to get the first derivative.
         // Use the second sample to get an estimation.
@@ -254,10 +252,8 @@ export class ActivityGraphFillComputer {
       lastSampleStack !== null
         ? stackTable.category[lastSampleStack]
         : greyCategoryIndex;
-    let sampleCPU;
-    if (!threadCPUDelta || !threadCPUDelta[lastIdx]) {
-      sampleCPU = 1;
-    } else {
+    let sampleCPU = null;
+    if (threadCPUDelta && threadCPUDelta[lastIdx] !== null) {
       const cpuDelta = threadCPUDelta[lastIdx] || 0;
       const realInterval =
         (samples.time[lastIdx] - samples.time[lastIdx - 1]) / interval;
@@ -284,7 +280,7 @@ export class ActivityGraphFillComputer {
     prevSampleTime: Milliseconds,
     sampleTime: Milliseconds,
     nextSampleTime: Milliseconds,
-    sampleCPU: number
+    sampleCPU: number | null
   ) {
     const {
       rangeEnd,
@@ -340,7 +336,7 @@ export class ActivityGraphFillComputer {
       percentageBuffers,
       sampleIndex
     );
-    const samplePercentage = sampleCPU / maxThreadCPU;
+    const samplePercentage = sampleCPU === null ? 1 : sampleCPU / maxThreadCPU;
     for (let i = intPixelStart; i <= intPixelEnd; i++) {
       percentageBuffer[i] += samplePercentage;
     }
