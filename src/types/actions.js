@@ -54,7 +54,7 @@ export type DataSource =
   | 'compare'
   | 'uploaded-recordings';
 
-export type TimelineType = 'stack' | 'category';
+export type TimelineType = 'stack' | 'category' | 'cpu-category';
 export type PreviewSelection =
   | {| +hasSelection: false, +isModifying: false |}
   | {|

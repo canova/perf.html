@@ -10,6 +10,8 @@ export * from './url-state';
 export * from './icons';
 export * from './publish';
 export * from './zipped-profiles';
+export * from './cpu';
+export * from './l10n';
 
 import * as app from './app';
 import { selectedThreadSelectors as selectedThread } from './per-thread';
@@ -18,7 +20,9 @@ import * as urlState from './url-state';
 import * as icons from './icons';
 import * as publish from './publish';
 import * as zippedProfiles from './zipped-profiles';
+import * as cpu from './cpu';
 import * as l10n from './l10n';
+
 const _selectorsForConsole = {
   app,
   profile,
@@ -27,6 +31,7 @@ const _selectorsForConsole = {
   publish,
   zippedProfiles,
   selectedThread,
+  cpu,
   l10n,
 };
 
