@@ -1,0 +1,111 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SampleGraph matches the 2d canvas draw snapshot 1`] = `
+Array [
+  Array [
+    "set fillStyle",
+    "#003eaa",
+  ],
+  Array [
+    "fillRect",
+    -50,
+    0,
+    10,
+    10,
+  ],
+  Array [
+    "set fillStyle",
+    "#003eaa",
+  ],
+  Array [
+    "fillRect",
+    -40,
+    0,
+    10,
+    10,
+  ],
+  Array [
+    "set fillStyle",
+    "#003eaa",
+  ],
+  Array [
+    "fillRect",
+    -30,
+    0,
+    10,
+    10,
+  ],
+  Array [
+    "set fillStyle",
+    "#003eaa",
+  ],
+  Array [
+    "fillRect",
+    -20,
+    0,
+    10,
+    10,
+  ],
+  Array [
+    "set fillStyle",
+    "#003eaa",
+  ],
+  Array [
+    "fillRect",
+    -10,
+    0,
+    10,
+    10,
+  ],
+  Array [
+    "set fillStyle",
+    "#003eaa",
+  ],
+  Array [
+    "fillRect",
+    0,
+    0,
+    10,
+    10,
+  ],
+  Array [
+    "set fillStyle",
+    "#003eaa",
+  ],
+  Array [
+    "fillRect",
+    10,
+    0,
+    10,
+    10,
+  ],
+  Array [
+    "set fillStyle",
+    "#003eaa",
+  ],
+  Array [
+    "fillRect",
+    20,
+    0,
+    10,
+    10,
+  ],
+]
+`;
+
+exports[`SampleGraph matches the component snapshot 1`] = `
+<canvas
+  class="threadSampleGraphCanvas threadSampleGraphCanvas"
+  height="10"
+  style="height: 5px;"
+  width="80"
+>
+  <h2>
+    Stack Graph for 
+    Test Track
+  </h2>
+  <p>
+    This graph charts the stack height of each sample.
+  </p>
+</canvas>
+`;
