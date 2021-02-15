@@ -24,7 +24,7 @@ import { getBoundingBox, fireFullClick } from '../fixtures/utils';
 
 import { getProfileFromTextSamples } from '../fixtures/profiles/processed-profile';
 
-import { commitRange } from '../../actions/profile-view';
+import { commitRange, changeTimelineType } from '../../actions/profile-view';
 
 // The following constants determine the size of the drawn graph.
 const SAMPLE_COUNT = 8;
@@ -126,6 +126,33 @@ describe('ThreadActivityGraph', function() {
 
   it('matches the 2d canvas draw snapshot', () => {
     const { ctx } = setup();
+    expect(ctx.__flushDrawLog()).toMatchSnapshot();
+  });
+
+  it('matches the 2d canvas draw snapshot with CPU values', () => {
+    const profile = getSamplesProfile();
+    profile.meta.interval = 1;
+    profile.meta.sampleUnits = {
+      time: 'ms',
+      eventDelay: 'ms',
+      threadCPUDelta: 'variable CPU cycles',
+    };
+    profile.threads[0].samples.threadCPUDelta = [
+      null,
+      400,
+      1000,
+      500,
+      100,
+      200,
+      800,
+      300,
+    ];
+
+    const { ctx, dispatch } = setup(profile);
+    // Flush draw log to remove the other graph drawing
+    ctx.__flushDrawLog();
+    dispatch(changeTimelineType('cpu-category'));
+
     expect(ctx.__flushDrawLog()).toMatchSnapshot();
   });
 
