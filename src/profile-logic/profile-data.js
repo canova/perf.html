@@ -1929,7 +1929,7 @@ export function getMapStackUpdater(
   };
 }
 
-export function getSampleIndexClosestToTime(
+export function getSampleIndexClosestToStartTime(
   samples: SamplesTable,
   time: number,
   interval: Milliseconds
