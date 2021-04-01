@@ -5,6 +5,8 @@
 // @flow
 import * as React from 'react';
 import { MenuItem } from 'react-contextmenu';
+import { withLocalization, type WithLocalizationProps } from '@fluent/react';
+
 import { ContextMenu } from './ContextMenu';
 import explicitConnect from 'firefox-profiler/utils/connect';
 import { funcHasRecursiveCall } from 'firefox-profiler/profile-logic/transforms';
@@ -60,8 +62,10 @@ type DispatchProps = {|
   +setContextMenuVisibility: typeof setContextMenuVisibility,
 |};
 
-type Props = ConnectedProps<{||}, StateProps, DispatchProps>;
-
+type Props = {|
+  ...WithLocalizationProps,
+  ...ConnectedProps<{||}, StateProps, DispatchProps>,
+|};
 import './CallNodeContextMenu.css';
 
 class CallNodeContextMenuImpl extends React.PureComponent<Props> {
@@ -423,7 +427,7 @@ class CallNodeContextMenuImpl extends React.PureComponent<Props> {
   }
 
   renderContextMenuContents() {
-    const { inverted, selectedTab } = this.props;
+    const { inverted, selectedTab, getString } = this.props;
     const rightClickedCallNodeInfo = this.getRightClickedCallNodeInfo();
 
     if (rightClickedCallNodeInfo === null) {
@@ -459,6 +463,7 @@ class CallNodeContextMenuImpl extends React.PureComponent<Props> {
           `}
         >
           Merge function
+          {getString('Merge function')}
         </TransformMenuItem>
 
         {inverted ? null : (
@@ -616,50 +621,50 @@ class CallNodeContextMenuImpl extends React.PureComponent<Props> {
   }
 }
 
-export const CallNodeContextMenu = explicitConnect<
-  {||},
-  StateProps,
-  DispatchProps
->({
-  mapStateToProps: state => {
-    const rightClickedCallNodeInfo = getRightClickedCallNodeInfo(state);
+export const CallNodeContextMenu = withLocalization<Props>(
+  explicitConnect<{||}, StateProps, DispatchProps>({
+    mapStateToProps: state => {
+      const rightClickedCallNodeInfo = getRightClickedCallNodeInfo(state);
 
-    let thread = null;
-    let threadsKey = null;
-    let callNodeInfo = null;
-    let rightClickedCallNodePath = null;
-    let rightClickedCallNodeIndex = null;
+      let thread = null;
+      let threadsKey = null;
+      let callNodeInfo = null;
+      let rightClickedCallNodePath = null;
+      let rightClickedCallNodeIndex = null;
 
-    if (rightClickedCallNodeInfo !== null) {
-      const selectors = getThreadSelectorsFromThreadsKey(
-        rightClickedCallNodeInfo.threadsKey
-      );
+      if (rightClickedCallNodeInfo !== null) {
+        const selectors = getThreadSelectorsFromThreadsKey(
+          rightClickedCallNodeInfo.threadsKey
+        );
 
-      thread = selectors.getThread(state);
-      threadsKey = rightClickedCallNodeInfo.threadsKey;
-      callNodeInfo = selectors.getCallNodeInfo(state);
-      rightClickedCallNodePath = rightClickedCallNodeInfo.callNodePath;
-      rightClickedCallNodeIndex = selectors.getRightClickedCallNodeIndex(state);
-    }
+        thread = selectors.getThread(state);
+        threadsKey = rightClickedCallNodeInfo.threadsKey;
+        callNodeInfo = selectors.getCallNodeInfo(state);
+        rightClickedCallNodePath = rightClickedCallNodeInfo.callNodePath;
+        rightClickedCallNodeIndex = selectors.getRightClickedCallNodeIndex(
+          state
+        );
+      }
 
-    return {
-      thread,
-      threadsKey,
-      callNodeInfo,
-      rightClickedCallNodePath,
-      rightClickedCallNodeIndex,
-      implementation: getImplementationFilter(state),
-      inverted: getInvertCallstack(state),
-      selectedTab: getSelectedTab(state),
-    };
-  },
-  mapDispatchToProps: {
-    addTransformToStack,
-    expandAllCallNodeDescendants,
-    setContextMenuVisibility,
-  },
-  component: CallNodeContextMenuImpl,
-});
+      return {
+        thread,
+        threadsKey,
+        callNodeInfo,
+        rightClickedCallNodePath,
+        rightClickedCallNodeIndex,
+        implementation: getImplementationFilter(state),
+        inverted: getInvertCallstack(state),
+        selectedTab: getSelectedTab(state),
+      };
+    },
+    mapDispatchToProps: {
+      addTransformToStack,
+      expandAllCallNodeDescendants,
+      setContextMenuVisibility,
+    },
+    component: CallNodeContextMenuImpl,
+  })
+);
 
 function TransformMenuItem(props: {|
   +children: React.Node,

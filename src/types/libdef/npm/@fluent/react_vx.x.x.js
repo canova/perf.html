@@ -86,10 +86,6 @@ declare module '@fluent/react/esm/use_localization' {
   declare module.exports: any;
 }
 
-declare module '@fluent/react/esm/with_localization' {
-  declare module.exports: any;
-}
-
 declare module '@fluent/react/vendor/omittedCloseTags' {
   declare module.exports: any;
 }
