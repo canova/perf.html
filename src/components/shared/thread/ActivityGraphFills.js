@@ -221,13 +221,19 @@ export class ActivityGraphFillComputer {
           : stackTable.category[stackIndex];
 
       let cpuBeforeSample = null;
+      let cpuAfterSample = null;
       if (enableCPUUsage && threadCPUDelta) {
         // It must be non-null because we are checking this in the processing
         // step and eliminating all the null values.
-        const cpuDelta = ensureExists(threadCPUDelta[i]);
+        const cpuDeltaBefore = ensureExists(threadCPUDelta[i]);
+        const cpuDeltaAfter = ensureExists(threadCPUDelta[i + 1]);
         const intervalDistribution =
           i === 0 ? 1 : (samples.time[i] - samples.time[i - 1]) / interval;
-        cpuBeforeSample = cpuDelta / intervalDistribution;
+        const nextIntervalDistribution =
+          (samples.time[i + 1] - samples.time[i]) / interval;
+
+        cpuBeforeSample = cpuDeltaBefore / intervalDistribution;
+        cpuAfterSample = cpuDeltaAfter / nextIntervalDistribution;
       }
 
       // Mutate the percentage buffers.
@@ -237,7 +243,8 @@ export class ActivityGraphFillComputer {
         prevSampleTime,
         sampleTime,
         nextSampleTime,
-        cpuBeforeSample
+        cpuBeforeSample,
+        cpuAfterSample
       );
 
       prevSampleTime = sampleTime;
@@ -268,6 +275,9 @@ export class ActivityGraphFillComputer {
       prevSampleTime,
       sampleTime,
       sampleTime + interval,
+      cpuBeforeSample,
+      // There is no cpuAfterSample for this since this is the last sample.
+      // Assigning the same CPU delta value to it.
       cpuBeforeSample
     );
   }
@@ -282,7 +292,8 @@ export class ActivityGraphFillComputer {
     prevSampleTime: Milliseconds,
     sampleTime: Milliseconds,
     nextSampleTime: Milliseconds,
-    cpuBeforeSample: number | null
+    cpuBeforeSample: number | null,
+    cpuAfterSample: number | null
   ) {
     const {
       rangeEnd,
@@ -309,8 +320,10 @@ export class ActivityGraphFillComputer {
     let pixelEnd = (sampleEnd - rangeStart) * xPixelsPerMs;
     pixelStart = Math.max(0, pixelStart);
     pixelEnd = Math.min(canvasPixelWidth - 1, pixelEnd);
+    const pixelCenter = (sampleTime - rangeStart) * xPixelsPerMs;
     const intPixelStart = Math.floor(pixelStart);
     const intPixelEnd = Math.floor(pixelEnd);
+    const intPixelCenter = Math.floor(pixelCenter);
 
     // For every sample, we have a fractional interval of this sample's
     // contribution to the graph's pixels.
@@ -341,15 +354,27 @@ export class ActivityGraphFillComputer {
 
     // A number between 0 and 1 for sample percentage. It changes depending on
     // the CPU usage if it's given. If not, it uses 1 directly.
-    const samplePercentage =
+    const sampleFirstHalfPercentage =
       cpuBeforeSample === null ? 1 : cpuBeforeSample / maxThreadCPUDelta;
-    for (let i = intPixelStart; i <= intPixelEnd; i++) {
-      percentageBuffer[i] += samplePercentage;
+    const sampleSecondHalfPercentage =
+      cpuAfterSample === null ? 1 : cpuAfterSample / maxThreadCPUDelta;
+
+    // Samples have two parts to be able to present the CPU utilizations properly.
+    // The first half of the sample will use the CPU delta number that belongs to
+    // this sample.
+    for (let i = intPixelStart; i <= intPixelCenter; i++) {
+      percentageBuffer[i] += sampleFirstHalfPercentage;
     }
+    // The second half of the sample will use the CPU delta number that belongs to
+    // the next sample.
+    for (let i = intPixelCenter + 1; i <= intPixelEnd; i++) {
+      percentageBuffer[i] += sampleSecondHalfPercentage;
+    }
+
     percentageBuffer[intPixelStart] -=
-      samplePercentage * (pixelStart - intPixelStart);
+      sampleFirstHalfPercentage * (pixelStart - intPixelStart);
     percentageBuffer[intPixelEnd] -=
-      samplePercentage * (1 - (pixelEnd - intPixelEnd));
+      sampleSecondHalfPercentage * (1 - (pixelEnd - intPixelEnd));
   }
 
   /**
