@@ -652,6 +652,9 @@ export class ActivityFillGraphQuerier {
     const {
       fullThread: { samples },
       rangeStart,
+      enableCPUUsage,
+      interval,
+      maxThreadCPUDelta,
     } = this.renderedComponentSettings;
     const kernelPos = xPixel - SMOOTHING_RADIUS;
     const pixelsAroundX = new Float32Array(SMOOTHING_KERNEL.length);
@@ -664,19 +667,68 @@ export class ActivityFillGraphQuerier {
         ? (samples.time[sample + 1] + sampleTime) / 2
         : Infinity;
 
+    let cpuBeforeSample = null;
+    let cpuAfterSample = null;
+    const threadCPUDelta = samples.threadCPUDelta;
+    if (enableCPUUsage && threadCPUDelta) {
+      // It must be non-null because we are checking this in the processing
+      // step and eliminating all the null values.
+      const cpuDeltaBefore = ensureExists(threadCPUDelta[sample]);
+      const cpuDeltaAfter =
+        sample === samples.length
+          ? cpuDeltaBefore
+          : ensureExists(threadCPUDelta[sample + 1]);
+      const intervalDistribution =
+        sample === 0
+          ? 1
+          : (samples.time[sample] - samples.time[sample - 1]) / interval;
+      const nextIntervalDistribution =
+        (samples.time[sample + 1] - samples.time[sample]) / interval;
+
+      cpuBeforeSample = cpuDeltaBefore / intervalDistribution;
+      cpuAfterSample = cpuDeltaAfter / nextIntervalDistribution;
+    }
+
     let pixelStart =
       (sampleTimeRangeStart - rangeStart) * xPixelsPerMs - kernelPos;
     let pixelEnd = (sampleTimeRangeEnd - rangeStart) * xPixelsPerMs - kernelPos;
     pixelStart = clamp(pixelStart, 0, SMOOTHING_KERNEL.length - 1);
     pixelEnd = clamp(pixelEnd, 0, SMOOTHING_KERNEL.length - 1);
+    const pixelCenter = (sampleTime - rangeStart) * xPixelsPerMs;
     const intPixelStart = pixelStart | 0;
     const intPixelEnd = pixelEnd | 0;
+    const intPixelCenter = Math.floor(pixelCenter);
 
-    for (let i = intPixelStart; i <= intPixelEnd; i++) {
-      pixelsAroundX[i] += 1;
+    // A number between 0 and 1 for sample percentage. It changes depending on
+    // the CPU usage if it's given. If not, it uses 1 directly.
+    const sampleFirstHalfPercentage =
+      cpuBeforeSample === null ? 1 : cpuBeforeSample / maxThreadCPUDelta;
+    const sampleSecondHalfPercentage =
+      cpuAfterSample === null ? 1 : cpuAfterSample / maxThreadCPUDelta;
+
+    // TODO: Make this better
+    // for (let i = intPixelStart; i <= intPixelEnd; i++) {
+    //   pixelsAroundX[i] += 1;
+    // }
+    // pixelsAroundX[intPixelStart] -= pixelStart - intPixelStart;
+    // pixelsAroundX[intPixelEnd] -= 1 - (pixelEnd - intPixelEnd);
+
+    // Samples have two parts to be able to present the CPU utilizations properly.
+    // The first half of the sample will use the CPU delta number that belongs to
+    // this sample.
+    for (let i = intPixelStart; i <= intPixelCenter; i++) {
+      pixelsAroundX[i] += sampleFirstHalfPercentage;
     }
-    pixelsAroundX[intPixelStart] -= pixelStart - intPixelStart;
-    pixelsAroundX[intPixelEnd] -= 1 - (pixelEnd - intPixelEnd);
+    // The second half of the sample will use the CPU delta number that belongs to
+    // the next sample.
+    for (let i = intPixelCenter + 1; i <= intPixelEnd; i++) {
+      pixelsAroundX[i] += sampleSecondHalfPercentage;
+    }
+
+    pixelsAroundX[intPixelStart] -=
+      sampleFirstHalfPercentage * (pixelStart - intPixelStart);
+    pixelsAroundX[intPixelEnd] -=
+      sampleSecondHalfPercentage * (1 - (pixelEnd - intPixelEnd));
 
     let sum = 0;
     for (let i = 0; i < SMOOTHING_KERNEL.length; i++) {
