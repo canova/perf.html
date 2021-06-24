@@ -72,7 +72,7 @@ function logAndPipeExec(...commands /*: string[][] */) /*: string */ {
 
 /**
  * Pause with a message and wait for the enter as a confirmation.
- * The propt will not be displayed if the `-y` argument is given to the script.
+ * The prompt will not be displayed if the `-y` argument is given to the script.
  * This is mainly used by the CircleCI automation.
  *
  * @param {string} message to be displayed before the prompt.
@@ -128,20 +128,20 @@ async function checkIfWorkspaceClean() /*: Promise<void> */ {
 /**
  * Finds the Git upstream remote and returns it.
  *
- * @returns {string} Name of the upstrem
+ * @returns {Promise<string>} Name of the upstrem
  * @throws Will throw an error if it can't find an upstream remote.
  */
-function findUpstream() /*: string */ {
+async function findUpstream() /*: Promise<string> */ {
   console.log('>>> Finding the upstream remote.');
   try {
-    const upstream = logAndPipeExec(
-      ['git', 'remote', '-v'],
-      ['grep', '-E', 'canova/perf.html|firefox-devtools/profiler'], // TODO: change 'canova' after
-      ['head', '-1'],
-      ['awk', '{ print $1 }']
-    ).trim();
+    const gitRemoteResult = await logAndExec('git', 'remote', '-v');
 
-    console.log(`Found '${upstream}' as upstream remote.`);
+    const remotes = gitRemoteResult.split('\n');
+    const candidates = remotes.filter(
+      line => /canova\/perf.html|firefox-devtools\/profiler/.test(line) // TODO: change 'canova' after
+    );
+    const upstream = candidates[0].split('\t')[0];
+
     return upstream;
   } catch (error) {
     throw new Error(stripIndent`
@@ -164,27 +164,36 @@ function findUpstream() /*: string */ {
  * that doesn't match the `matchRegexp`.
  */
 async function checkAllowedPaths(
-  upstream /*: string */,
-  compareBranch /*: string */,
-  baseBranch /*: string */,
-  matchRegexp /*: RegExp */
+  {
+    upstream,
+    compareBranch,
+    baseBranch,
+    matchRegexp,
+  } /*:
+  {|
+    upstream: string,
+    compareBranch: string,
+    baseBranch: string ,
+    matchRegexp: RegExp
+  |}
+  */
 ) {
   console.log(
     `>>> Checking if ${compareBranch} branch has changes from the files that are not allowed.`
   );
-  // git log --no-merges compareBranch..baseBranch --pretty="format:" --name-only
+  // git log --no-merges baseBranch..compareBranch --pretty="format:" --name-only
   let changedFiles = await logAndExec(
     'git',
     'log',
     '--no-merges',
-    `${upstream}/${compareBranch}..${upstream}/${baseBranch}`,
+    `${upstream}/${baseBranch}..${upstream}/${compareBranch}`,
     '--pretty=format:',
     '--name-only'
   );
   changedFiles = changedFiles.split('\n');
 
   for (const file of changedFiles) {
-    if (file.length > 0 && !file.match(matchRegexp)) {
+    if (file.length > 0 && !matchRegexp.test(file)) {
       throw new Error(oneLine`
         ${compareBranch} branch includes changes from the files that are not
         allowed: ${file}
@@ -247,10 +256,20 @@ async function tryToSync(upstream /*: string */) /*: Promise<void> */ {
       await logAndExec('git', 'fetch', upstream);
 
       // First, check if the l10nn branch contains only changes in `locales` directory.
-      await checkAllowedPaths(upstream, 'main', 'l10n', vendoredLocalesPath);
+      await checkAllowedPaths({
+        upstream,
+        compareBranch: 'l10n',
+        baseBranch: 'main',
+        matchRegexp: vendoredLocalesPath,
+      });
 
       // Second, check if the main branch contains changes except the translated locales.
-      await checkAllowedPaths(upstream, 'l10n', 'main', nonVendoredLocalesPath);
+      await checkAllowedPaths({
+        upstream,
+        compareBranch: 'main',
+        baseBranch: 'l10n',
+        matchRegexp: nonVendoredLocalesPath,
+      });
 
       console.log('>>> Merging main to l10n.');
       await logAndExec('git', 'checkout', `${upstream}/l10n`);
@@ -297,7 +316,7 @@ async function main() /*: Promise<void> */ {
     SKIP_PROMPTS = true;
   }
 
-  const upstream = findUpstream();
+  const upstream = await findUpstream();
   await checkIfWorkspaceClean();
 
   console.log(
