@@ -178,6 +178,7 @@ type BaseQuery = {|
   view: string,
   implementation: string,
   timelineType: string,
+  trackSearch: string,
   ...FullProfileSpecificBaseQuery,
   ...ActiveTabProfileSpecificBaseQuery,
   ...OriginsProfileSpecificBaseQuery,
@@ -368,6 +369,7 @@ export function getQueryStringFromUrlState(urlState: UrlState): string {
       urlState.profileSpecific.timelineType === 'category'
         ? undefined
         : urlState.profileSpecific.timelineType,
+    trackSearch: urlState.profileSpecific.trackSearchString || undefined,
   }: BaseQueryShape);
 
   // Depending on which panel is active, also show tab-specific query parameters.
@@ -589,6 +591,7 @@ export function stateFromLocation(
       callTreeSearchString: query.search || '',
       markersSearchString: query.markerSearch || '',
       networkSearchString: query.networkSearch || '',
+      trackSearchString: query.trackSearch || '',
       transforms,
       timelineType: validateTimelineType(query.timelineType),
       full: {

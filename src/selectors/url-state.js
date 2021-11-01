@@ -91,6 +91,8 @@ export const getMarkersSearchString: Selector<string> = (state) =>
   getProfileSpecificState(state).markersSearchString;
 export const getNetworkSearchString: Selector<string> = (state) =>
   getProfileSpecificState(state).networkSearchString;
+export const getTrackSearchString: Selector<string> = (state) =>
+  getProfileSpecificState(state).trackSearchString;
 
 export const getSelectedTab: Selector<TabSlug> = (state) =>
   getUrlState(state).selectedTab;
@@ -205,6 +207,11 @@ export const getMarkersSearchStrings: Selector<string[] | null> =
 export const getNetworkSearchStrings: Selector<string[] | null> =
   createSelector(getNetworkSearchString, splitSearchString);
 
+export const getTrackSearchStrings: Selector<string[] | null> = createSelector(
+  getTrackSearchString,
+  splitSearchString
+);
+
 /**
  * A RegExp can be used for searching and filtering the thread's samples.
  */
@@ -218,6 +225,9 @@ export const getMarkersSearchStringsAsRegExp: Selector<RegExp | null> =
 
 export const getNetworkSearchStringsAsRegExp: Selector<RegExp | null> =
   createSelector(getNetworkSearchStrings, stringsToRegExp);
+
+export const getTrackSearchStringsAsRegExp: Selector<RegExp | null> =
+  createSelector(getTrackSearchStrings, stringsToRegExp);
 
 // Pre-allocate an array to help with strict equality tests in the selectors.
 const EMPTY_TRANSFORM_STACK = [];

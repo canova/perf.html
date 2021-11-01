@@ -183,6 +183,15 @@ const networkSearchString: Reducer<string> = (state = '', action) => {
   }
 };
 
+const trackSearchString: Reducer<string> = (state = '', action) => {
+  switch (action.type) {
+    case 'CHANGE_TRACK_SEARCH_STRING':
+      return action.searchString;
+    default:
+      return state;
+  }
+};
+
 const transforms: Reducer<TransformStacksPerThread> = (state = {}, action) => {
   switch (action.type) {
     case 'PROFILE_LOADED':
@@ -532,6 +541,7 @@ const profileSpecific = combineReducers({
   callTreeSearchString,
   markersSearchString,
   networkSearchString,
+  trackSearchString,
   transforms,
   timelineType,
   full: fullProfileSpecific,

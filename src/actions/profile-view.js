@@ -1214,6 +1214,16 @@ export function changeNetworkSearchString(searchString: string): Action {
   };
 }
 
+/**
+ * Change the track search string that appears on the track context menu.
+ */
+export function changeTrackSearchString(searchString: string): Action {
+  return {
+    type: 'CHANGE_TRACK_SEARCH_STRING',
+    searchString,
+  };
+}
+
 export function changeImplementationFilter(
   implementation: ImplementationFilter
 ): ThunkAction<void> {

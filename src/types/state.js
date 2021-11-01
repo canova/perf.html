@@ -257,6 +257,7 @@ export type ProfileSpecificUrlState = {|
   callTreeSearchString: string,
   markersSearchString: string,
   networkSearchString: string,
+  trackSearchString: string,
   transforms: TransformStacksPerThread,
   timelineType: TimelineType,
   full: FullProfileSpecificUrlState,
