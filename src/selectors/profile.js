@@ -447,6 +447,18 @@ export const getGlobalTrackName: DangerousSelectorWithArguments<
   TrackIndex
 > = (state, trackIndex) => getGlobalTrackNames(state)[trackIndex];
 
+/**
+ * Returns the global tracks that match the search filter.
+ */
+export const getSearchFilteredGlobalTracks: Selector<Set<TrackIndex> | null> =
+  createSelector(
+    getGlobalTracks,
+    getGlobalTrackNames,
+    getThreads,
+    UrlState.getTrackSearchStringsAsRegExp,
+    Tracks.getSearchFilteredGlobalTracks
+  );
+
 export const getLocalTrackNamesByPid: Selector<Map<Pid, string[]>> =
   createSelector(
     getLocalTracksByPid,
@@ -474,6 +486,20 @@ export const getLocalTrackName = (
     getLocalTrackNamesByPid(state).get(pid),
     'Could not find the track names from the given pid'
   )[trackIndex];
+
+/**
+ * Returns the local tracks that match the search filter by Pid.
+ */
+export const getSearchFilteredLocalTracksByPid: Selector<Map<
+  Pid,
+  Set<TrackIndex>
+> | null> = createSelector(
+  getLocalTracksByPid,
+  getLocalTrackNamesByPid,
+  getThreads,
+  UrlState.getTrackSearchStringsAsRegExp,
+  Tracks.getSearchFilteredLocalTracksByPid
+);
 
 /**
  * Active tab profile selectors

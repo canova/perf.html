@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.trackSearchField form.idleSearchField {
+  width: 100%;
+}
+
+.trackSearchField input.idleSearchFieldInput {
+  width: calc(100% - 10px);
+  height: 25px;
+  margin: 0 5px;
+}
+
+.trackSearchField .idleSearchFieldButton {
+  /* 5px is margin and the other 5px is the location inside the input */
+  right: 10px;
+}

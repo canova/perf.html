@@ -635,6 +635,10 @@ TrackContextMenu--hide-other-screenshots-tracks = Hide other Screenshots tracks
 TrackContextMenu--hide-track = Hide “{ $trackName }”
 TrackContextMenu--show-all-tracks = Show all tracks
 
+# This is used as the title for the track filter input.
+TrackContextMenu--track-filter =
+    .title = Only display tracks that match a certain text
+
 ## TransformNavigator
 ## Navigator for the applied transforms in the Call Tree, Flame Graph, and Stack
 ## Chart components.
