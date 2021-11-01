@@ -639,6 +639,10 @@ TrackContextMenu--show-all-tracks = Show all tracks
 TrackContextMenu--track-filter =
     .title = Only display tracks that match a certain text
 
+# This is used in the tracks context menu as a button to show all the tracks
+# below it.
+TrackContextMenu--show-all-tracks-below = Show all tracks below
+
 ## TransformNavigator
 ## Navigator for the applied transforms in the Call Tree, Flame Graph, and Stack
 ## Chart components.

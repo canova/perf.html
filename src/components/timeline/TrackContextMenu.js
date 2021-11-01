@@ -19,6 +19,7 @@ import {
   hideLocalTrack,
   showLocalTrack,
   changeTrackSearchString,
+  showProvidedTracks,
 } from 'firefox-profiler/actions/profile-view';
 import explicitConnect from 'firefox-profiler/utils/connect';
 import { ensureExists } from 'firefox-profiler/utils/flow';
@@ -84,6 +85,7 @@ type DispatchProps = {|
   +isolateProcessMainThread: typeof isolateProcessMainThread,
   +isolateScreenshot: typeof isolateScreenshot,
   +changeTrackSearchString: typeof changeTrackSearchString,
+  +showProvidedTracks: typeof showProvidedTracks,
 |};
 
 type Props = ConnectedProps<{||}, StateProps, DispatchProps>;
@@ -92,6 +94,25 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
   _showAllTracks = (): void => {
     const { showAllTracks } = this.props;
     showAllTracks();
+  };
+
+  _showProvidedTracks = (): void => {
+    const {
+      showProvidedTracks,
+      searchFilteredGlobalTracks,
+      searchFilteredLocalTracksByPid,
+    } = this.props;
+    if (
+      searchFilteredGlobalTracks === null ||
+      searchFilteredLocalTracksByPid === null
+    ) {
+      // This shouldn't happen!
+      return;
+    }
+    showProvidedTracks(
+      searchFilteredGlobalTracks,
+      searchFilteredLocalTracksByPid
+    );
   };
 
   _toggleGlobalTrackVisibility = (
@@ -655,6 +676,24 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
     );
   }
 
+  renderShowProvidedTracks() {
+    const { rightClickedTrack } = this.props;
+    if (rightClickedTrack !== null) {
+      return null;
+    }
+
+    return (
+      <React.Fragment>
+        <MenuItem onClick={this._showProvidedTracks}>
+          <Localized id="TrackContextMenu--show-all-tracks-below">
+            Show all tracks below
+          </Localized>
+        </MenuItem>
+        <div className="react-contextmenu-separator" />
+      </React.Fragment>
+    );
+  }
+
   renderTrackSearch() {
     const { rightClickedTrack, searchString } = this.props;
     if (rightClickedTrack !== null) {
@@ -691,6 +730,7 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
     const isolateScreenshot = this.renderIsolateScreenshot();
     const hideTrack = this.renderHideTrack();
     const showAllTracksMenu = this.renderShowAllTracks();
+    const showProvidedTracksMenu = this.renderShowProvidedTracks();
     const trackSearch = this.renderTrackSearch();
     const separator =
       isolateProcessMainThread ||
@@ -710,7 +750,7 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
           // visible depending on the current state.
         }
         {trackSearch}
-        {showAllTracksMenu}
+        {searchString ? showProvidedTracksMenu : showAllTracksMenu}
         {isolateProcessMainThread}
         {isolateProcess}
         {isolateLocalTrack}
@@ -785,6 +825,7 @@ export const TimelineTrackContextMenu = explicitConnect<
     hideLocalTrack,
     showLocalTrack,
     changeTrackSearchString,
+    showProvidedTracks,
   },
   component: TimelineTrackContextMenuImpl,
 });
