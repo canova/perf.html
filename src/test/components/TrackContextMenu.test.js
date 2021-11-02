@@ -6,6 +6,7 @@
 
 import * as React from 'react';
 import { Provider } from 'react-redux';
+import { fireEvent } from '@testing-library/react';
 
 import { render, screen } from 'firefox-profiler/test/fixtures/testing-library';
 import { ensureExists } from '../../utils/flow';
@@ -18,6 +19,7 @@ import { getGlobalTracks, getLocalTracks } from '../../selectors/profile';
 import {
   getHiddenGlobalTracks,
   getHiddenLocalTracks,
+  getTrackSearchString,
 } from '../../selectors/url-state';
 import {
   getProfileWithNiceTracks,
@@ -435,6 +437,144 @@ describe('timeline/TrackContextMenu', function () {
         '  - show [thread DOM Worker]',
         '  - hide [thread Style]',
       ]);
+    });
+  });
+
+  describe('track search', function () {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    function setupAllTracks() {
+      const results = setup();
+      const selectTrackFilterInput = () =>
+        ((screen.getByPlaceholderText(
+          /Enter filter terms/
+        ): any): HTMLInputElement);
+
+      return {
+        ...results,
+        selectTrackFilterInput,
+      };
+    }
+
+    it('can change the search input', function () {
+      const { getState, selectTrackFilterInput } = setupAllTracks();
+      expect(getTrackSearchString(getState())).toEqual('');
+      const searchText = 'style';
+      const input = selectTrackFilterInput();
+
+      fireEvent.change(input, {
+        target: { value: searchText },
+      });
+
+      jest.runAllTimers();
+      expect(getTrackSearchString(getState())).toEqual(searchText);
+      expect(input.value).toEqual(searchText);
+    });
+
+    it('can filter a single global track', () => {
+      const { getState, selectTrackFilterInput } = setupAllTracks();
+      expect(getTrackSearchString(getState())).toEqual('');
+      const searchText = 'GeckoMain';
+      const input = selectTrackFilterInput();
+
+      // Check if all the tracks are visible at first.
+      expect(screen.getByText('GeckoMain')).toBeInTheDocument();
+      expect(screen.getByText('Content Process')).toBeInTheDocument();
+      expect(screen.getByText('Style')).toBeInTheDocument();
+
+      fireEvent.change(input, {
+        target: { value: searchText },
+      });
+
+      jest.runAllTimers();
+
+      // Check if only the GeckoMain is in the document and not the others.
+      expect(screen.getByText('GeckoMain')).toBeInTheDocument();
+      expect(screen.queryByText('Content Process')).not.toBeInTheDocument();
+      expect(screen.queryByText('Style')).not.toBeInTheDocument();
+    });
+
+    it('can filter a global track with its local track', () => {
+      const { getState, selectTrackFilterInput } = setupAllTracks();
+      expect(getTrackSearchString(getState())).toEqual('');
+      const searchText = 'Content Process';
+      const input = selectTrackFilterInput();
+
+      // Check if all the tracks are visible at first.
+      expect(screen.getByText('GeckoMain')).toBeInTheDocument();
+      expect(screen.getByText('Content Process')).toBeInTheDocument();
+      expect(screen.getByText('Style')).toBeInTheDocument();
+
+      fireEvent.change(input, {
+        target: { value: searchText },
+      });
+
+      jest.runAllTimers();
+
+      // Check if only Content Process and its children are in the document.
+      expect(screen.queryByText('GeckoMain')).not.toBeInTheDocument();
+      expect(screen.getByText('Content Process')).toBeInTheDocument();
+      expect(screen.getByText('Style')).toBeInTheDocument();
+    });
+
+    it('can filter a local track with its global track', () => {
+      const { getState, selectTrackFilterInput } = setupAllTracks();
+      expect(getTrackSearchString(getState())).toEqual('');
+      const searchText = 'Style';
+      const input = selectTrackFilterInput();
+
+      // Check if all the tracks are visible at first.
+      expect(screen.getByText('GeckoMain')).toBeInTheDocument();
+      expect(screen.getByText('Content Process')).toBeInTheDocument();
+      expect(screen.getByText('Style')).toBeInTheDocument();
+
+      fireEvent.change(input, {
+        target: { value: searchText },
+      });
+
+      jest.runAllTimers();
+
+      // Check if only Content Process and its children are in the document.
+      expect(screen.queryByText('GeckoMain')).not.toBeInTheDocument();
+      expect(screen.getByText('Content Process')).toBeInTheDocument();
+      expect(screen.getByText('Style')).toBeInTheDocument();
+    });
+
+    it('can filter a track with pid or processType', () => {
+      const { getState, selectTrackFilterInput } = setupAllTracks();
+      expect(getTrackSearchString(getState())).toEqual('');
+      let searchText = '111'; // pid of GeckoMain
+      const input = selectTrackFilterInput();
+
+      // Check if all the tracks are visible at first.
+      expect(screen.getByText('GeckoMain')).toBeInTheDocument();
+      expect(screen.getByText('Content Process')).toBeInTheDocument();
+      expect(screen.getByText('Style')).toBeInTheDocument();
+
+      fireEvent.change(input, {
+        target: { value: searchText },
+      });
+
+      jest.runAllTimers();
+
+      // Check if only GeckoMain is in the document.
+      expect(screen.getByText('GeckoMain')).toBeInTheDocument();
+      expect(screen.queryByText('Content Process')).not.toBeInTheDocument();
+      expect(screen.queryByText('Style')).not.toBeInTheDocument();
+
+      searchText = 'tab'; // processType of Content Process
+      fireEvent.change(input, {
+        target: { value: searchText },
+      });
+
+      jest.runAllTimers();
+
+      // Check if Content Process and its children are in the document.
+      expect(screen.queryByText('GeckoMain')).not.toBeInTheDocument();
+      expect(screen.getByText('Content Process')).toBeInTheDocument();
+      expect(screen.getByText('Style')).toBeInTheDocument();
     });
   });
 });
