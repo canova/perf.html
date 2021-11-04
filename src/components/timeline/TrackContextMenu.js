@@ -91,6 +91,8 @@ type DispatchProps = {|
 type Props = ConnectedProps<{||}, StateProps, DispatchProps>;
 
 class TimelineTrackContextMenuImpl extends PureComponent<Props> {
+  _trackSearchElem: {| current: TrackSearch | null |} = React.createRef();
+
   _showAllTracks = (): void => {
     const { showAllTracks } = this.props;
     showAllTracks();
@@ -710,6 +712,7 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
             title="Only display tracks that match a certain text"
             currentSearchString={searchString}
             onSearch={this._onSearch}
+            ref={this._trackSearchElem}
           />
         </Localized>
         <div className="react-contextmenu-separator" />
@@ -719,6 +722,20 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
 
   _onSearch = (value: string) => {
     this.props.changeTrackSearchString(value);
+  };
+
+  _onShow = () => {
+    if (
+      // We need to focus the track search filter. But we can't use autoFocus
+      // property because this context menu is already rendered and hidden during
+      // the load of the web page. So, when user clicks on the track context menu
+      // button, focus will be moved to that component and search filter will not
+      // be focused anymore. To fix this, we are manually calling the focus.
+      this._trackSearchElem.current &&
+      this._trackSearchElem.current.idleSearchField.current
+    ) {
+      this._trackSearchElem.current.idleSearchField.current.focus();
+    }
   };
 
   render() {
@@ -744,6 +761,7 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
       <ContextMenu
         id="TimelineTrackContextMenu"
         className="timelineTrackContextMenu"
+        onShow={this._onShow}
       >
         {
           // The menu items header items to isolate tracks may or may not be

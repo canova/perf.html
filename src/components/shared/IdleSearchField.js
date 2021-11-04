@@ -70,6 +70,16 @@ export class IdleSearchField extends PureComponent<Props, State> {
     this._notifyIfChanged(this.state.value);
   };
 
+  focus = () => {
+    // Allow time for React to let the event bubble up. Otherwise clicked button
+    // will steal the focus.
+    requestAnimationFrame(() => {
+      if (this._input) {
+        this._input.focus();
+      }
+    });
+  };
+
   _notifyIfChanged(value: string) {
     if (value !== this._previouslyNotifiedValue) {
       this._previouslyNotifiedValue = value;

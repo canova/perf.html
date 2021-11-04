@@ -19,6 +19,7 @@ type Props = {|
 type State = {||};
 
 export class TrackSearch extends React.PureComponent<Props, State> {
+  idleSearchField: {| current: IdleSearchField | null |} = React.createRef();
   _onSearchFieldIdleAfterChange = (value: string) => {
     this.props.onSearch(value);
   };
@@ -34,6 +35,7 @@ export class TrackSearch extends React.PureComponent<Props, State> {
           defaultValue={currentSearchString}
           onIdleAfterChange={this._onSearchFieldIdleAfterChange}
           autoComplete="off"
+          ref={this.idleSearchField}
         />
       </div>
     );
