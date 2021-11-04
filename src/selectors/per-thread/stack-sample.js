@@ -65,6 +65,22 @@ export function getStackAndSampleSelectorsPerThread(
     }
   );
 
+  const getUninvertedCallNodeInfo: Selector<CallNodeInfo> = createSelector(
+    threadSelectors.getFilteredThreadForTimeline,
+    ProfileSelectors.getDefaultCategory,
+    (
+      { stackTable, frameTable, funcTable }: Thread,
+      defaultCategory: IndexIntoCategoryList
+    ): CallNodeInfo => {
+      return ProfileData.getCallNodeInfo(
+        stackTable,
+        frameTable,
+        funcTable,
+        defaultCategory
+      );
+    }
+  );
+
   const getCallNodeInfo: Selector<CallNodeInfo> = createSelector(
     threadSelectors.getFilteredThread,
     ProfileSelectors.getDefaultCategory,
@@ -98,6 +114,18 @@ export function getStackAndSampleSelectorsPerThread(
       }
     );
 
+  const getSelectedUninvertedCallNodeIndex: Selector<IndexIntoCallNodeTable | null> =
+    createSelector(
+      getUninvertedCallNodeInfo,
+      getSelectedCallNodePath,
+      (callNodeInfo, callNodePath) => {
+        return ProfileData.getCallNodeIndexFromPath(
+          callNodePath,
+          callNodeInfo.callNodeTable
+        );
+      }
+    );
+
   const getExpandedCallNodePaths: Selector<PathSet> = createSelector(
     threadSelectors.getViewOptions,
     (threadViewOptions) => threadViewOptions.expandedCallNodePaths
@@ -120,8 +148,8 @@ export function getStackAndSampleSelectorsPerThread(
   > = createSelector(
     threadSelectors.getFilteredThreadForTimeline,
     threadSelectors.getTabFilteredThread,
-    getCallNodeInfo,
-    getSelectedCallNodeIndex,
+    getUninvertedCallNodeInfo,
+    getSelectedUninvertedCallNodeIndex,
     (
       thread,
       tabFilteredThread,
@@ -155,7 +183,7 @@ export function getStackAndSampleSelectorsPerThread(
     (IndexIntoSamplesTable, IndexIntoSamplesTable) => number
   > = createSelector(
     threadSelectors.getFilteredThreadForTimeline,
-    getCallNodeInfo,
+    getUninvertedCallNodeInfo,
     (thread, { callNodeTable, stackIndexToCallNodeIndex }) => {
       const sampleIndexToCallNodeIndex =
         ProfileData.getSampleIndexToCallNodeIndex(
@@ -261,8 +289,10 @@ export function getStackAndSampleSelectorsPerThread(
     unfilteredSamplesRange,
     getWeightTypeForCallTree,
     getCallNodeInfo,
+    getUninvertedCallNodeInfo,
     getSelectedCallNodePath,
     getSelectedCallNodeIndex,
+    getSelectedUninvertedCallNodeIndex,
     getExpandedCallNodePaths,
     getExpandedCallNodeIndexes,
     getSamplesSelectedStatesInFilteredThread,

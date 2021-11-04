@@ -135,7 +135,7 @@ export function selectLeafCallNode(
   return (dispatch, getState) => {
     const threadSelectors = getThreadSelectorsFromThreadsKey(threadsKey);
     const filteredThread = threadSelectors.getFilteredThread(getState());
-    const callNodeInfo = threadSelectors.getCallNodeInfo(getState());
+    const callNodeInfo = threadSelectors.getUninvertedCallNodeInfo(getState());
 
     // The newSelectedStack could be undefined if there are 0 samples.
     const newSelectedStack = filteredThread.samples.stack[sampleIndex];
@@ -167,7 +167,7 @@ export function selectRootCallNode(
   return (dispatch, getState) => {
     const threadSelectors = getThreadSelectorsFromThreadsKey(threadsKey);
     const filteredThread = threadSelectors.getFilteredThread(getState());
-    const callNodeInfo = threadSelectors.getCallNodeInfo(getState());
+    const callNodeInfo = threadSelectors.getUninvertedCallNodeInfo(getState());
 
     const newSelectedStack = filteredThread.samples.stack[sampleIndex];
     if (newSelectedStack === null || newSelectedStack === undefined) {
@@ -203,7 +203,7 @@ export function selectBestAncestorCallNodeAndExpandCallTree(
     const fullThread = threadSelectors.getRangeFilteredThread(getState());
     const filteredThread = threadSelectors.getFilteredThread(getState());
     const unfilteredStack = fullThread.samples.stack[sampleIndex];
-    const callNodeInfo = threadSelectors.getCallNodeInfo(getState());
+    const callNodeInfo = threadSelectors.getUninvertedCallNodeInfo(getState());
 
     if (unfilteredStack === null) {
       return false;

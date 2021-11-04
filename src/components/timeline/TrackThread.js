@@ -398,7 +398,7 @@ export const TimelineTrackThread = explicitConnect<
       selectedThreadIndexes,
       threadsKey
     )
-      ? selectors.getSelectedCallNodeIndex(state)
+      ? selectors.getSelectedUninvertedCallNodeIndex(state)
       : null;
     const fullThread = selectors.getCPUProcessedThread(state);
     const timelineType = getTimelineType(state);
@@ -412,7 +412,7 @@ export const TimelineTrackThread = explicitConnect<
       filteredThread: selectors.getFilteredThreadForTimeline(state),
       rangeFilteredThread: selectors.getRangeFilteredThread(state),
       tabFilteredThread: selectors.getTabFilteredThread(state),
-      callNodeInfo: selectors.getCallNodeInfo(state),
+      callNodeInfo: selectors.getUninvertedCallNodeInfo(state),
       selectedCallNodeIndex,
       unfilteredSamplesRange: selectors.unfilteredSamplesRange(state),
       interval: getProfileInterval(state),
