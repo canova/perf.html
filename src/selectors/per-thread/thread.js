@@ -200,17 +200,16 @@ export function getThreadSelectorsPerThread(
     ProfileData.filterThreadByImplementation
   );
 
-  const _getImplementationAndSearchFilteredThread: Selector<Thread> =
-    createSelector(
-      _getImplementationFilteredThread,
-      UrlState.getSearchStrings,
-      (thread, searchStrings) => {
-        return ProfileData.filterThreadToSearchStrings(thread, searchStrings);
-      }
-    );
+  const getFilteredThreadForTimeline: Selector<Thread> = createSelector(
+    _getImplementationFilteredThread,
+    UrlState.getSearchStrings,
+    (thread, searchStrings) => {
+      return ProfileData.filterThreadToSearchStrings(thread, searchStrings);
+    }
+  );
 
   const getFilteredThread: Selector<Thread> = createSelector(
-    _getImplementationAndSearchFilteredThread,
+    getFilteredThreadForTimeline,
     UrlState.getInvertCallstack,
     ProfileSelectors.getDefaultCategory,
     (thread, shouldInvertCallstack, defaultCategory) => {
@@ -468,6 +467,7 @@ export function getThreadSelectorsPerThread(
     getSamplesWeightType,
     getNativeAllocations,
     getThreadRange,
+    getFilteredThreadForTimeline,
     getFilteredThread,
     getRangeFilteredThread,
     getRangeAndTransformFilteredThread,
