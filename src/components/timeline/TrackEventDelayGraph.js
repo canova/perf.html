@@ -374,7 +374,7 @@ export const TrackEventDelayGraph = explicitConnect<
       rangeEnd: end,
       interval: getProfileInterval(state),
       thread: selectors.getThread(state),
-      filteredThread: selectors.getFilteredThread(state),
+      filteredThread: selectors.getFilteredThreadForTimeline(state),
       unfilteredSamplesRange: selectors.unfilteredSamplesRange(state),
       eventDelays: selectors.getProcessedEventDelays(state),
     };

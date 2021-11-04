@@ -439,7 +439,7 @@ export const TrackMemoryGraph = explicitConnect<
       rangeStart: start,
       rangeEnd: end,
       interval: getProfileInterval(state),
-      filteredThread: selectors.getFilteredThread(state),
+      filteredThread: selectors.getFilteredThreadForTimeline(state),
       unfilteredSamplesRange: selectors.unfilteredSamplesRange(state),
     };
   },

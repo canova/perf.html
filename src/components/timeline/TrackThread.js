@@ -409,7 +409,7 @@ export const TimelineTrackThread = explicitConnect<
     return {
       invertCallstack: getInvertCallstack(state),
       fullThread,
-      filteredThread: selectors.getFilteredThread(state),
+      filteredThread: selectors.getFilteredThreadForTimeline(state),
       rangeFilteredThread: selectors.getRangeFilteredThread(state),
       tabFilteredThread: selectors.getTabFilteredThread(state),
       callNodeInfo: selectors.getCallNodeInfo(state),
