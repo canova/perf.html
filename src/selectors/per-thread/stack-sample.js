@@ -118,7 +118,7 @@ export function getStackAndSampleSelectorsPerThread(
   const getSamplesSelectedStatesInFilteredThread: Selector<
     null | SelectedState[]
   > = createSelector(
-    threadSelectors.getFilteredThread,
+    threadSelectors.getFilteredThreadForTimeline,
     threadSelectors.getTabFilteredThread,
     getCallNodeInfo,
     getSelectedCallNodeIndex,
@@ -154,7 +154,7 @@ export function getStackAndSampleSelectorsPerThread(
   const getTreeOrderComparatorInFilteredThread: Selector<
     (IndexIntoSamplesTable, IndexIntoSamplesTable) => number
   > = createSelector(
-    threadSelectors.getFilteredThread,
+    threadSelectors.getFilteredThreadForTimeline,
     getCallNodeInfo,
     (thread, { callNodeTable, stackIndexToCallNodeIndex }) => {
       const sampleIndexToCallNodeIndex =
