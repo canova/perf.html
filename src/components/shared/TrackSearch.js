@@ -33,6 +33,7 @@ export class TrackSearch extends React.PureComponent<Props, State> {
           idlePeriod={200}
           defaultValue={currentSearchString}
           onIdleAfterChange={this._onSearchFieldIdleAfterChange}
+          autoComplete="off"
         />
       </div>
     );

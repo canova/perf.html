@@ -17,6 +17,7 @@ type Props = {|
   +defaultValue: ?string,
   +className: ?string,
   +title: ?string,
+  +autoComplete?: string,
 |};
 
 type State = {
@@ -104,7 +105,7 @@ export class IdleSearchField extends PureComponent<Props, State> {
   }
 
   render() {
-    const { className, title } = this.props;
+    const { className, title, autoComplete } = this.props;
     return (
       <form
         className={classNames('idleSearchField', className)}
@@ -126,6 +127,7 @@ export class IdleSearchField extends PureComponent<Props, State> {
             onFocus={this._onSearchFieldFocus}
             onBlur={this._onSearchFieldBlur}
             ref={this._takeInputRef}
+            autoComplete={autoComplete}
           />
         </Localized>
         <input
