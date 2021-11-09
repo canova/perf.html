@@ -1895,6 +1895,142 @@ export function invertCallstack(
   });
 }
 
+export function invertCallNodeInfo(
+  callNodeInfo: CallNodeInfo,
+  defaultCategory: IndexIntoCategoryList
+): CallNodeInfo {
+  return timeCode('invertCallNodeInfo', () => {
+    // The callNodeTable components.
+    const newPrefix: Array<IndexIntoCallNodeTable> = [];
+    const newFunc: Array<IndexIntoFuncTable> = [];
+    const newCategory: Array<IndexIntoCategoryList> = [];
+    const newSubcategory: Array<IndexIntoSubcategoryListForCategory> = [];
+    const newInnerWindowID: Array<InnerWindowID> = [];
+    const newDepth: Array<number> = [];
+    let newLength = 0;
+
+    function addCallNode(
+      prefixIndex: IndexIntoCallNodeTable,
+      funcIndex: IndexIntoFuncTable,
+      categoryIndex: IndexIntoCategoryList,
+      subcategoryIndex: IndexIntoSubcategoryListForCategory,
+      windowID: InnerWindowID
+    ) {
+      const index = newLength++;
+      newPrefix[index] = prefixIndex;
+      newFunc[index] = funcIndex;
+      newCategory[index] = categoryIndex;
+      newSubcategory[index] = subcategoryIndex;
+      newInnerWindowID[index] = windowID;
+      if (prefixIndex === -1) {
+        newDepth[index] = 0;
+      } else {
+        newDepth[index] = newDepth[prefixIndex] + 1;
+      }
+
+      return index;
+    }
+
+    // Create a Map that keys off of two values, both the prefix and frame combination
+    // by using a bit of math: prefix * frameCount + frame => stackIndex
+    const prefixAndFrameToCallNode = new Map();
+
+    // Returns the stackIndex for a specific frame (that is, a function and its
+    // context), and a specific prefix. If it doesn't exist yet it will create
+    // a new stack entry and return its index.
+    function callNodeFor(prefix, func, category, subcategory, windowID) {
+      const prefixAndFuncIndex = `${prefix}-${func}`;
+      let callNodeIndex = prefixAndFrameToCallNode.get(prefixAndFuncIndex);
+      if (callNodeIndex === undefined) {
+        callNodeIndex = addCallNode(
+          prefix,
+          func,
+          category,
+          subcategory,
+          windowID
+        );
+        prefixAndFrameToCallNode.set(prefixAndFuncIndex, callNodeIndex);
+      } else if (newCategory[callNodeIndex] !== category) {
+        // If two stack nodes from the non-inverted stack tree with different
+        // categories happen to collapse into the same stack node in the
+        // inverted tree, discard their category and set the category to the
+        // default category.
+        newCategory[callNodeIndex] = defaultCategory;
+        newSubcategory[callNodeIndex] = 0;
+      } else if (newSubcategory[callNodeIndex] !== subcategory) {
+        // If two stack nodes from the non-inverted stack tree with the same
+        // category but different subcategories happen to collapse into the same
+        // stack node in the inverted tree, discard their subcategory and set it
+        // to the "Other" subcategory.
+        newSubcategory[callNodeIndex] = 0;
+      }
+      return callNodeIndex;
+    }
+
+    const oldCallNodeIndexToNewCallNodeIndex = new Map();
+
+    // TODO: add comment.
+    const callNodeTable = callNodeInfo.callNodeTable;
+    for (
+      let callNodeIndex = callNodeTable.length - 1;
+      callNodeIndex >= 0;
+      callNodeIndex--
+    ) {
+      let newCallNode = oldCallNodeIndexToNewCallNodeIndex.get(callNodeIndex);
+      if (newCallNode === undefined) {
+        newCallNode = -1;
+        for (
+          let currentCallNode = callNodeIndex;
+          currentCallNode !== -1;
+          currentCallNode = callNodeTable.prefix[currentCallNode]
+        ) {
+          // Notice how we reuse the previous stack as the prefix. This is what
+          // effectively inverts the call tree.
+          newCallNode = callNodeFor(
+            newCallNode,
+            callNodeTable.func[currentCallNode],
+            callNodeTable.category[currentCallNode],
+            callNodeTable.subcategory[currentCallNode],
+            callNodeTable.innerWindowID[currentCallNode]
+          );
+        }
+        oldCallNodeIndexToNewCallNodeIndex.set(callNodeIndex, newCallNode);
+      }
+    }
+
+    const newCallNodeTable: CallNodeTable = {
+      prefix: new Int32Array(newPrefix),
+      func: new Int32Array(newFunc),
+      category: new Int32Array(newCategory),
+      subcategory: new Int32Array(newSubcategory),
+      innerWindowID: new Float64Array(newInnerWindowID),
+      depth: newDepth,
+      length: newLength,
+    };
+
+    const newStackIndexToCallNodeIndex = new Uint32Array(
+      callNodeInfo.stackIndexToCallNodeIndex.length
+    );
+
+    for (
+      let stackIndex = 0;
+      stackIndex < callNodeInfo.stackIndexToCallNodeIndex.length;
+      stackIndex++
+    ) {
+      const oldCallNodeIndex =
+        callNodeInfo.stackIndexToCallNodeIndex[stackIndex];
+      const newCallNodeIndex =
+        oldCallNodeIndexToNewCallNodeIndex.get(oldCallNodeIndex);
+      newStackIndexToCallNodeIndex[stackIndex] = ensureExists(newCallNodeIndex);
+    }
+
+    return {
+      callNodeTable: newCallNodeTable,
+      stackIndexToCallNodeIndex: newStackIndexToCallNodeIndex,
+    };
+  });
+}
+
 /**
  * Sometimes we want to update the stacks for a thread, for instance while searching
  * for a text string, or doing a call tree transformation. This function abstracts
@@ -1919,6 +2055,8 @@ export function updateThreadStacks(
     stackTable: newStackTable,
   };
 
+  // FIXME: We don't look for jsallocations and nativeallocations now. We should
+  // check them and fix if necessary.
   if (jsAllocations) {
     newThread.jsAllocations = {
       ...jsAllocations,

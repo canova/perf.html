@@ -81,19 +81,30 @@ export function getStackAndSampleSelectorsPerThread(
     }
   );
 
+  // const getCallNodeInfo: Selector<CallNodeInfo> = createSelector(
+  //   threadSelectors.getFilteredThread,
+  //   ProfileSelectors.getDefaultCategory,
+  //   (
+  //     { stackTable, frameTable, funcTable }: Thread,
+  //     defaultCategory: IndexIntoCategoryList
+  //   ): CallNodeInfo => {
+  //     return ProfileData.getCallNodeInfo(
+  //       stackTable,
+  //       frameTable,
+  //       funcTable,
+  //       defaultCategory
+  //     );
+  //   }
+  // );
+
   const getCallNodeInfo: Selector<CallNodeInfo> = createSelector(
-    threadSelectors.getFilteredThread,
+    getUninvertedCallNodeInfo,
+    UrlState.getInvertCallstack,
     ProfileSelectors.getDefaultCategory,
-    (
-      { stackTable, frameTable, funcTable }: Thread,
-      defaultCategory: IndexIntoCategoryList
-    ): CallNodeInfo => {
-      return ProfileData.getCallNodeInfo(
-        stackTable,
-        frameTable,
-        funcTable,
-        defaultCategory
-      );
+    (callNodeInfo, shouldInvertCallstack, defaultCategory) => {
+      return shouldInvertCallstack
+        ? ProfileData.invertCallNodeInfo(callNodeInfo, defaultCategory)
+        : callNodeInfo;
     }
   );
 

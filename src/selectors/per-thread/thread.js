@@ -213,9 +213,12 @@ export function getThreadSelectorsPerThread(
     UrlState.getInvertCallstack,
     ProfileSelectors.getDefaultCategory,
     (thread, shouldInvertCallstack, defaultCategory) => {
-      return shouldInvertCallstack
-        ? ProfileData.invertCallstack(thread, defaultCategory)
-        : thread;
+      console.log('canova getFilteredThread for thread', thread.tid);
+      console.trace('canova');
+      // return shouldInvertCallstack
+      //   ? ProfileData.invertCallstack(thread, defaultCategory)
+      //   : thread;
+      return thread;
     }
   );
 
