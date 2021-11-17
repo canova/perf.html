@@ -41,7 +41,7 @@ import {
   getLocalTrackOrderByPid,
   getTrackSearchString,
 } from 'firefox-profiler/selectors/url-state';
-import { TrackSearch } from 'firefox-profiler/components/shared/TrackSearch';
+import { TrackSearchField } from 'firefox-profiler/components/shared/TrackSearchField';
 import classNames from 'classnames';
 
 import type {
@@ -91,7 +91,8 @@ type DispatchProps = {|
 type Props = ConnectedProps<{||}, StateProps, DispatchProps>;
 
 class TimelineTrackContextMenuImpl extends PureComponent<Props> {
-  _trackSearchElem: {| current: TrackSearch | null |} = React.createRef();
+  _trackSearchFieldElem: {| current: TrackSearchField | null |} =
+    React.createRef();
 
   _showAllTracks = (): void => {
     const { showAllTracks } = this.props;
@@ -696,7 +697,7 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
     );
   }
 
-  renderTrackSearch() {
+  renderTrackSearchField() {
     const { rightClickedTrack, searchString } = this.props;
     if (rightClickedTrack !== null) {
       // This option should only be visible in the top context menu and not when
@@ -707,12 +708,12 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
     return (
       <React.Fragment>
         <Localized id="TrackContextMenu--track-filter" attrs={{ title: true }}>
-          <TrackSearch
+          <TrackSearchField
             className="trackContextMenuSearchField"
             title="Only display tracks that match a certain text"
             currentSearchString={searchString}
             onSearch={this._onSearch}
-            ref={this._trackSearchElem}
+            ref={this._trackSearchFieldElem}
           />
         </Localized>
         <div className="react-contextmenu-separator" />
@@ -731,10 +732,10 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
       // the load of the web page. So, when user clicks on the track context menu
       // button, focus will be moved to that component and search filter will not
       // be focused anymore. To fix this, we are manually calling the focus.
-      this._trackSearchElem.current &&
-      this._trackSearchElem.current.idleSearchField.current
+      this._trackSearchFieldElem.current &&
+      this._trackSearchFieldElem.current.idleSearchField.current
     ) {
-      this._trackSearchElem.current.idleSearchField.current.focus();
+      this._trackSearchFieldElem.current.idleSearchField.current.focus();
     }
   };
 
@@ -748,7 +749,7 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
     const hideTrack = this.renderHideTrack();
     const showAllTracksMenu = this.renderShowAllTracks();
     const showProvidedTracksMenu = this.renderShowProvidedTracks();
-    const trackSearch = this.renderTrackSearch();
+    const trackSearch = this.renderTrackSearchField();
     const separator =
       isolateProcessMainThread ||
       isolateProcess ||

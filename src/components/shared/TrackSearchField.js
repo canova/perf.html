@@ -7,7 +7,7 @@ import * as React from 'react';
 import classNames from 'classnames';
 import { IdleSearchField } from './IdleSearchField';
 
-import './TrackSearch.css';
+import './TrackSearchField.css';
 
 type Props = {|
   +className: string,
@@ -18,7 +18,7 @@ type Props = {|
 
 type State = {||};
 
-export class TrackSearch extends React.PureComponent<Props, State> {
+export class TrackSearchField extends React.PureComponent<Props, State> {
   idleSearchField: {| current: IdleSearchField | null |} = React.createRef();
   _onSearchFieldIdleAfterChange = (value: string) => {
     this.props.onSearch(value);
