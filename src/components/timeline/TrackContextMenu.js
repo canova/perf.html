@@ -369,8 +369,13 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
     const hiddenLocalTracks = hiddenLocalTracksByPid.get(pid);
     const localTrackNames = localTrackNamesByPid.get(pid);
     const localTracks = localTracksByPid.get(pid);
+    // If it's null, include everything without filtering.
     let searchFilteredLocalTracks = null;
+    // skipSearchFilter will be true when the parent global track matches the filter.
+    // It means that we can include all the local tracks without checking.
     if (searchFilteredLocalTracksByPid !== null && !skipSearchFilter) {
+      // If there is a search filter AND we can't skip the search filter, then
+      // get the filtered local tracks, so we can filter.
       searchFilteredLocalTracks = searchFilteredLocalTracksByPid.get(pid);
     }
 
@@ -762,10 +767,13 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
       // the load of the web page. So, when user clicks on the track context menu
       // button, focus will be moved to that component and search filter will not
       // be focused anymore. To fix this, we are manually calling the focus.
-      this._trackSearchFieldElem.current &&
-      this._trackSearchFieldElem.current.idleSearchField.current
+      this._trackSearchFieldElem.current
     ) {
-      this._trackSearchFieldElem.current.idleSearchField.current.focus();
+      // Allow time for React to let the event bubble up. Otherwise clicked button
+      // will steal the focus.
+      requestAnimationFrame(() => {
+        this._trackSearchFieldElem.current.focus();
+      });
     }
   };
 
@@ -777,9 +785,6 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
     const isolateLocalTrack = this.renderIsolateLocalTrack();
     const isolateScreenshot = this.renderIsolateScreenshot();
     const hideTrack = this.renderHideTrack();
-    const showAllTracksMenu = this.renderShowAllTracks();
-    const showProvidedTracksMenu = this.renderShowProvidedTracks();
-    const trackSearch = this.renderTrackSearchField();
     const separator =
       isolateProcessMainThread ||
       isolateProcess ||
@@ -798,8 +803,10 @@ class TimelineTrackContextMenuImpl extends PureComponent<Props> {
           // The menu items header items to isolate tracks may or may not be
           // visible depending on the current state.
         }
-        {trackSearch}
-        {searchString ? showProvidedTracksMenu : showAllTracksMenu}
+        {this.renderTrackSearchField()}
+        {searchString
+          ? this.renderShowProvidedTracks()
+          : this.renderShowAllTracks()}
         {isolateProcessMainThread}
         {isolateProcess}
         {isolateLocalTrack}

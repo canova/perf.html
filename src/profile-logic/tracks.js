@@ -1013,6 +1013,7 @@ export function getSearchFilteredLocalTracksByPid(
       searchRegExp.lastIndex = 0;
 
       if (searchRegExp.test(pid.toString())) {
+        searchFilteredLocalTracks.add(trackIndex);
         continue;
       }
 

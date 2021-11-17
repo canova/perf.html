@@ -24,6 +24,12 @@ export class TrackSearchField extends React.PureComponent<Props, State> {
     this.props.onSearch(value);
   };
 
+  focus = () => {
+    if (this.idleSearchField.current) {
+      this.idleSearchField.current.focus();
+    }
+  };
+
   render() {
     const { title, currentSearchString, className } = this.props;
     return (
