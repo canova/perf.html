@@ -32,6 +32,10 @@ import {
   autoMockElementSize,
   setMockedElementSize,
 } from '../fixtures/mocks/element-size';
+import {
+  autoMockIntersectionObserver,
+  flushIntersectionObserver,
+} from '../fixtures/mocks/intersection-observer';
 
 // The following constants determine the size of the drawn graph.
 const SAMPLE_COUNT = 8;
@@ -48,6 +52,7 @@ function getSamplesPixelPosition(
 describe('ThreadActivityGraph', function () {
   autoMockCanvasContext();
   autoMockElementSize({ width: GRAPH_WIDTH, height: GRAPH_HEIGHT });
+  autoMockIntersectionObserver();
 
   function getSamplesProfile() {
     return getProfileFromTextSamples(`
@@ -82,6 +87,8 @@ describe('ThreadActivityGraph', function () {
 
     // WithSize uses requestAnimationFrame
     flushRafCalls();
+    console.log('canova observer', window.IntersectionObserver);
+    flushIntersectionObserver();
 
     const activityGraphCanvas = ensureExists(
       container.querySelector('.threadActivityGraphCanvas'),
@@ -137,7 +144,7 @@ describe('ThreadActivityGraph', function () {
     expect(container.firstChild).toMatchSnapshot();
   });
 
-  it('matches the 2d canvas draw snapshot', () => {
+  fit('matches the 2d canvas draw snapshot', () => {
     setup();
     expect(flushDrawLog()).toMatchSnapshot();
   });

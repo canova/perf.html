@@ -36,6 +36,10 @@ import {
   getHumanReadableTracks,
 } from '../fixtures/profiles/tracks';
 import { ensureExists } from '../../utils/flow';
+import {
+  autoMockIntersectionObserver,
+  flushIntersectionObserver,
+} from '../fixtures/mocks/intersection-observer';
 
 import type { Profile } from 'firefox-profiler/types';
 
@@ -43,6 +47,7 @@ describe('Timeline multiple thread selection', function () {
   autoMockDomRect();
   autoMockCanvasContext();
   autoMockElementSize({ width: 200, height: 300 });
+  autoMockIntersectionObserver();
 
   function setup() {
     const profile = getProfileWithNiceTracks();
@@ -405,6 +410,7 @@ function _getProfileWithDroppedSamples(): Profile {
 describe('Timeline', function () {
   autoMockCanvasContext();
   autoMockElementSize({ width: 200, height: 300 });
+  autoMockIntersectionObserver();
 
   beforeEach(() => {
     jest
@@ -428,6 +434,7 @@ describe('Timeline', function () {
 
     flushRafCalls();
 
+    flushIntersectionObserver();
     const drawCalls = flushDrawLog();
 
     expect(container.firstChild).toMatchSnapshot();
