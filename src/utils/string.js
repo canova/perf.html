@@ -106,14 +106,42 @@ export const stringsToRegExp = (strings: string[] | null): RegExp | null => {
     return null;
   }
 
-  const regexpStr = strings
-    .map((string) => {
-      const prefixMatch = string.match(/^([a-z0-1]+):(.+)/i);
-      if (prefixMatch) {
-        return prefixMatch[1] + ':.*' + escapeStringRegexp(prefixMatch[2]);
-      }
-      return escapeStringRegexp(string);
-    })
-    .join('|');
+  const regexpStr = strings.map(escapeStringRegexp).join('|');
   return new RegExp(regexpStr, 'gi');
+};
+
+export type MarkerRegExps = {
+  _generic: RegExp | null,
+  [string]: RegExp,
+};
+
+/**
+ * Concatenate an array of strings into a RegExp that matches on all
+ * the strings.
+ */
+export const stringsToMarkerRegExps = (
+  strings: string[] | null
+): MarkerRegExps | null => {
+  if (!strings || !strings.length) {
+    return null;
+  }
+
+  const markerRegexps = {};
+  const genericStrings = [];
+  for (const string of strings) {
+    const prefixMatch = string.match(/^([a-z0-1]+):(.+)/i);
+    if (prefixMatch) {
+      markerRegexps[prefixMatch[1]] = new RegExp(prefixMatch[2], 'gi');
+    } else {
+      genericStrings.push(string);
+    }
+  }
+
+  return {
+    _generic:
+      genericStrings.length > 0
+        ? new RegExp(genericStrings.join('|'), 'gi')
+        : null,
+    ...markerRegexps,
+  };
 };
