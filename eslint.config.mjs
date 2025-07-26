@@ -254,7 +254,7 @@ export default defineConfig(
 
   // Test files override
   {
-    files: ['src/test/**/*'],
+    files: ['src/test/**/*', 'profiler-cli/src/test/**/*'],
     languageOptions: {
       globals: {
         ...globals.jest,
