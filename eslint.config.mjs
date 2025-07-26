@@ -18,6 +18,7 @@ export default defineConfig(
     ignores: [
       'src/profile-logic/import/proto/**',
       'src/types/libdef/npm/**',
+      'profiler-cli/dist/**',
       'res/**',
       'dist/**',
       'node-tools-dist/**',
