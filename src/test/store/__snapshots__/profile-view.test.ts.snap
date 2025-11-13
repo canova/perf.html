@@ -636,6 +636,8 @@ Object {
     "sources": Object {
       "filename": Array [],
       "length": 0,
+      "startColumn": Array [],
+      "startLine": Array [],
       "uuid": Array [],
     },
     "stackTable": Object {
@@ -2604,6 +2606,8 @@ CallTree {
     "sources": Object {
       "filename": Array [],
       "length": 0,
+      "startColumn": Array [],
+      "startLine": Array [],
       "uuid": Array [],
     },
     "stackTable": Object {
@@ -2940,6 +2944,8 @@ Object {
   "sources": Object {
     "filename": Array [],
     "length": 0,
+    "startColumn": Array [],
+    "startLine": Array [],
     "uuid": Array [],
   },
   "stackTable": Object {
@@ -3348,6 +3354,8 @@ Object {
   "sources": Object {
     "filename": Array [],
     "length": 0,
+    "startColumn": Array [],
+    "startLine": Array [],
     "uuid": Array [],
   },
   "stackTable": Object {
@@ -3682,6 +3690,8 @@ Object {
   "sources": Object {
     "filename": Array [],
     "length": 0,
+    "startColumn": Array [],
+    "startLine": Array [],
     "uuid": Array [],
   },
   "stackTable": Object {
@@ -4016,6 +4026,8 @@ Object {
   "sources": Object {
     "filename": Array [],
     "length": 0,
+    "startColumn": Array [],
+    "startLine": Array [],
     "uuid": Array [],
   },
   "stackTable": Object {
