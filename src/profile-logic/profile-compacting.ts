@@ -746,6 +746,11 @@ function _gatherReferencesInSources(
     }
 
     referencedStrings[sources.filename[i]] = 1;
+
+    const sourceMapURL = sources.sourceMapURL[i];
+    if (sourceMapURL !== null) {
+      referencedStrings[sourceMapURL] = 1;
+    }
   }
 }
 
@@ -768,6 +773,15 @@ function _createCompactedSources(
     newSources.uuid[newIndex] = sources.uuid[i];
     newSources.startLine[newIndex] = sources.startLine[i];
     newSources.startColumn[newIndex] = sources.startColumn[i];
+
+    // Translate the sourceMapURL string index if present.
+    const oldSourceMapURLIndex = sources.sourceMapURL[i];
+    if (oldSourceMapURLIndex !== null) {
+      newSources.sourceMapURL[newIndex] =
+        oldStringToNewStringPlusOne[oldSourceMapURLIndex] - 1;
+    } else {
+      newSources.sourceMapURL[newIndex] = null;
+    }
 
     oldSourceToNewSourcePlusOne[i] = newIndex + 1;
   }
