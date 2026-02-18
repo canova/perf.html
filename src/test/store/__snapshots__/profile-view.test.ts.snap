@@ -635,11 +635,11 @@ Object {
     },
     "sources": Object {
       "filename": Array [],
+      "id": Array [],
       "length": 0,
       "sourceMapURL": Array [],
       "startColumn": Array [],
       "startLine": Array [],
-      "uuid": Array [],
     },
     "stackTable": Object {
       "frame": Array [
@@ -2606,11 +2606,11 @@ CallTree {
     "showMarkersInTimeline": undefined,
     "sources": Object {
       "filename": Array [],
+      "id": Array [],
       "length": 0,
       "sourceMapURL": Array [],
       "startColumn": Array [],
       "startLine": Array [],
-      "uuid": Array [],
     },
     "stackTable": Object {
       "category": Array [
@@ -2945,11 +2945,11 @@ Object {
   "showMarkersInTimeline": undefined,
   "sources": Object {
     "filename": Array [],
+    "id": Array [],
     "length": 0,
     "sourceMapURL": Array [],
     "startColumn": Array [],
     "startLine": Array [],
-    "uuid": Array [],
   },
   "stackTable": Object {
     "category": Array [
@@ -3356,11 +3356,11 @@ Object {
   "showMarkersInTimeline": undefined,
   "sources": Object {
     "filename": Array [],
+    "id": Array [],
     "length": 0,
     "sourceMapURL": Array [],
     "startColumn": Array [],
     "startLine": Array [],
-    "uuid": Array [],
   },
   "stackTable": Object {
     "category": Array [
@@ -3693,11 +3693,11 @@ Object {
   "showMarkersInTimeline": undefined,
   "sources": Object {
     "filename": Array [],
+    "id": Array [],
     "length": 0,
     "sourceMapURL": Array [],
     "startColumn": Array [],
     "startLine": Array [],
-    "uuid": Array [],
   },
   "stackTable": Object {
     "category": Array [
@@ -4030,11 +4030,11 @@ Object {
   "showMarkersInTimeline": undefined,
   "sources": Object {
     "filename": Array [],
+    "id": Array [],
     "length": 0,
     "sourceMapURL": Array [],
     "startColumn": Array [],
     "startLine": Array [],
-    "uuid": Array [],
   },
   "stackTable": Object {
     "category": Array [
