@@ -791,7 +791,7 @@ export function computeCallTreeTimingsInverted(
   const callNodeTableDepthCol = callNodeTable.depth;
   const totalPerRootFunc = new Float64Array(funcCount);
   const hasChildrenPerRootFunc = makeBitSet(funcCount);
-  const seenPerRootFunc = new Uint8Array(funcCount);
+  const seenPerRootFunc = makeBitSet(funcCount);
   const sortedRoots = [];
   for (let i = 0; i < callNodeSelf.length; i++) {
     const self = callNodeSelf[i];
@@ -805,8 +805,8 @@ export function computeCallTreeTimingsInverted(
     const func = callNodeTableFuncCol[i];
 
     totalPerRootFunc[func] += self;
-    if (seenPerRootFunc[func] === 0) {
-      seenPerRootFunc[func] = 1;
+    if (!checkBit(seenPerRootFunc, func)) {
+      setBit(seenPerRootFunc, func);
       sortedRoots.push(func);
     }
     if (callNodeTableDepthCol[i] !== 0) {
