@@ -34,7 +34,7 @@ import { ResourceType } from 'firefox-profiler/types';
 import ExtensionIcon from '../../res/img/svg/extension.svg';
 import { formatCallNodeNumber, formatPercent } from '../utils/format-numbers';
 import { assertExhaustiveCheck, ensureExists } from '../utils/types';
-import { checkBit } from '../utils/bitset';
+import { type BitSet, checkBit, makeBitSet, setBit } from '../utils/bitset';
 import * as ProfileData from './profile-data';
 import type { CallTreeSummaryStrategy } from '../types/actions';
 import type { CallNodeInfo, CallNodeInfoInverted } from './call-node-info';
@@ -61,7 +61,7 @@ export type CallTreeTimingsInverted = {
   rootTotalSummary: number;
   sortedRoots: IndexIntoFuncTable[];
   totalPerRootFunc: Float64Array;
-  hasChildrenPerRootFunc: Uint8Array;
+  hasChildrenPerRootFunc: BitSet;
 };
 
 export type CallTreeTimingsFunctionList = {
@@ -242,7 +242,7 @@ class CallTreeInternalInverted implements CallTreeInternal {
   _callNodeSelf: Float64Array;
   _rootNodes: IndexIntoCallNodeTable[];
   _totalPerRootFunc: Float64Array;
-  _hasChildrenPerRootFunc: Uint8Array;
+  _hasChildrenPerRootFunc: BitSet;
   _totalAndHasChildrenPerNonRootNode: Map<
     IndexIntoCallNodeTable,
     TotalAndHasChildren
@@ -268,7 +268,7 @@ class CallTreeInternalInverted implements CallTreeInternal {
 
   hasChildren(callNodeIndex: IndexIntoCallNodeTable): boolean {
     if (this._callNodeInfo.isRoot(callNodeIndex)) {
-      return this._hasChildrenPerRootFunc[callNodeIndex] !== 0;
+      return checkBit(this._hasChildrenPerRootFunc, callNodeIndex);
     }
     return this._getTotalAndHasChildren(callNodeIndex).hasChildren;
   }
@@ -790,7 +790,7 @@ export function computeCallTreeTimingsInverted(
   const callNodeTableFuncCol = callNodeTable.func;
   const callNodeTableDepthCol = callNodeTable.depth;
   const totalPerRootFunc = new Float64Array(funcCount);
-  const hasChildrenPerRootFunc = new Uint8Array(funcCount);
+  const hasChildrenPerRootFunc = makeBitSet(funcCount);
   const seenPerRootFunc = new Uint8Array(funcCount);
   const sortedRoots = [];
   for (let i = 0; i < callNodeSelf.length; i++) {
@@ -810,7 +810,7 @@ export function computeCallTreeTimingsInverted(
       sortedRoots.push(func);
     }
     if (callNodeTableDepthCol[i] !== 0) {
-      hasChildrenPerRootFunc[func] = 1;
+      setBit(hasChildrenPerRootFunc, func);
     }
   }
   sortedRoots.sort(
