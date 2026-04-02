@@ -54,6 +54,7 @@ import {
   translateFuncIndex,
   translateResourceIndex,
 } from './index-translation';
+import { checkBit, makeBitSet, setBit } from 'firefox-profiler/utils/bitset';
 
 /**
  * This file contains the functions and logic for working with and applying transforms
@@ -926,9 +927,7 @@ export function dropFunction(
   const { stackTable, frameTable } = thread;
 
   // Go through each stack, and label it as containing the function or not.
-  // stackContainsFunc is a stackIndex => bool map, implemented as a U8 typed
-  // array for better performance. 0 means false, 1 means true.
-  const stackContainsFunc = new Uint8Array(stackTable.length);
+  const stackContainsFunc = makeBitSet(stackTable.length);
   for (let stackIndex = 0; stackIndex < stackTable.length; stackIndex++) {
     const prefix = stackTable.prefix[stackIndex];
     const frameIndex = stackTable.frame[stackIndex];
@@ -937,15 +936,15 @@ export function dropFunction(
       // This is the function we want to remove.
       funcIndex === funcIndexToDrop ||
       // The parent of this stack contained the function.
-      (prefix !== null && stackContainsFunc[prefix] === 1)
+      (prefix !== null && checkBit(stackContainsFunc, prefix))
     ) {
-      stackContainsFunc[stackIndex] = 1;
+      setBit(stackContainsFunc, stackIndex);
     }
   }
 
   return updateThreadStacks(thread, stackTable, (stack) =>
     // Drop the stacks that contain that function.
-    stack !== null && stackContainsFunc[stack] === 1 ? null : stack
+    stack !== null && checkBit(stackContainsFunc, stack) ? null : stack
   );
 }
 
