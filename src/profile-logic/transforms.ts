@@ -1213,19 +1213,19 @@ export function collapseFunctionSubtree(
 ): Thread {
   const { stackTable, frameTable } = thread;
   const oldStackToNewStack = new Int32Array(stackTable.length);
-  const isInCollapsedSubtree = new Uint8Array(stackTable.length);
+  const isInCollapsedSubtree = makeBitSet(stackTable.length);
 
   for (let stackIndex = 0; stackIndex < stackTable.length; stackIndex++) {
     const prefix = stackTable.prefix[stackIndex];
-    if (prefix !== null && isInCollapsedSubtree[prefix] !== 0) {
+    if (prefix !== null && checkBit(isInCollapsedSubtree, prefix)) {
       oldStackToNewStack[stackIndex] = oldStackToNewStack[prefix];
-      isInCollapsedSubtree[stackIndex] = 1;
+      setBit(isInCollapsedSubtree, stackIndex);
     } else {
       oldStackToNewStack[stackIndex] = stackIndex;
       const frameIndex = stackTable.frame[stackIndex];
       const funcIndex = frameTable.func[frameIndex];
       if (funcToCollapse === funcIndex) {
-        isInCollapsedSubtree[stackIndex] = 1;
+        setBit(isInCollapsedSubtree, stackIndex);
       }
     }
   }
