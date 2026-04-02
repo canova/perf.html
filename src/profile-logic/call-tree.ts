@@ -943,7 +943,7 @@ function _computeFuncTotal(
   // The set of "functions with potentially non-zero totals", stored as an array.
   const seenFuncs = [];
   // seenPerFunc[func] stores whether seenFuncs.includes(func).
-  const seenPerFunc = new Uint8Array(funcCount);
+  const seenPerFunc = makeBitSet(funcCount);
 
   // We loop the call node table in reverse, so that we find the children
   // before their parents, and the total is known at the time we reach a
@@ -982,8 +982,8 @@ function _computeFuncTotal(
       funcTotal[func] += total;
 
       // Add this func to the set of funcs with potentially non-zero totals.
-      if (seenPerFunc[func] === 0) {
-        seenPerFunc[func] = 1;
+      if (!checkBit(seenPerFunc, func)) {
+        setBit(seenPerFunc, func);
         seenFuncs.push(func);
       }
     }
