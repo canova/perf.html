@@ -10,7 +10,6 @@ import {
   toValidImplementationFilter,
   updateThreadStacks,
   updateThreadStacksByGeneratingNewStackColumns,
-  getMapStackUpdater,
   getOriginAnnotationForFunc,
   createStackTableBySkippingDiscarded,
   applyTransformOutputToThread,
@@ -759,102 +758,78 @@ export function mergeCallNode(
 ): Thread {
   return timeCode('mergeCallNode', () => {
     const { stackTable, frameTable } = thread;
-    // Depth here is 0 indexed.
-    const depthAtCallNodePathLeaf = callNodePath.length - 1;
-    const oldStackToNewStack: Map<
+
+    // Maps merged stacks to their effective parent (the stack that samples pointing
+    // to the merged stack should be attributed to). Only contains entries for merged
+    // stacks; the vast majority of stacks are not merged and map to themselves.
+    const mergedStackToEffectiveParent = new Map<
       IndexIntoStackTable | null,
       IndexIntoStackTable | null
-    > = new Map();
-    // A root stack's prefix will be null. Maintain that relationship from old to new
-    // stacks by mapping from null to null.
-    oldStackToNewStack.set(null, null);
-    const newFrameCol = [];
-    const newPrefixCol = [];
-    const newCategoryCol = [];
-    const newSubcategoryCol = [];
-    let newLength = 0;
-    // Provide two arrays to efficiently cache values for the algorithm. This probably
-    // could be refactored to use only one array here.
-    const stackDepths = [];
-    const stackMatches = [];
+    >();
+    const newPrefixCol = new Array<IndexIntoStackTable | null>(
+      stackTable.length
+    );
+
     const funcMatchesImplementation = FUNC_MATCHES[implementation];
+
+    const callNodePathLength = callNodePath.length;
+    // A map to keep track of whether a stack matches (part of) the call node path.
+    // If undefined: no match
+    // Otherwise: length of the partial match, including this stack
+    // All values are < callNodePathLength.
+    const partialMatchLengthAtStack = new Map<
+      IndexIntoStackTable | null,
+      number
+    >();
+    partialMatchLengthAtStack.set(null, 0);
     for (let stackIndex = 0; stackIndex < stackTable.length; stackIndex++) {
       const prefix = stackTable.prefix[stackIndex];
+
+      // If our prefix got merged away, remap it to its parent.
+      const parentOfPrefix = mergedStackToEffectiveParent.get(prefix);
+      const effectivePrefix =
+        parentOfPrefix !== undefined ? parentOfPrefix : prefix;
+      newPrefixCol[stackIndex] = effectivePrefix;
+
+      const prefixPartialMatchLength = partialMatchLengthAtStack.get(prefix);
+      if (prefixPartialMatchLength === undefined) {
+        // No match, nothing else to do here
+        continue;
+      }
+
+      // Now we know that this stack's prefix was a (partial) match for our CallNodePath.
       const frameIndex = stackTable.frame[stackIndex];
-      const category = stackTable.category[stackIndex];
-      const subcategory = stackTable.subcategory[stackIndex];
       const funcIndex = frameTable.func[frameIndex];
 
-      const doesPrefixMatch = prefix === null ? true : stackMatches[prefix];
-      const prefixDepth: number = prefix === null ? -1 : stackDepths[prefix];
-      const currentFuncOnPath = callNodePath[prefixDepth + 1];
-
-      let doMerge = false;
-      let stackDepth: number = prefixDepth;
-      let doesMatchCallNodePath;
-      if (doesPrefixMatch && stackDepth < depthAtCallNodePathLeaf) {
-        // This stack's prefixes were in our CallNodePath.
-        if (currentFuncOnPath === funcIndex) {
-          // This stack's function matches too!
-          doesMatchCallNodePath = true;
-          if (stackDepth + 1 === depthAtCallNodePathLeaf) {
-            // Holy cow, we found a match for our merge operation and can merge this stack.
-            doMerge = true;
-          } else {
-            // Since we found a match, increase the stack depth. This should match
-            // the depth of the implementation filtered stacks.
-            stackDepth++;
-          }
-        } else if (!funcMatchesImplementation(thread, funcIndex)) {
-          // This stack's function does not match the CallNodePath, however it's not part
-          // of the CallNodePath's implementation filter. Go ahead and keep it.
-          doesMatchCallNodePath = true;
+      if (funcIndex === callNodePath[prefixPartialMatchLength]) {
+        // This stack's function matches too!
+        const matchLength = prefixPartialMatchLength + 1;
+        if (matchLength === callNodePathLength) {
+          // The entire path matched and we found a node that needs to be merged away.
+          mergedStackToEffectiveParent.set(stackIndex, effectivePrefix);
         } else {
-          // While all of the predecessors matched, this stack's function does not :(
-          doesMatchCallNodePath = false;
+          // Not reached the end yet, store the partial match length.
+          partialMatchLengthAtStack.set(stackIndex, matchLength);
         }
+      } else if (!funcMatchesImplementation(thread, funcIndex)) {
+        // This stack's function does not match the CallNodePath, however it's not part
+        // of the CallNodePath's implementation filter. Inherit the parent's partial
+        // match length
+        partialMatchLengthAtStack.set(stackIndex, prefixPartialMatchLength);
       } else {
-        // This stack is not part of a matching branch of the tree.
-        doesMatchCallNodePath = false;
-      }
-      stackMatches[stackIndex] = doesMatchCallNodePath;
-      stackDepths[stackIndex] = stackDepth;
-
-      // Map the oldStackToNewStack, and only push on the stacks that aren't merged.
-      if (doMerge) {
-        const newStackPrefix = oldStackToNewStack.get(prefix);
-        oldStackToNewStack.set(
-          stackIndex,
-          newStackPrefix === undefined ? null : newStackPrefix
-        );
-      } else {
-        const newStackIndex = newLength++;
-        const newStackPrefix = oldStackToNewStack.get(prefix);
-        newPrefixCol[newStackIndex] =
-          newStackPrefix === undefined ? null : newStackPrefix;
-        newFrameCol[newStackIndex] = frameIndex;
-        newCategoryCol[newStackIndex] = category;
-        newSubcategoryCol[newStackIndex] = subcategory;
-        oldStackToNewStack.set(stackIndex, newStackIndex);
+        // While all of the predecessors matched, this stack's function does not :(
       }
     }
 
     const newStackTable = {
-      frame: newFrameCol,
+      ...stackTable,
       prefix: newPrefixCol,
-      category: new Uint8Array(newCategoryCol),
-      subcategory:
-        stackTable.subcategory instanceof Uint8Array
-          ? new Uint8Array(newSubcategoryCol)
-          : new Uint16Array(newSubcategoryCol),
-      length: newLength,
     };
 
-    return updateThreadStacks(
-      thread,
-      newStackTable,
-      getMapStackUpdater(oldStackToNewStack)
-    );
+    return updateThreadStacks(thread, newStackTable, (oldStack) => {
+      const effectiveParent = mergedStackToEffectiveParent.get(oldStack);
+      return effectiveParent !== undefined ? effectiveParent : oldStack;
+    });
   });
 }
 
