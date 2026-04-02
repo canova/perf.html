@@ -1739,7 +1739,7 @@ export function funcHasRecursiveCall(
   funcToCheck: IndexIntoFuncTable
 ) {
   // Set of stack indices that are funcToCheck or have a funcToCheck ancestor.
-  const ancestorOfCallNodeContainsFuncToCheck = new Uint8Array(
+  const ancestorOfCallNodeContainsFuncToCheck = makeBitSet(
     callNodeTable.length
   );
 
@@ -1747,16 +1747,16 @@ export function funcHasRecursiveCall(
     const prefix = callNodeTable.prefix[i];
     const funcIndex = callNodeTable.func[i];
     const recursivePrefix =
-      prefix !== -1 && ancestorOfCallNodeContainsFuncToCheck[prefix] !== 0;
+      prefix !== -1 && checkBit(ancestorOfCallNodeContainsFuncToCheck, prefix);
 
     if (funcToCheck === funcIndex) {
       if (recursivePrefix) {
         // This function matches and so did one of its ancestors.
         return true;
       }
-      ancestorOfCallNodeContainsFuncToCheck[i] = 1;
+      setBit(ancestorOfCallNodeContainsFuncToCheck, i);
     } else if (recursivePrefix) {
-      ancestorOfCallNodeContainsFuncToCheck[i] = 1;
+      setBit(ancestorOfCallNodeContainsFuncToCheck, i);
     }
   }
   return false;
