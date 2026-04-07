@@ -75,7 +75,11 @@ function _languageExtForPath(path: string | null): LanguageSupport | [] {
   ) {
     return cpp();
   }
-  return [];
+
+  // Fallback to JavaScript highlighting. Inline scripts share the page URL, so
+  // their path won't have a .js extension. This may be incorrect for
+  // unknown/unsupported file types, but is the best guess for the common case.
+  return javascript();
 }
 
 // Adjustments to make a CodeMirror editor work as a non-editable code viewer.
