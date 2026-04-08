@@ -275,6 +275,10 @@ Home--enable-button-unavailable =
 # This message can be seen on https://main--perf-html.netlify.app/ .
 Home--web-channel-unavailable = 此分析器无法连接至 WebChannel。通常是因为运行分析器的主机与 <code>devtools.performance.recording.ui-base-url</code> 首选项中指定的主机不同。若您想要使用此分析器捕捉新的性能分析记录，并可程序化控制分析器菜单按钮，可到 <code>about:config</code> 调整该首选项。
 Home--record-instructions = 要进行分析，请点击“分析”按钮，或使用键盘快捷键。在性能记录时，此图标将会变为蓝色。按下<kbd>捕捉</kbd>即可将数据加载至 profiler.firefox.com。
+Home--fenix-instructions-directly = 可直接在此设备上对 { -firefox-android-brand-name } 进行性能分析。有关更多信息，请阅读<a>直接在设备上对 { -firefox-android-brand-name } 进行性能分析</a>。
+Home--fenix-instructions-remotely =
+    您也可以通过桌面版 { -firefox-brand-name } 对 { -firefox-android-brand-name } 进行远程性能分析。有关更多信息，请参阅文档：
+    <a>对 { -firefox-android-brand-name } 进行远程性能分析</a>。
 Home--record-instructions-start-stop = 停止并开始分析
 Home--record-instructions-capture-load = 捕捉并加载分析记录
 Home--profiler-motto = 捕捉性能分析记录。剖析、分享、让网站速度更快。
@@ -282,6 +286,7 @@ Home--additional-content-title = 加载现有分析记录
 Home--additional-content-content = 您可以将分析记录<strong>拖放</strong>至此处，或：
 Home--compare-recordings-info = 您也可以比较记录内容。<a>打开比较界面。</a>
 Home--your-recent-uploaded-recordings-title = 您最近上传的记录
+Home--dark-mode-title = 深色模式
 # We replace the elements such as <perf> and <simpleperf> with links to the
 # documentation to use these tools.
 Home--load-files-from-other-tools2 = { -profiler-brand-name } 也可以从其他分析器导入记录，例如 <perf>Linux perf</perf>、<simpleperf>Android SimplePerf</simpleperf>、Chrome 性能面板、<androidstudio>Android Studio</androidstudio>，支持直接导入 <dhat>dhat</dhat>、<traceevent>Google 的 Trace Event</traceevent> 格式保存的分析记录。<write>点此了解如何编写您自己的导入程序</write>。
