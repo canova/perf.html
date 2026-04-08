@@ -76,6 +76,14 @@ CallNodeContextMenu--transform-focus-function = 聚焦于函数
 CallNodeContextMenu--transform-focus-function-inverted = 聚焦于函数（反向）
     .title = { CallNodeContextMenu--transform-focus-function-title }
 
+## The translation for "self" in these strings should match the translation used
+## in CallTree--samples-self and CallTree--bytes-self. Alternatively it can be
+## translated as "self values" or "self time" (though "self time" is less desirable
+## because this menu item is also shown in "bytes" mode).
+
+CallNodeContextMenu--transform-focus-self = 只聚焦于自身
+    .title = { CallNodeContextMenu--transform-focus-self-title }
+
 ##
 
 CallNodeContextMenu--transform-focus-subtree = 只聚焦于子树
@@ -290,8 +298,8 @@ IdleSearchField--search-input =
 ## JsTracerSettings
 ## JSTracer is an experimental feature and it's currently disabled. See Bug 1565788.
 
-JsTracerSettings--show-only-self-time = 只显示 self 时间
-    .title = 只显示调用节点所用的时间，而忽略其 children。
+JsTracerSettings--show-only-self-time = 只显示自身时间
+    .title = 只显示调用节点所用的时间，而忽略其子节点。
 
 ## ListOfPublishedProfiles
 ## This is the component that displays all the profiles the user has uploaded.
