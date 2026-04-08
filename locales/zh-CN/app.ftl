@@ -112,16 +112,16 @@ CallNodeContextMenu--show-the-function-in-devtools = 在开发者工具中显示
 
 CallTree--tracing-ms-total = 总运行时间（ms）
     .title = 此函数在栈上被观察到出现的“总计”时长汇总。包含函数实际运行的时长，以及此函数中所调用的时长。
-CallTree--tracing-ms-self = Self（ms）
-    .title = “Self”时间只包含函数在栈底结束时的时间。若此函数是通过其他函数调用的，则不包含“该函数”的时间。“self”时间适合用于了解程序中实际用了多长时间在哪些函数上。
+CallTree--tracing-ms-self = 自身（ms）
+    .title = “自身”时间只包含函数在栈底结束时的时间。若此函数是通过其他函数调用的，则不包含“该函数”的时间。“自身”时间适合用于了解程序中实际用了多长时间在哪些函数上。
 CallTree--samples-total = 总计（样本数）
     .title = 此函数在栈上被观察到出现的“总计”次数汇总。包含实际运行的的次数，以及此函数中所调用的次数。
-CallTree--samples-self = Self
-    .title = “Self”样本数只包含函数在栈底结束时的次数。若此函数是通过其他函数调用的，则不包含“该函数”的次数。“self”次数适合用于了解程序中实际用了多长时间在哪些函数上。
+CallTree--samples-self = 自身
+    .title = “自身”样本数只包含函数在栈底结束时的次数。若此函数是通过其他函数调用的，则不包含“该函数”的次数。“自身”次数适合用于了解程序中实际用了多长时间在哪些函数上。
 CallTree--bytes-total = 总大小（字节）
     .title = 此函数在栈上被观察到分配或释放的“总计”字节汇总。包含函数实际运行时使用的大小，以及此函数中所调用其他函数所用的内存大小。
-CallTree--bytes-self = Self（字节）
-    .title = “Self”字节数只包含函数在栈底分配或释放的内存用量。若此函数是通过其他函数调用的，则不包含“该函数”的用量。“Self”字节数适合用于了解程序中实际用了多少内存在哪些函数上。
+CallTree--bytes-self = 自身（字节）
+    .title = “自身”字节数只包含函数在栈底分配或释放的内存用量。若此函数是通过其他函数调用的，则不包含“该函数”的用量。“自身”字节数适合用于了解程序中实际用了多少内存在哪些函数上。
 
 ## Call tree "badges" (icons) with tooltips
 ##
