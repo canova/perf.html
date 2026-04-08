@@ -275,6 +275,7 @@ Home--enable-button-unavailable =
 # This message can be seen on https://main--perf-html.netlify.app/ .
 Home--web-channel-unavailable = 此分析器无法连接至 WebChannel。通常是因为运行分析器的主机与 <code>devtools.performance.recording.ui-base-url</code> 首选项中指定的主机不同。若您想要使用此分析器捕捉新的性能分析记录，并可程序化控制分析器菜单按钮，可到 <code>about:config</code> 调整该首选项。
 Home--record-instructions = 要进行分析，请点击“分析”按钮，或使用键盘快捷键。在性能记录时，此图标将会变为蓝色。按下<kbd>捕捉</kbd>即可将数据加载至 profiler.firefox.com。
+Home--instructions-content2 = 记录性能分析数据需要使用<a>桌面版 { -firefox-brand-name }</a>，但已有的分析记录可使用任意现代浏览器查看。
 Home--fenix-instructions-directly = 可直接在此设备上对 { -firefox-android-brand-name } 进行性能分析。有关更多信息，请阅读<a>直接在设备上对 { -firefox-android-brand-name } 进行性能分析</a>。
 Home--fenix-instructions-remotely =
     您也可以通过桌面版 { -firefox-brand-name } 对 { -firefox-android-brand-name } 进行远程性能分析。有关更多信息，请参阅文档：
@@ -967,6 +968,12 @@ TransformNavigator--focus-subtree = 聚焦节点：{ $item }
 # Variables:
 #   $item (String) - Name of the function that transform applied to.
 TransformNavigator--focus-function = 聚焦：{ $item }
+# "Focus self" transform.
+# See: https://profiler.firefox.com/docs/#/./guide-filtering-call-trees?id=focus-on-function-self
+# Also see the translation note above CallNodeContextMenu--transform-focus-self.
+# Variables:
+#   $item (String) - Name of the function that transform applied to.
+TransformNavigator--focus-self = 聚焦于自身：{ $item }
 # "Focus category" transform. The word "Focus" has the meaning of an adjective here.
 # See: https://profiler.firefox.com/docs/#/./guide-filtering-call-trees?id=focus-category
 # Variables:
