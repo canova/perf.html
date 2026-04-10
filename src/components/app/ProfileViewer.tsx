@@ -21,7 +21,6 @@ import { KeyboardShortcut } from './KeyboardShortcut';
 import { returnToZipFileList } from 'firefox-profiler/actions/zipped-profiles';
 import { Timeline } from 'firefox-profiler/components/timeline';
 import { getHasZipFile } from 'firefox-profiler/selectors/zipped-profiles';
-import { getTimelineHeight } from 'firefox-profiler/selectors/app';
 import { getIsBottomBoxOpen } from 'firefox-profiler/selectors/url-state';
 import {
   getUploadProgress,
@@ -35,14 +34,13 @@ import { BackgroundImageStyleDef } from 'firefox-profiler/components/shared/Styl
 import classNames from 'classnames';
 import { DebugWarning } from 'firefox-profiler/components/app/DebugWarning';
 
-import type { CssPixels, IconsWithClassNames } from 'firefox-profiler/types';
+import type { IconsWithClassNames } from 'firefox-profiler/types';
 import type { ConnectedProps } from 'firefox-profiler/utils/connect';
 
 import './ProfileViewer.css';
 
 type StateProps = {
   readonly hasZipFile: boolean;
-  readonly timelineHeight: CssPixels | null;
   readonly uploadProgress: number;
   readonly isUploading: boolean;
   readonly isHidingStaleProfile: boolean;
@@ -62,7 +60,6 @@ class ProfileViewerImpl extends PureComponent<Props> {
     const {
       hasZipFile,
       returnToZipFileList,
-      timelineHeight,
       isUploading,
       uploadProgress,
       isHidingStaleProfile,
@@ -92,13 +89,6 @@ class ProfileViewerImpl extends PureComponent<Props> {
               hasSanitizedProfile && !isHidingStaleProfile,
             profileViewerFadeOut: isHidingStaleProfile,
           })}
-          style={
-            timelineHeight === null
-              ? {}
-              : ({
-                  '--profile-viewer-splitter-max-height': `${timelineHeight}px`,
-                } as React.CSSProperties)
-          }
         >
           <div className="profileViewerTopBar">
             {hasZipFile ? (
@@ -160,7 +150,6 @@ class ProfileViewerImpl extends PureComponent<Props> {
 export const ProfileViewer = explicitConnect<{}, StateProps, DispatchProps>({
   mapStateToProps: (state) => ({
     hasZipFile: getHasZipFile(state),
-    timelineHeight: getTimelineHeight(state),
     uploadProgress: getUploadProgress(state),
     isUploading: getUploadPhase(state) === 'uploading',
     isHidingStaleProfile: getIsHidingStaleProfile(state),
