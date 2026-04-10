@@ -77,6 +77,7 @@ import type {
   SourceTable,
   FuncTableWithReservedFunctions,
   IndexIntoResourceTable,
+  IndexIntoSourceTable,
   IndexIntoFuncTable,
   FuncTable,
 } from 'firefox-profiler/types';
@@ -267,6 +268,7 @@ export const getFuncTableWithReservedFunctions: Selector<FuncTableWithReservedFu
   createSelector(
     (state: State) => getRawProfileSharedData(state).funcTable,
     (state: State) => getRawProfileSharedData(state).resourceTable,
+    (state: State) => getRawProfileSharedData(state).sources,
     reserveFunctionsForCollapsedResources
   );
 
@@ -277,6 +279,11 @@ export const getReservedFunctionsForResources: Selector<
   Map<IndexIntoResourceTable, IndexIntoFuncTable>
 > = (state) =>
   getFuncTableWithReservedFunctions(state).reservedFunctionsForResources;
+
+export const getReservedFunctionsForSources: Selector<
+  Map<IndexIntoSourceTable, IndexIntoFuncTable>
+> = (state) =>
+  getFuncTableWithReservedFunctions(state).reservedFunctionsForSources;
 
 export const getSourceTable: Selector<SourceTable> = (state: State) =>
   getRawProfileSharedData(state).sources;
