@@ -183,6 +183,7 @@ type BaseQuery = {
 type CallTreeQuery = BaseQuery & {
   search: string; // "js::RunScript"
   invertCallstack: null | undefined;
+  hideIdleSamples: null | undefined;
   ctSummary: string;
 };
 
@@ -198,6 +199,7 @@ type NetworkQuery = BaseQuery & {
 type StackChartQuery = BaseQuery & {
   search: string; // "js::RunScript"
   invertCallstack: null | undefined;
+  hideIdleSamples: null | undefined;
   showUserTimings: null | undefined;
   sameWidths: null | undefined;
   ctSummary: string;
@@ -212,6 +214,7 @@ type Query = BaseQuery & {
   // CallTree/StackChart specific
   search?: string;
   invertCallstack?: null | undefined;
+  hideIdleSamples?: null | undefined;
   ctSummary?: string;
   transforms?: string;
   sourceViewIndex?: number;
@@ -339,6 +342,11 @@ export function getQueryStringFromUrlState(urlState: UrlState): string {
       query.invertCallstack = urlState.profileSpecific.invertCallstack
         ? null
         : undefined;
+      // The URL param is inverted (`hideIdleSamples`) so the default-on state
+      // doesn't clutter the URL; only the non-default "hide" case is encoded.
+      query.hideIdleSamples = urlState.profileSpecific.includeIdleSamples
+        ? undefined
+        : null;
       if (
         selectedThreadsKey !== null &&
         urlState.profileSpecific.transforms[selectedThreadsKey]
@@ -590,6 +598,7 @@ export function stateFromLocation(
         query.ctSummary || undefined
       ),
       invertCallstack: query.invertCallstack === undefined ? false : true,
+      includeIdleSamples: query.hideIdleSamples === undefined,
       showUserTimings: query.showUserTimings === undefined ? false : true,
       stackChartSameWidths: query.sameWidths === undefined ? false : true,
       committedRanges: query.range ? parseCommittedRanges(query.range) : [],
