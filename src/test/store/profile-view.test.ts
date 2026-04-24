@@ -839,8 +839,8 @@ describe('actions/ProfileView', function () {
         '    - C (total: 1, self: —)',
         '      - D (total: 1, self: 1)',
         '  - E (total: 1, self: 1)',
-        '- D (total: 1, self: 1)',
         '- C (total: 1, self: 1)',
+        '- D (total: 1, self: 1)',
       ]);
     });
 
