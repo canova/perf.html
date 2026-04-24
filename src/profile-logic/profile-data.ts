@@ -326,8 +326,6 @@ function _computeCallNodeTableHierarchy(
 
     const firstSibling =
       prefixCallNode === -1 ? firstRoot : firstChild[prefixCallNode];
-    const lastUsed =
-      prefixCallNode === -1 ? lastUsedRoot : lastUsedChild[prefixCallNode];
 
     // Locate this (prefixCallNode, funcIndex) in the sorted sibling list.
     // Either we find an existing match and reuse it, or we find the insertion
@@ -335,49 +333,44 @@ function _computeCallNodeTableHierarchy(
     // our new node should be linked after, or -1 if it should become the new
     // head of the sibling list.
     let callNodeIndex = -1;
-    let prevSibling = -1;
+    let prevSibling = -1; // used for insertion, if callNodeIndex === -1
 
-    if (firstSibling === -1) {
-      // No existing siblings. The new node will be both head and tail.
-    } else if (func[lastUsed] === funcIndex) {
-      // Hot path: same func as the last child we touched for this parent.
-      callNodeIndex = lastUsed;
-    } else if (func[lastUsed] < funcIndex) {
-      // The new func sits somewhere after lastUsed in the sorted list, so we
-      // can skip everything up to and including lastUsed. If lastUsed is the
-      // tail, sibling starts at -1 and we append without scanning.
-      prevSibling = lastUsed;
-      let sibling = nextSibling[lastUsed];
-      while (sibling !== -1) {
-        const siblingFunc = func[sibling];
-        if (siblingFunc === funcIndex) {
-          callNodeIndex = sibling;
-          break;
+    if (firstSibling !== -1) {
+      // Get the sibling that we used most recently for this parent.
+      // We know lastUsed is !== -1 because we know there is at least one sibling.
+      const lastUsed =
+        prefixCallNode === -1 ? lastUsedRoot : lastUsedChild[prefixCallNode];
+
+      if (funcIndex === func[lastUsed]) {
+        // Hot path: same func as the last child we touched for this parent.
+        callNodeIndex = lastUsed;
+      } else {
+        // We'll have to scan (at least part of) the list of siblings.
+        let sibling = firstSibling;
+        if (funcIndex > func[lastUsed]) {
+          // Since the list of siblings is ordered by func, we now know that can
+          // skip the part of the list that's before lastUsed.
+          // If lastUsed is the tail, sibling starts at -1 and we append without
+          // scanning.
+          prevSibling = lastUsed;
+          sibling = nextSibling[lastUsed];
         }
-        if (siblingFunc > funcIndex) {
-          // Insert before `sibling`; prevSibling is already its predecessor.
-          break;
+        while (sibling !== -1) {
+          const siblingFunc = func[sibling];
+          if (siblingFunc === funcIndex) {
+            // Found a match!
+            callNodeIndex = sibling;
+            break;
+          }
+          if (siblingFunc > funcIndex) {
+            // No match, and we can stop scanning here due to the ordering.
+            // We'll insert the new node before `sibling`; prevSibling is
+            // already its predecessor.
+            break;
+          }
+          prevSibling = sibling;
+          sibling = nextSibling[sibling];
         }
-        prevSibling = sibling;
-        sibling = nextSibling[sibling];
-      }
-    } else {
-      // func[lastUsed] > funcIndex, so scanning from the head is guaranteed
-      // to either find a match or an insertion point before falling off the
-      // end.
-      let sibling = firstSibling;
-      while (true) {
-        const siblingFunc = func[sibling];
-        if (siblingFunc === funcIndex) {
-          callNodeIndex = sibling;
-          break;
-        }
-        if (siblingFunc > funcIndex) {
-          // Insert before `sibling`; prevSibling is already its predecessor.
-          break;
-        }
-        prevSibling = sibling;
-        sibling = nextSibling[sibling];
       }
     }
 
