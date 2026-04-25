@@ -247,8 +247,8 @@ describe('doSymbolicateProfile', function () {
         '  - second symbol (total: 1, self: —)',
         '    - last symbol (total: 1, self: 1)',
         '  - last symbol (total: 1, self: 1)',
-        '- third symbol (total: 1, self: 1)',
         '- second symbol (total: 1, self: 1)',
+        '- third symbol (total: 1, self: 1)',
       ]);
 
       const thread = getThread(getState());
@@ -483,8 +483,8 @@ describe('doSymbolicateProfile', function () {
       '  - second symbol (total: 1, self: —)',
       '    - last symbol (total: 1, self: 1)',
       '  - last symbol (total: 1, self: 1)',
-      '- third symbol (total: 1, self: 1)',
       '- second symbol (total: 1, self: 1)',
+      '- third symbol (total: 1, self: 1)',
     ]);
   });
 
@@ -587,8 +587,8 @@ describe('doSymbolicateProfile', function () {
       '  - second symbol (total: 1, self: —)',
       '    - last symbol (total: 1, self: 1)',
       '  - last symbol (total: 1, self: 1)',
-      '- third symbol (total: 1, self: 1)',
       '- second symbol (total: 1, self: 1)',
+      '- third symbol (total: 1, self: 1)',
     ]);
   });
 });
