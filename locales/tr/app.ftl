@@ -421,6 +421,7 @@ MenuButtons--metaInfo--profile-not-symbolicated = Profil sembolleştirilmemiş
 MenuButtons--metaInfo--resymbolicate-profile = Profili yeniden sembolleştir
 MenuButtons--metaInfo--symbolicate-profile = Profili sembolleştir
 MenuButtons--metaInfo--attempting-resymbolicate = Profil yeniden sembolleştirilmeye çalışılıyor
+MenuButtons--metaInfo--currently-symbolicating = Şu anda profil sembolleştiriliyor
 MenuButtons--metaInfo--cpu-model = İşlemci modeli:
 MenuButtons--metaInfo--cpu-cores = İşlemci çekirdekleri:
 MenuButtons--metaInfo--main-memory = Ana bellek:
