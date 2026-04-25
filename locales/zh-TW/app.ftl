@@ -1043,6 +1043,12 @@ BottomBox--assembly-code-not-available-title = 無法取得機器碼
 # Elements:
 #   <a>link text</a> - A link to the github issue about supported scenarios.
 BottomBox--assembly-code-not-available-text = 關於支援的使用情境與規劃中的改進，請參考<a>issue #4520</a>。
+# The toggle button for making the bottom box fullscreen.
+BottomBox--hide-fullscreen =
+    .title = 離開全螢幕模式
+# The toggle button for making the bottom box fullscreen.
+BottomBox--show-fullscreen =
+    .title = 全螢幕
 SourceView--close-button =
     .title = 關閉原始碼畫面
 
