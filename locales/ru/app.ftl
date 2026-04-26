@@ -1153,6 +1153,9 @@ BottomBox--assembly-code-not-available-text = См. <a>проблему #4520</a
 # The toggle button for making the bottom box fullscreen.
 BottomBox--hide-fullscreen =
     .title = Выйти из полноэкранного режима
+# The toggle button for making the bottom box fullscreen.
+BottomBox--show-fullscreen =
+    .title = Полноэкранный режим
 SourceView--close-button =
     .title = Закрыть исходный вид
 
