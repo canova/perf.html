@@ -1144,6 +1144,12 @@ BottomBox--assembly-code-not-available-title = Ο κώδικας assembly δεν
 # Elements:
 #   <a>link text</a> - A link to the github issue about supported scenarios.
 BottomBox--assembly-code-not-available-text = Δείτε το <a>ζήτημα #4520</a> για υποστηριζόμενα σενάρια και προγραμματισμένες βελτιώσεις.
+# The toggle button for making the bottom box fullscreen.
+BottomBox--hide-fullscreen =
+    .title = Έξοδος από πλήρη οθόνη
+# The toggle button for making the bottom box fullscreen.
+BottomBox--show-fullscreen =
+    .title = Πλήρης οθόνη
 SourceView--close-button =
     .title = Κλείσιμο προβολής πηγής
 
