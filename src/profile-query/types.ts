@@ -224,6 +224,16 @@ export type FunctionAsmAnnotation = {
   instructions: AnnotatedInstruction[];
 };
 
+export type SourceAnnotationResult = {
+  annotation: FunctionSourceAnnotation | null;
+  warnings: string[];
+};
+
+export type AsmAnnotationsResult = {
+  annotations: FunctionAsmAnnotation[];
+  warnings: string[];
+};
+
 export type FunctionAnnotateResult = {
   type: 'function-annotate';
   functionHandle: string;
