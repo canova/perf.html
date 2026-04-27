@@ -527,6 +527,10 @@ type UrlStateAction =
       readonly showUserTimings: boolean;
     }
   | {
+      readonly type: 'CHANGE_INCLUDE_IDLE_SAMPLES';
+      readonly includeIdleSamples: boolean;
+    }
+  | {
       readonly type: 'CHANGE_STACK_CHART_SAME_WIDTHS';
       readonly stackChartSameWidths: boolean;
     }

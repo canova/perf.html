@@ -1711,6 +1711,17 @@ export function changeShowUserTimings(
   };
 }
 
+export function changeIncludeIdleSamples(
+  includeIdleSamples: boolean
+): ThunkAction<void> {
+  return (dispatch) => {
+    dispatch({
+      type: 'CHANGE_INCLUDE_IDLE_SAMPLES',
+      includeIdleSamples,
+    });
+  };
+}
+
 export function changeStackChartSameWidths(
   stackChartSameWidths: boolean
 ): ThunkAction<void> {

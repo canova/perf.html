@@ -157,9 +157,10 @@ export function getBasicThreadSelectorsPerThread(
    * 3. Reserved functions - New funcTable with reserved functions for collapsed resources.
    * 4. Range - New samples table with only samples in the committed range.
    * 5. Transform - Apply the transform stack that modifies the stacks and samples.
-   * 6. Implementation - Modify stacks and samples to only show a single implementation.
-   * 7. Search - Exclude samples that don't include some text in the stack.
-   * 8. Preview - Only include samples that are within a user's preview range selection.
+   * 6. Idle - Optionally null out the stack of samples whose leaf frame is idle.
+   * 7. Implementation - Modify stacks and samples to only show a single implementation.
+   * 8. Search - Exclude samples that don't include some text in the stack.
+   * 9. Preview - Only include samples that are within a user's preview range selection.
    */
 
   const getThread: Selector<Thread> = createSelector(
@@ -472,8 +473,23 @@ export function getThreadSelectorsWithMarkersPerThread(
     }
   );
 
-  const _getImplementationFilteredThread: Selector<Thread> = createSelector(
+  const _getIdleFilteredThread: Selector<Thread> = createSelector(
     getRangeAndTransformFilteredThread,
+    UrlState.getIncludeIdleSamples,
+    ProfileSelectors.getIdleCategoryIndex,
+    (thread, includeIdleSamples, idleCategoryIndex) => {
+      if (includeIdleSamples || idleCategoryIndex === null) {
+        return thread;
+      }
+      return ProfileData.filterThreadSamplesByLeafCategory(
+        thread,
+        idleCategoryIndex
+      );
+    }
+  );
+
+  const _getImplementationFilteredThread: Selector<Thread> = createSelector(
+    _getIdleFilteredThread,
     UrlState.getImplementationFilter,
     (thread: Thread, implementationFilter: ImplementationFilter) => {
       // Apply the implementation filter.

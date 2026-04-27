@@ -2059,6 +2059,35 @@ export function getInclusiveIndexRangeForSelection(
 }
 
 /**
+ * Return a thread where samples whose leaf stack frame is in the given
+ * category have had their stack nulled out. These samples are still present in
+ * the samples table (indexes are preserved), but they become invisible to the
+ * call tree, stack chart, and flame graph.
+ *
+ * This is used by the "Include idle samples" toggle to hide idle time from
+ * the call tree.
+ */
+export function filterThreadSamplesByLeafCategory(
+  thread: Thread,
+  categoryToExclude: IndexIntoCategoryList
+): Thread {
+  const { samples } = thread;
+  const newStackCol = samples.stack.slice();
+  for (let i = 0; i < samples.length; i++) {
+    if (samples.category[i] === categoryToExclude) {
+      newStackCol[i] = null;
+    }
+  }
+  return {
+    ...thread,
+    samples: {
+      ...samples,
+      stack: newStackCol,
+    },
+  };
+}
+
+/**
  * Return a thread whose samples (including allocation samples) have been
  * filtered to include just those in the given time window.
  *

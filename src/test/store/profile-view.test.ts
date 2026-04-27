@@ -1715,6 +1715,78 @@ describe('actions/ProfileView', function () {
     });
   });
 
+  describe('changeIncludeIdleSamples', function () {
+    function setup() {
+      // Four samples: two with an Idle leaf, two with a non-idle leaf.
+      const { profile } = getProfileFromTextSamples(`
+        A          A              A          A
+        B[cat:DOM] B[cat:Idle]    B[cat:DOM] B[cat:Idle]
+      `);
+      return storeWithProfile(profile);
+    }
+
+    it('defaults to true and toggles through the reducer', function () {
+      const { dispatch, getState } = setup();
+
+      expect(UrlStateSelectors.getIncludeIdleSamples(getState())).toEqual(true);
+      dispatch(ProfileView.changeIncludeIdleSamples(false));
+      expect(UrlStateSelectors.getIncludeIdleSamples(getState())).toEqual(
+        false
+      );
+    });
+
+    it('nulls out stacks of samples whose leaf frame is idle when off', function () {
+      const { dispatch, getState } = setup();
+
+      const beforeThread =
+        selectedThreadSelectors.getFilteredThread(getState());
+      expect(beforeThread.samples.stack.every((s) => s !== null)).toBe(true);
+
+      dispatch(ProfileView.changeIncludeIdleSamples(false));
+
+      const afterThread = selectedThreadSelectors.getFilteredThread(getState());
+      const idleCategoryIndex = ensureExists(
+        ProfileViewSelectors.getIdleCategoryIndex(getState()),
+        'Expected the test profile to have an Idle category'
+      );
+
+      // Samples 0 and 2 have DOM leaves; 1 and 3 have Idle leaves.
+      expect(afterThread.samples.stack[0]).not.toBe(null);
+      expect(afterThread.samples.stack[1]).toBe(null);
+      expect(afterThread.samples.stack[2]).not.toBe(null);
+      expect(afterThread.samples.stack[3]).toBe(null);
+
+      // The stackTable is untouched. Only sample.stack entries are nulled.
+      expect(afterThread.stackTable).toBe(beforeThread.stackTable);
+      // The kept samples still point at a stack whose category is not idle.
+      const keptStackCategories = afterThread.samples.stack
+        .filter((s): s is number => s !== null)
+        .map((s) => afterThread.stackTable.category[s]);
+      expect(keptStackCategories).not.toContain(idleCategoryIndex);
+    });
+
+    it('is a no-op when the profile has no idle category', function () {
+      const { profile } = getProfileFromTextSamples(`
+        A          A
+        B[cat:DOM] B[cat:DOM]
+      `);
+      // Replace categories with a set that has no "Idle" entry.
+      profile.meta.categories = [
+        { name: 'Other', color: 'grey', subcategories: ['Other'] },
+        { name: 'DOM', color: 'blue', subcategories: ['Other'] },
+      ];
+      const { dispatch, getState } = storeWithProfile(profile);
+
+      expect(ProfileViewSelectors.getIdleCategoryIndex(getState())).toBe(null);
+
+      const before = selectedThreadSelectors.getFilteredThread(getState());
+      dispatch(ProfileView.changeIncludeIdleSamples(false));
+      const after = selectedThreadSelectors.getFilteredThread(getState());
+      // Without an idle category there is nothing to filter.
+      expect(after).toBe(before);
+    });
+  });
+
   describe('updatePreviewSelection', function () {
     it('updates the profile selection', function () {
       const { profile } = getProfileFromTextSamples('A');

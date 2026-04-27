@@ -124,6 +124,8 @@ export const getSelectedTab: Selector<TabSlug> = (state) =>
 export const getInvertCallstack: Selector<boolean> = (state) =>
   getSelectedTab(state) === 'calltree' &&
   getProfileSpecificState(state).invertCallstack;
+export const getIncludeIdleSamples: Selector<boolean> = (state) =>
+  getProfileSpecificState(state).includeIdleSamples;
 
 export const getSelectedThreadIndexesOrNull: Selector<
   Set<ThreadIndex> | null

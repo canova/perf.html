@@ -312,6 +312,15 @@ const invertCallstack: Reducer<boolean> = (state = false, action) => {
   }
 };
 
+const includeIdleSamples: Reducer<boolean> = (state = true, action) => {
+  switch (action.type) {
+    case 'CHANGE_INCLUDE_IDLE_SAMPLES':
+      return action.includeIdleSamples;
+    default:
+      return state;
+  }
+};
+
 /**
  * Signals whether user timing markers will be shown in the stack chart.
  */
@@ -750,6 +759,7 @@ const profileSpecific = combineReducers({
   implementation,
   lastSelectedCallTreeSummaryStrategy,
   invertCallstack,
+  includeIdleSamples,
   showUserTimings,
   stackChartSameWidths,
   committedRanges,
