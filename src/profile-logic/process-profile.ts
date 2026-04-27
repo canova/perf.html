@@ -980,7 +980,16 @@ function _deriveCounterDisplay(
   category: string,
   name: string
 ): CounterDisplayConfig {
-  if (category === 'Memory') {
+  if (category === 'Bandwidth') {
+    return {
+      graphType: 'line-rate',
+      unit: 'bytes',
+      color: 'blue',
+      markerSchemaLocation: null,
+      sortWeight: 10,
+      label: 'Bandwidth',
+    };
+  } else if (category === 'Memory') {
     return {
       graphType: 'line-accumulated',
       unit: 'bytes',
@@ -997,15 +1006,6 @@ function _deriveCounterDisplay(
       markerSchemaLocation: null,
       sortWeight: 30,
       label: name,
-    };
-  } else if (category === 'Bandwidth') {
-    return {
-      graphType: 'line-rate',
-      unit: 'bytes',
-      color: 'blue',
-      markerSchemaLocation: null,
-      sortWeight: 10,
-      label: 'Bandwidth',
     };
   } else if (category === 'CPU' && name === 'processCPU') {
     return {
