@@ -355,6 +355,7 @@ export type ProfileSpecificUrlState = {
   implementation: ImplementationFilter;
   lastSelectedCallTreeSummaryStrategy: CallTreeSummaryStrategy;
   invertCallstack: boolean;
+  includeIdleSamples: boolean;
   showUserTimings: boolean;
   stackChartSameWidths: boolean;
   committedRanges: StartEndRange[];
