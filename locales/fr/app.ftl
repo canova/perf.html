@@ -1040,6 +1040,12 @@ BottomBox--assembly-code-not-available-title = Code assembleur non disponible
 # Elements:
 #   <a>link text</a> - A link to the github issue about supported scenarios.
 BottomBox--assembly-code-not-available-text = Consultez le <a>ticket n°4520</a> pour les scénarios pris en charge et les améliorations prévues.
+# The toggle button for making the bottom box fullscreen.
+BottomBox--hide-fullscreen =
+    .title = Quitter le mode plein écran
+# The toggle button for making the bottom box fullscreen.
+BottomBox--show-fullscreen =
+    .title = Plein écran
 SourceView--close-button =
     .title = Fermer la vue du code source
 
