@@ -676,6 +676,12 @@ export type RemoveProfileInformation = {
   readonly shouldRemovePreferenceValues: boolean;
   // Remove the private browsing data if it's true.
   readonly shouldRemovePrivateBrowsingData: boolean;
+  // True when the profile carries any source file contents. Data-derived (not a
+  // user toggle): when false, the sanitizer skips the source-content step
+  // entirely. When true, source contents are stripped; threadIndexesToLimitSourceContents
+  // narrows the strip to sources not reachable from those threads.
+  readonly hasSourceContents: boolean;
+  readonly threadIndexesToLimitSourceContents: Set<ThreadIndex> | null;
 };
 
 /**

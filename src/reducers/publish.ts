@@ -25,6 +25,7 @@ function _getSanitizingSharingOptions(): CheckedSharingOptions {
     includeExtension: false,
     includePreferenceValues: false,
     includePrivateBrowsingData: false,
+    includeSourceContentsForSelectedThreads: false,
   };
 }
 
@@ -39,6 +40,8 @@ function _getMostlyNonSanitizingSharingOptions(): CheckedSharingOptions {
     includePreferenceValues: true,
     // We always want to sanitize the private browsing data by default
     includePrivateBrowsingData: false,
+    // Source contents are never published by default regardless of channel
+    includeSourceContentsForSelectedThreads: false,
   };
 }
 

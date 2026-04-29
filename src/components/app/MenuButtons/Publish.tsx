@@ -21,6 +21,7 @@ import {
   getAbortFunction,
   getCheckedSharingOptions,
   getFilenameString,
+  getProfileHasSourceContents,
   getUploadPhase,
   getUploadProgress,
   getUploadProgressString,
@@ -58,6 +59,7 @@ type StateProps = {
   readonly rootRange: StartEndRange;
   readonly shouldShowPreferenceOption: boolean;
   readonly profileContainsPrivateBrowsingInformation: boolean;
+  readonly profileHasSourceContents: boolean;
   readonly checkedSharingOptions: CheckedSharingOptions;
   readonly sanitizedProfileEncodingState: SanitizedProfileEncodingState;
   readonly downloadFileName: string;
@@ -123,6 +125,7 @@ class PublishPanelImpl extends React.PureComponent<PublishProps, {}> {
     const {
       shouldShowPreferenceOption,
       profileContainsPrivateBrowsingInformation,
+      profileHasSourceContents,
       sanitizedProfileEncodingState,
       downloadFileName,
       shouldSanitizeByDefault,
@@ -208,6 +211,12 @@ class PublishPanelImpl extends React.PureComponent<PublishProps, {}> {
                       title="This profile contains private browsing data"
                     />
                   </Localized>
+                )
+              : null}
+            {profileHasSourceContents
+              ? this._renderCheckbox(
+                  'includeSourceContentsForSelectedThreads',
+                  'MenuButtons--publish--renderCheckbox-label-include-source-contents-selected-threads'
                 )
               : null}
           </div>
@@ -361,6 +370,7 @@ export const PublishPanel = explicitConnect<
     shouldShowPreferenceOption: getHasPreferenceMarkers(state),
     profileContainsPrivateBrowsingInformation:
       getContainsPrivateBrowsingInformation(state),
+    profileHasSourceContents: getProfileHasSourceContents(state),
     checkedSharingOptions: getCheckedSharingOptions(state),
     downloadFileName: getFilenameString(state),
     sanitizedProfileEncodingState: getSanitizedProfileEncodingState(state),

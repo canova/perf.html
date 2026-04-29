@@ -80,6 +80,7 @@ describe('getCheckedSharingOptions', function () {
       includeUrls: false,
       includePreferenceValues: false,
       includePrivateBrowsingData: false,
+      includeSourceContentsForSelectedThreads: false,
     };
     const isNotFiltering = {
       includeExtension: true,
@@ -90,6 +91,7 @@ describe('getCheckedSharingOptions', function () {
       includeUrls: true,
       includePreferenceValues: true,
       includePrivateBrowsingData: false,
+      includeSourceContentsForSelectedThreads: false,
     };
     function getDefaultsWith(updateChannel: string) {
       const { profile } = getProfileFromTextSamples('A');
@@ -168,6 +170,70 @@ describe('getRemoveProfileInformation', function () {
     const removeProfileInformation = getRemoveProfileInformation(getState());
     // It should return early with null value.
     expect(removeProfileInformation).toEqual(null);
+  });
+
+  describe('includeSourceContentsForSelectedThreads', function () {
+    // Build a 2-thread profile where each thread references its own JS source
+    // with content already populated.
+    function makeProfile() {
+      const { profile } = getProfileFromTextSamples(
+        `A[file:thread0.js]`,
+        `B[file:thread1.js]`
+      );
+      const { sources, stringArray } = profile.shared;
+      for (let i = 0; i < sources.length; i++) {
+        sources.content[i] = `// ${stringArray[sources.filename[i]]}\n`;
+      }
+      return profile;
+    }
+
+    it('returns hasSourceContents=true and a null thread limit when the flag is off', function () {
+      const profile = makeProfile();
+      const { getState } = storeWithProfile(profile);
+
+      // Default flag value is false — the existing default-state tests verify
+      // that. We assert behavior here: hasSourceContents is true (because the
+      // profile contains content), and threadIndexesToLimitSourceContents is
+      // null so that sanitize wipes all source contents.
+      const info = ensureExists(getRemoveProfileInformation(getState()));
+      expect(info.hasSourceContents).toBe(true);
+      expect(info.threadIndexesToLimitSourceContents).toBeNull();
+    });
+
+    it('returns the selected-thread indexes when the flag is on and a thread is selected', function () {
+      const profile = makeProfile();
+      const { getState, dispatch } = storeWithProfile(profile);
+
+      dispatch(
+        updateSharingOption('includeSourceContentsForSelectedThreads', true)
+      );
+
+      const info = ensureExists(getRemoveProfileInformation(getState()));
+      expect(info.hasSourceContents).toBe(true);
+      // The default selected thread index is 0 on this fixture.
+      expect(info.threadIndexesToLimitSourceContents).toEqual(new Set([0]));
+    });
+
+    it('resets the thread limit to null when the flag is toggled back off', function () {
+      const profile = makeProfile();
+      const { getState, dispatch } = storeWithProfile(profile);
+
+      dispatch(
+        updateSharingOption('includeSourceContentsForSelectedThreads', true)
+      );
+      expect(
+        ensureExists(getRemoveProfileInformation(getState()))
+          .threadIndexesToLimitSourceContents
+      ).toEqual(new Set([0]));
+
+      dispatch(
+        updateSharingOption('includeSourceContentsForSelectedThreads', false)
+      );
+      expect(
+        ensureExists(getRemoveProfileInformation(getState()))
+          .threadIndexesToLimitSourceContents
+      ).toBeNull();
+    });
   });
 
   it('should remove child threads of fake main threads', function () {

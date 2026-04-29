@@ -15,6 +15,7 @@ import {
   getContainsPrivateBrowsingInformation,
   getThreads,
   getMarkerSchemaByName,
+  getSourceTable,
 } from './profile';
 import {
   sanitizePII,
@@ -23,7 +24,11 @@ import {
 } from '../profile-logic/sanitize';
 import { ensureExists } from '../utils/types';
 import { formatNumber } from '../utils/format-numbers';
-import { getHiddenGlobalTracks, getHiddenLocalTracksByPid } from './url-state';
+import {
+  getHiddenGlobalTracks,
+  getHiddenLocalTracksByPid,
+  getSelectedThreadIndexesOrNull,
+} from './url-state';
 
 import type {
   PublishState,
@@ -45,6 +50,11 @@ export const getPublishState: Selector<PublishState> = (state) => state.publish;
 export const getCheckedSharingOptions: Selector<CheckedSharingOptions> = (
   state
 ) => getPublishState(state).checkedSharingOptions;
+
+export const getProfileHasSourceContents: Selector<boolean> = createSelector(
+  getSourceTable,
+  (sources) => sources.content.some((c) => c !== null)
+);
 
 export const getFilenameString: Selector<string> = createSelector(
   getProfile,
@@ -80,6 +90,8 @@ export const getRemoveProfileInformation: Selector<RemoveProfileInformation | nu
     getLocalTracksByPid,
     getHasPreferenceMarkers,
     getContainsPrivateBrowsingInformation,
+    getSelectedThreadIndexesOrNull,
+    getProfileHasSourceContents,
     (
       checkedSharingOptions,
       profile,
@@ -89,7 +101,9 @@ export const getRemoveProfileInformation: Selector<RemoveProfileInformation | nu
       globalTracks,
       localTracksByPid,
       hasPreferenceMarkers,
-      containsPrivateBrowsingInformation
+      containsPrivateBrowsingInformation,
+      selectedThreadIndexesOrNull,
+      hasSourceContents
     ) => {
       let isIncludingEverything = true;
       for (const [prop, value] of Object.entries(checkedSharingOptions)) {
@@ -104,6 +118,14 @@ export const getRemoveProfileInformation: Selector<RemoveProfileInformation | nu
           prop === 'includePrivateBrowsingData' &&
           !containsPrivateBrowsingInformation
         ) {
+          continue;
+        }
+        if (prop === 'includeSourceContentsForSelectedThreads') {
+          // Source content is always stripped (fully or partially) when present,
+          // so we never include everything if the profile has source content.
+          if (hasSourceContents) {
+            isIncludingEverything = false;
+          }
           continue;
         }
         isIncludingEverything = isIncludingEverything && value;
@@ -158,6 +180,12 @@ export const getRemoveProfileInformation: Selector<RemoveProfileInformation | nu
         }
       }
 
+      const threadIndexesToLimitSourceContents =
+        checkedSharingOptions.includeSourceContentsForSelectedThreads &&
+        selectedThreadIndexesOrNull !== null
+          ? selectedThreadIndexesOrNull
+          : null;
+
       return {
         shouldFilterToCommittedRange: checkedSharingOptions.includeFullTimeRange
           ? null
@@ -177,6 +205,8 @@ export const getRemoveProfileInformation: Selector<RemoveProfileInformation | nu
           !checkedSharingOptions.includePreferenceValues,
         shouldRemovePrivateBrowsingData:
           !checkedSharingOptions.includePrivateBrowsingData,
+        hasSourceContents,
+        threadIndexesToLimitSourceContents,
       };
     }
   );

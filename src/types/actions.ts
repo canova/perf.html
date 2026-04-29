@@ -158,6 +158,9 @@ export type CheckedSharingOptions = {
   includeExtension: boolean;
   includePreferenceValues: boolean;
   includePrivateBrowsingData: boolean;
+  // When true, keep source file contents only for sources used by the selected
+  // threads. When false (default), strip source content from all sources.
+  includeSourceContentsForSelectedThreads: boolean;
 };
 
 // This type is used when selecting tracks in the timeline. Ctrl and Meta are

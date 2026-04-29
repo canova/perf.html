@@ -22,6 +22,7 @@ import { getSchemaFromMarker } from './marker-schema';
 import {
   filterRawThreadSamplesToRange,
   filterCounterSamplesToRange,
+  collectSourceIndicesFromThreads,
 } from './profile-data';
 import type {
   Profile,
@@ -126,13 +127,26 @@ export function sanitizePII(
     stringArray,
   };
 
-  // FIXME: Currently we always sanitize the source contents while publishing.
-  // But we should have a sharing option in the publish panel to be able to
-  // include sources.
-  newShared.sources = {
-    ...newShared.sources,
-    content: Array(newShared.sources.content.length).fill(null),
-  };
+  if (PIIToBeRemoved.hasSourceContents) {
+    if (PIIToBeRemoved.threadIndexesToLimitSourceContents !== null) {
+      const usedSourceIndices = collectSourceIndicesFromThreads(
+        PIIToBeRemoved.threadIndexesToLimitSourceContents,
+        profile.threads,
+        profile.shared
+      );
+      newShared.sources = {
+        ...newShared.sources,
+        content: newShared.sources.content.map((content, i) =>
+          usedSourceIndices.has(i) ? content : null
+        ),
+      };
+    } else {
+      newShared.sources = {
+        ...newShared.sources,
+        content: Array(newShared.sources.content.length).fill(null),
+      };
+    }
+  }
 
   let stackFlags: Uint8Array | null = null;
 

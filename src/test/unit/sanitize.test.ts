@@ -28,6 +28,7 @@ import {
 } from 'firefox-profiler/test/fixtures/utils';
 import type {
   MarkerSchemaByName,
+  Profile,
   RawThread,
   RemoveProfileInformation,
 } from 'firefox-profiler/types';
@@ -46,6 +47,8 @@ describe('sanitizePII', function () {
       shouldRemoveExtensions: false,
       shouldRemovePreferenceValues: false,
       shouldRemovePrivateBrowsingData: false,
+      hasSourceContents: false,
+      threadIndexesToLimitSourceContents: null,
     };
 
     const PIIToRemove: RemoveProfileInformation = {
@@ -1221,6 +1224,123 @@ describe('sanitizePII', function () {
         '    - Cjs (total: 1, self: 1)',
         '    - Ejs (total: 1, self: 1)',
       ]);
+    });
+  });
+
+  describe('source contents (includeSourceContentsForSelectedThreads)', function () {
+    // Build a 3-thread profile where each thread references its own source
+    // and each source has a placeholder content string.
+    function makeProfileWithSourceContents() {
+      const { profile } = getProfileFromTextSamples(
+        `A[file:file1.js]`,
+        `B[file:file2.js]`,
+        `C[file:file3.js]`
+      );
+      const { sources, stringArray } = profile.shared;
+      // Populate source contents in the same order as the sources table.
+      for (let i = 0; i < sources.length; i++) {
+        const filename = stringArray[sources.filename[i]];
+        sources.content[i] = `// contents of ${filename}\n`;
+      }
+      return profile;
+    }
+
+    function sourceIndexForFile(profile: Profile, filename: string): number {
+      const { sources, stringArray } = profile.shared;
+      const idx = sources.filename.findIndex(
+        (f: number) => stringArray[f] === filename
+      );
+      if (idx === -1) {
+        throw new Error(`No source for ${filename}`);
+      }
+      return idx;
+    }
+
+    it('strips all source contents when hasSourceContents=true and no thread limit is set', function () {
+      const profile = makeProfileWithSourceContents();
+      // Sanity check: every source has non-null content to start.
+      expect(profile.shared.sources.content.every((c) => c !== null)).toBe(
+        true
+      );
+
+      const { sanitizedProfile } = setup(
+        {
+          hasSourceContents: true,
+          threadIndexesToLimitSourceContents: null,
+        },
+        profile
+      );
+
+      // All source contents should be wiped — no thread was singled out.
+      expect(sanitizedProfile.shared.sources.content).toEqual([
+        null,
+        null,
+        null,
+      ]);
+    });
+
+    it('keeps source contents only for sources used by the selected threads', function () {
+      const profile = makeProfileWithSourceContents();
+      const file1Idx = sourceIndexForFile(profile, 'file1.js');
+      const file2Idx = sourceIndexForFile(profile, 'file2.js');
+      const file3Idx = sourceIndexForFile(profile, 'file3.js');
+
+      // Only thread 1 is "selected". Its source (file2.js) should keep its
+      // content; the others should be wiped.
+      const { sanitizedProfile } = setup(
+        {
+          hasSourceContents: true,
+          threadIndexesToLimitSourceContents: new Set([1]),
+        },
+        profile
+      );
+
+      expect(sanitizedProfile.shared.sources.content[file1Idx]).toBeNull();
+      expect(sanitizedProfile.shared.sources.content[file2Idx]).toBe(
+        '// contents of file2.js\n'
+      );
+      expect(sanitizedProfile.shared.sources.content[file3Idx]).toBeNull();
+    });
+
+    it('keeps source contents for multiple selected threads', function () {
+      const profile = makeProfileWithSourceContents();
+      const file1Idx = sourceIndexForFile(profile, 'file1.js');
+      const file2Idx = sourceIndexForFile(profile, 'file2.js');
+      const file3Idx = sourceIndexForFile(profile, 'file3.js');
+
+      const { sanitizedProfile } = setup(
+        {
+          hasSourceContents: true,
+          threadIndexesToLimitSourceContents: new Set([0, 2]),
+        },
+        profile
+      );
+
+      expect(sanitizedProfile.shared.sources.content[file1Idx]).toBe(
+        '// contents of file1.js\n'
+      );
+      expect(sanitizedProfile.shared.sources.content[file2Idx]).toBeNull();
+      expect(sanitizedProfile.shared.sources.content[file3Idx]).toBe(
+        '// contents of file3.js\n'
+      );
+    });
+
+    it('leaves source contents alone when hasSourceContents=false', function () {
+      const profile = makeProfileWithSourceContents();
+      const { sanitizedProfile } = setup(
+        {
+          hasSourceContents: false,
+          threadIndexesToLimitSourceContents: null,
+        },
+        profile
+      );
+
+      // hasSourceContents=false means the user opted not to ship contents,
+      // so the sanitize step does nothing here — that's the caller's
+      // responsibility (sanitize is also reused for thread-removal paths).
+      expect(sanitizedProfile.shared.sources.content).toEqual(
+        profile.shared.sources.content
+      );
     });
   });
 
