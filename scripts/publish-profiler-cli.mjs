@@ -14,11 +14,9 @@ const userSpecifiedTag = forwardedArgs.some(
   (a) => a === '--tag' || a.startsWith('--tag=')
 );
 const isPrerelease = version.includes('-');
-// TODO: switch 'alpha' to 'next' once a stable release exists and we want the
-// conventional pre-release channel.
 const tagArgs = userSpecifiedTag
   ? []
-  : ['--tag', isPrerelease ? 'alpha' : 'latest'];
+  : ['--tag', isPrerelease ? 'next' : 'latest'];
 
 function run(cmd, args) {
   const result = spawnSync(cmd, args, { cwd: repoRoot, stdio: 'inherit' });
