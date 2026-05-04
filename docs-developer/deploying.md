@@ -128,8 +128,8 @@ yarn publish-profiler-cli
 
 1. Run `yarn build-profiler-cli` to produce `profiler-cli/dist/profiler-cli.js` (a
    single self-contained bundle with no runtime dependencies).
-2. Run `npm publish profiler-cli/`, picking `--tag alpha` when the version
-   contains `-` (e.g. `0.1.0-alpha.5`) and `--tag latest` otherwise.
+2. Run `npm publish profiler-cli/`, picking `--tag next` when the version
+   contains `-` (e.g. `0.1.0-next.1`) and `--tag latest` otherwise.
 3. Trigger the `prepublishOnly` hook in `profiler-cli/package.json`, which runs
    [`scripts/verify-profiler-cli-build.mjs`](../scripts/verify-profiler-cli-build.mjs)
    to confirm the bundle exists and embeds the current `package.json` version —

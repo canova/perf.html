@@ -2,8 +2,6 @@
 
 A command-line interface for querying Firefox Profiler profiles with persistent daemon sessions.
 
-> **Alpha release** — this package is in early development. Commands and options may change between versions.
-
 ## Installation
 
 ```bash
